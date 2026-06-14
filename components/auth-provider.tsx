@@ -38,14 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient()
 
     async function loadProfile(supabaseUserId: string, email: string) {
-      const { data } = await supabase
+      const { data: rawData } = await supabase
         .from('users')
         .select('username, display_name, avatar_url, reputation')
         .eq('id', supabaseUserId)
-        .single() as {
-          data: { username: string; display_name: string | null; avatar_url: string | null; reputation: number } | null
-          error: unknown
-        }
+        .single()
+      const data = rawData as { username: string; display_name: string | null; avatar_url: string | null; reputation: number } | null
 
       setUser({
         id: supabaseUserId,

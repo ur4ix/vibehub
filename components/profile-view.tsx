@@ -73,19 +73,11 @@ export function ProfileView() {
     if (!user) return
     const supabase = createClient()
     Promise.all([
-      supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single() as Promise<{ data: Profile | null; error: unknown }>,
-      supabase
-        .from('repositories')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false }) as Promise<{ data: Repository[] | null; error: unknown }>,
+      supabase.from('users').select('*').eq('id', user.id).single(),
+      supabase.from('repositories').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
     ]).then(([{ data: p }, { data: r }]) => {
-      setProfile(p)
-      setRepos(r ?? [])
+      setProfile(p as Profile | null)
+      setRepos((r as Repository[] | null) ?? [])
     })
   }, [user])
 
@@ -151,13 +143,13 @@ export function ProfileView() {
     }
 
     // Re-fetch the full row so the profile card shows fresh data
-    const { data: refreshed } = await supabase
+    const { data: refreshedRaw } = await supabase
       .from('users')
       .select('*')
       .eq('id', authUser.id)
-      .maybeSingle() as { data: Profile | null; error: unknown }
+      .maybeSingle()
 
-    setProfile(refreshed)
+    setProfile(refreshedRaw as Profile | null)
     setEditing(false)
     router.refresh()
   }

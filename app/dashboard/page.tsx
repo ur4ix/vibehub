@@ -15,17 +15,19 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
-  const { data: profile } = await supabase
+  const { data: profileRaw } = await supabase
     .from('users')
     .select('*')
     .eq('id', user.id)
-    .maybeSingle() as { data: Profile | null; error: unknown }
+    .maybeSingle()
+  const profile = profileRaw as Profile | null
 
-  const { data: repos } = await supabase
+  const { data: reposRaw } = await supabase
     .from('repositories')
     .select('id, title, slug, type, price_cents, is_published, created_at')
     .eq('owner_id', user.id)
-    .order('created_at', { ascending: false }) as { data: DashboardRepo[] | null; error: unknown }
+    .order('created_at', { ascending: false })
+  const repos = reposRaw as DashboardRepo[] | null
 
   return (
     <div className="min-h-screen bg-background">

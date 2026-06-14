@@ -36,13 +36,13 @@ function NotificationBell() {
   const loadNotifications = useCallback(async () => {
     if (!user) return
     const supabase = createClient()
-    const { data } = await supabase
+    const { data: rawNotifs } = await supabase
       .from('notifications')
       .select('id, type, title, body, is_read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20) as { data: Notification[] | null; error: unknown }
-    if (data) setNotifications(data)
+      .limit(20)
+    if (rawNotifs) setNotifications(rawNotifs as Notification[])
   }, [user])
 
   useEffect(() => {

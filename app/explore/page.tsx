@@ -159,16 +159,18 @@ function ExploreContent() {
         query = query.order('created_at', { ascending: false })
       }
 
-      const { data: repoRows } = await query.limit(48) as { data: Repository[] | null; error: unknown }
+      const { data: repoRowsRaw } = await query.limit(48)
+      const repoRows = repoRowsRaw as Repository[] | null
 
       if (!repoRows?.length) { setRepos([]); setLoading(false); return }
 
       // Fetch owner usernames via profiles view
       const ownerIds = [...new Set(repoRows.map((r) => r.owner_id))]
-      const { data: profiles } = await supabase
+      const { data: profilesRaw } = await supabase
         .from('profiles')
         .select('id, username, display_name')
-        .in('id', ownerIds) as { data: { id: string; username: string; display_name: string | null }[] | null; error: unknown }
+        .in('id', ownerIds)
+      const profiles = profilesRaw as { id: string; username: string; display_name: string | null }[] | null
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) ?? [])
 
