@@ -16,9 +16,9 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('username, display_name, reputation')
+    .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   const { data: repos } = await supabase
     .from('repositories')
