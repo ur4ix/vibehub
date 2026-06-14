@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield } from 'lucide-react'
+import { Shield, Camera } from 'lucide-react'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
 import { PixelButton } from './pixel-button'
@@ -64,6 +64,9 @@ export function ProfileView() {
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!loading && !user) router.push('/auth')
@@ -162,6 +165,42 @@ export function ProfileView() {
     router.refresh()
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Instant preview
+    const objectUrl = URL.createObjectURL(file)
+    setAvatarPreview(objectUrl)
+    setAvatarUploading(true)
+
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `avatars/${user.id}/avatar.${ext}`
+    const supabase = createClient()
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type })
+
+    if (uploadError) {
+      setSaveError(`Avatar upload failed: ${uploadError.message}`)
+      setAvatarPreview(null)
+      setAvatarUploading(false)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+
+    await supabase
+      .from('users')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id)
+
+    setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null)
+    setAvatarUploading(false)
+    router.refresh()
+  }
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -207,6 +246,38 @@ export function ProfileView() {
               {editing ? (
                 <form className="flex flex-col gap-4" onSubmit={save}>
                   <h2 className="font-pixel text-[11px] uppercase tracking-wider">Edit profile</h2>
+
+                  {/* Avatar upload */}
+                  <div className="flex flex-col items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={avatarUploading}
+                      className="group relative"
+                      aria-label="Upload avatar"
+                    >
+                      <PixelAvatar
+                        username={user.username}
+                        avatarColor={user.avatarColor}
+                        size={80}
+                        imageUrl={avatarPreview ?? profile?.avatar_url}
+                        className="!border-4"
+                      />
+                      <span className="absolute inset-0 grid place-items-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 group-disabled:opacity-0">
+                        <Camera className="h-6 w-6 text-white" />
+                      </span>
+                    </button>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {avatarUploading ? 'Uploading…' : 'Click to change avatar'}
+                    </span>
+                  </div>
 
                   <Field label="Username" value={draft.username}
                     onChange={(v) => setDraft((d) => ({ ...d, username: v }))} placeholder="vibecoder" />
@@ -266,7 +337,7 @@ export function ProfileView() {
               ) : (
                 <>
                   <div className="flex flex-col items-center text-center">
-                    <PixelAvatar username={user.username} avatarColor={user.avatarColor} size={88} className="!border-4" />
+                    <PixelAvatar username={user.username} avatarColor={user.avatarColor} size={88} className="!border-4" imageUrl={profile?.avatar_url} />
                     <h1 className="mt-5 font-pixel text-sm leading-[1.5]">
                       {profile?.display_name ?? user.username}
                     </h1>

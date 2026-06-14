@@ -16,6 +16,7 @@ export interface CurrentUser {
   email: string
   username: string
   displayName: string | null
+  avatarUrl: string | null
   avatarColor: string
   reputation: number
 }
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function loadProfile(supabaseUserId: string, email: string) {
       const { data } = await supabase
         .from('users')
-        .select('username, display_name, reputation')
+        .select('username, display_name, avatar_url, reputation')
         .eq('id', supabaseUserId)
         .single()
 
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         username: data?.username ?? email.split('@')[0] ?? 'user',
         displayName: data?.display_name ?? null,
+        avatarUrl: data?.avatar_url ?? null,
         avatarColor: colorFromId(supabaseUserId),
         reputation: data?.reputation ?? 0,
       })

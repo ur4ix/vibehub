@@ -31,7 +31,7 @@ const COLS = [
 
 export function SiteFooter() {
   return (
-    <footer className="bg-background">
+    <footer className="bg-background border-t-2 border-border">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
