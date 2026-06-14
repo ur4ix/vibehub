@@ -139,7 +139,7 @@ export function ProfileView() {
     setAvatarUploading(true)
 
     const ext = file.name.split('.').pop() ?? 'jpg'
-    const path = `avatars/${user.id}/avatar.${ext}`
+    const path = `${user.id}/avatar.${ext}`   // bucket = 'avatars', no prefix needed
     const supabase = createClient()
 
     const { error: uploadError } = await supabase.storage
