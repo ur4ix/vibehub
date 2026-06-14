@@ -49,6 +49,7 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<string>("");
   const [repoType, setRepoType] = useState<"free" | "paid">("free");
   const [price, setPrice] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -213,6 +214,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           price_cents: priceCents,
           storage_path: storagePath,
           tags,
+          category: category || null,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
         });
@@ -265,6 +267,39 @@ export function UploadForm({ userId }: UploadFormProps) {
             required
             disabled={isSubmitting}
           />
+        </div>
+
+        {/* Category */}
+        <div className="flex flex-col gap-2">
+          <Label>
+            Category{" "}
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { value: "apps", icon: "▢", label: "Apps" },
+              { value: "ui-components", icon: "◧", label: "UI Components" },
+              { value: "prompts", icon: "☰", label: "Prompts" },
+              { value: "templates", icon: "▦", label: "Templates" },
+            ].map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setCategory(category === c.value ? "" : c.value)}
+                disabled={isSubmitting}
+                className={cn(
+                  "flex items-center gap-2 border-2 px-3 py-2.5 text-sm transition-colors outline-none",
+                  "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  category === c.value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-primary hover:text-foreground",
+                )}
+              >
+                <span className="font-pixel text-base">{c.icon}</span>
+                <span className="font-mono text-xs">{c.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Slug */}

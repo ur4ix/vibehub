@@ -90,14 +90,13 @@ export function ProfileView() {
   }, [user])
 
   function startEdit() {
-    if (!profile) return
     setDraft({
-      username: profile.username,
-      displayName: profile.display_name ?? '',
-      bio: profile.bio ?? '',
-      github_username: profile.github_username ?? '',
-      huggingface_username: profile.huggingface_username ?? '',
-      x_username: profile.x_username ?? '',
+      username: profile?.username ?? user?.username ?? '',
+      displayName: profile?.display_name ?? user?.displayName ?? '',
+      bio: profile?.bio ?? '',
+      github_username: profile?.github_username ?? '',
+      huggingface_username: profile?.huggingface_username ?? '',
+      x_username: profile?.x_username ?? '',
     })
     setSaveError(null)
     setEditing(true)

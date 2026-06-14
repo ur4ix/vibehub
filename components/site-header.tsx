@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, ChevronDown } from 'lucide-react'
+import { Bell, ChevronDown, X } from 'lucide-react'
 import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
@@ -15,10 +15,108 @@ const UNAUTH_NAV = [
 ]
 
 const AUTH_NAV = [
-  { label: 'Explore', href: '/#catalog' },
+  { label: 'Explore', href: '/explore' },
   { label: 'My Projects', href: '/profile' },
   { label: 'Dashboard', href: '/dashboard' },
 ]
+
+// ─── Notification Bell ────────────────────────────────────────────────────────
+
+const SAMPLE_NOTIFICATIONS = [
+  {
+    id: '1',
+    type: 'system',
+    title: 'Welcome to VibeHub!',
+    body: 'Your account is set up. Start by publishing your first project.',
+    time: 'just now',
+    read: false,
+  },
+]
+
+function NotificationBell() {
+  const [open, setOpen] = useState(false)
+  const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const unreadCount = notifications.filter((n) => !n.read).length
+
+  useEffect(() => {
+    function onPointerDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [])
+
+  function markAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label={`Notifications${unreadCount ? ` — ${unreadCount} unread` : ''}`}
+        className="relative grid h-9 w-9 place-items-center border-2 border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+      >
+        <Bell className="h-4 w-4" />
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center border border-background bg-primary font-pixel text-[8px] text-primary-foreground">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 border-2 border-border bg-card pixel-shadow-border z-50">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <span className="font-pixel text-[9px] uppercase tracking-wider">Notifications</span>
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="font-mono text-[10px] text-muted-foreground hover:text-primary"
+                >
+                  Mark all read
+                </button>
+              )}
+              <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {notifications.length === 0 ? (
+            <div className="px-4 py-10 text-center">
+              <Bell className="mx-auto mb-3 h-8 w-8 text-muted-foreground/30" />
+              <p className="font-mono text-xs text-muted-foreground">No notifications yet</p>
+            </div>
+          ) : (
+            <ul>
+              {notifications.map((n) => (
+                <li
+                  key={n.id}
+                  className={'border-b border-border px-4 py-3.5 last:border-0 ' + (!n.read ? 'bg-primary/5' : '')}
+                >
+                  <div className="flex items-start gap-3">
+                    {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-primary" />}
+                    <div className={!n.read ? '' : 'pl-[18px]'}>
+                      <p className="font-pixel text-[9px] uppercase tracking-wider text-foreground">{n.title}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{n.body}</p>
+                      <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/60">{n.time}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── SiteHeader ───────────────────────────────────────────────────────────────
 
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -29,9 +127,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
     }
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
@@ -44,10 +140,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3" aria-label="VibeHub — home">
-          <span
-            className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground"
-            aria-hidden="true"
-          >
+          <span className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground" aria-hidden="true">
             <span className="font-pixel text-[12px]">{'>'}</span>
           </span>
           <span className="font-pixel text-xs tracking-tight">VIBEHUB</span>
@@ -56,33 +149,25 @@ export function SiteHeader() {
         {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
           {navLinks.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         {/* Desktop right — authenticated */}
         {user ? (
           <div className="hidden items-center gap-3 md:flex">
-            {/* Bell */}
-            <button
-              aria-label="Notifications"
-              className="grid h-9 w-9 place-items-center border-2 border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <Bell className="h-4 w-4" />
-            </button>
+            <NotificationBell />
 
-            {/* Upload */}
             <PixelButton className="px-4 py-2.5" onClick={() => router.push('/upload')}>
               + Upload
             </PixelButton>
 
-            {/* Avatar dropdown */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
@@ -97,38 +182,26 @@ export function SiteHeader() {
               </button>
 
               {menuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 mt-2 w-52 border-2 border-border bg-card pixel-shadow-border"
-                >
+                <div role="menu" className="absolute right-0 mt-2 w-52 border-2 border-border bg-card pixel-shadow-border z-50">
                   <div className="border-b border-border px-4 py-3">
                     <p className="font-pixel text-[9px] text-foreground">{user.username}</p>
                     <p className="mt-1 font-mono text-[10px] text-muted-foreground truncate">{user.email}</p>
                   </div>
-                  <Link
-                    role="menuitem"
-                    href="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="block border-b border-border px-4 py-3 font-mono text-xs transition-colors hover:bg-secondary hover:text-primary"
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    role="menuitem"
-                    href="/settings/security"
-                    onClick={() => setMenuOpen(false)}
-                    className="block border-b border-border px-4 py-3 font-mono text-xs transition-colors hover:bg-secondary hover:text-primary"
-                  >
-                    Security settings
-                  </Link>
-                  <Link
-                    role="menuitem"
-                    href="/dashboard"
-                    onClick={() => setMenuOpen(false)}
-                    className="block border-b border-border px-4 py-3 font-mono text-xs transition-colors hover:bg-secondary hover:text-primary"
-                  >
-                    Dashboard
-                  </Link>
+                  {[
+                    { label: 'Profile', href: '/profile' },
+                    { label: 'Security settings', href: '/settings/security' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                  ].map((item) => (
+                    <Link
+                      key={item.href}
+                      role="menuitem"
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="block border-b border-border px-4 py-3 font-mono text-xs transition-colors hover:bg-secondary hover:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                   <button
                     role="menuitem"
                     onClick={() => { signOut(); setMenuOpen(false) }}
@@ -141,12 +214,8 @@ export function SiteHeader() {
             </div>
           </div>
         ) : (
-          /* Desktop right — unauthenticated */
           <div className="hidden items-center gap-3 md:flex">
-            <Link
-              href="/auth"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
+            <Link href="/auth" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Sign in
             </Link>
             <PixelButton className="px-4 py-2.5" onClick={() => router.push('/auth')}>
@@ -171,14 +240,14 @@ export function SiteHeader() {
         <div className="border-t-2 border-border bg-card md:hidden">
           <nav className="mx-auto flex max-w-6xl flex-col px-4 py-2" aria-label="Mobile navigation">
             {navLinks.map((l) => (
-              <a
+              <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
                 className="border-b border-border py-3 text-sm text-muted-foreground last:border-0 hover:text-primary"
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
 
             {user ? (
@@ -216,17 +285,12 @@ export function SiteHeader() {
               </div>
             ) : (
               <div className="flex gap-3 py-3">
-                <PixelButton
-                  variant="outline"
-                  className="flex-1 px-4 py-2.5"
-                  onClick={() => { router.push('/auth'); setMobileOpen(false) }}
-                >
+                <PixelButton variant="outline" className="flex-1 px-4 py-2.5"
+                  onClick={() => { router.push('/auth'); setMobileOpen(false) }}>
                   Sign in
                 </PixelButton>
-                <PixelButton
-                  className="flex-1 px-4 py-2.5"
-                  onClick={() => { router.push('/auth'); setMobileOpen(false) }}
-                >
+                <PixelButton className="flex-1 px-4 py-2.5"
+                  onClick={() => { router.push('/auth'); setMobileOpen(false) }}>
                   Get started
                 </PixelButton>
               </div>

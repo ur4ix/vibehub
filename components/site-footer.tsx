@@ -2,10 +2,11 @@ const COLS = [
   {
     title: 'Marketplace',
     links: [
-      { label: 'Catalog', href: '/#catalog' },
-      { label: 'Apps', href: '/#catalog' },
-      { label: 'Components', href: '/#catalog' },
-      { label: 'Prompts', href: '/#catalog' },
+      { label: 'Explore', href: '/explore' },
+      { label: 'Apps', href: '/explore?cat=apps' },
+      { label: 'UI Components', href: '/explore?cat=ui-components' },
+      { label: 'Prompts', href: '/explore?cat=prompts' },
+      { label: 'Templates', href: '/explore?cat=templates' },
     ],
   },
   {
@@ -13,17 +14,17 @@ const COLS = [
     links: [
       { label: 'Publish project', href: '/upload' },
       { label: 'Pricing', href: '/#sellers' },
-      { label: 'Review rules', href: '/#sellers' },
-      { label: 'Payouts', href: '/#sellers' },
+      { label: 'Review rules', href: '/docs/review-rules' },
+      { label: 'Payouts', href: '/docs/payouts' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { label: 'About', href: '#' },
-      { label: 'Blog', href: '#' },
-      { label: 'Contact', href: '#' },
-      { label: 'Docs', href: '#' },
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Docs', href: '/docs' },
     ],
   },
 ]
