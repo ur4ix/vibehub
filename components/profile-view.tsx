@@ -10,9 +10,8 @@ import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
-import type { Tables } from '@/types/database'
+import type { Tables, Profile } from '@/types/database'
 
-type DbUser = Tables<'users'>
 type Repository = Tables<'repositories'>
 
 function Stat({ value, label }: { value: string | number; label: string }) {
@@ -51,7 +50,7 @@ function HuggingFaceIcon(props: React.ComponentProps<'svg'>) {
 export function ProfileView() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [profile, setProfile] = useState<DbUser | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [repos, setRepos] = useState<Repository[]>([])
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({

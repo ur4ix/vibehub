@@ -662,7 +662,17 @@ export type User = Tables<"users">;
 export type UserInsert = TablesInsert<"users">;
 export type UserUpdate = TablesUpdate<"users">;
 
-export type Profile = Tables<"profiles">;
+export interface Profile {
+  id: string
+  display_name: string | null
+  username: string
+  avatar_url: string | null
+  bio: string | null
+  reputation: number
+  github_username: string | null
+  huggingface_username: string | null
+  x_username: string | null
+}
 
 export type ChatStatus = Enums<"chat_status">;
 export type ListingStatus = Enums<"listing_status">;

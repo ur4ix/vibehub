@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
+import type { Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Dashboard — VibeHub',
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
     .from('users')
     .select('*')
     .eq('id', user.id)
-    .maybeSingle()
+    .maybeSingle() as { data: Profile | null; error: unknown }
 
   const { data: repos } = await supabase
     .from('repositories')
