@@ -31,7 +31,7 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const PROTECTED = ["/dashboard", "/upload", "/profile"]
+  const PROTECTED = ["/dashboard", "/upload", "/profile", "/settings"]
   const needsAuth = PROTECTED.some((p) => pathname.startsWith(p))
 
   if (!isAuthenticated && needsAuth) {

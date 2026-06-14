@@ -53,9 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
     }
 
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (u) {
-        loadProfile(u.id, u.email ?? '').finally(() => setLoading(false))
+    // Use getSession() for fast initial render (no network round-trip)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadProfile(session.user.id, session.user.email ?? '').finally(() => setLoading(false))
       } else {
         setLoading(false)
       }

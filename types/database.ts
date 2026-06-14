@@ -424,6 +424,9 @@ export type Database = {
           seller_deposit_cents: number;
           stripe_customer_id: string | null;
           stripe_connect_account_id: string | null;
+          github_username: string | null;
+          huggingface_username: string | null;
+          x_username: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -437,6 +440,9 @@ export type Database = {
           seller_deposit_cents?: number;
           stripe_customer_id?: string | null;
           stripe_connect_account_id?: string | null;
+          github_username?: string | null;
+          huggingface_username?: string | null;
+          x_username?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -450,6 +456,9 @@ export type Database = {
           seller_deposit_cents?: number;
           stripe_customer_id?: string | null;
           stripe_connect_account_id?: string | null;
+          github_username?: string | null;
+          huggingface_username?: string | null;
+          x_username?: string | null;
           created_at?: string;
           updated_at?: string;
         };
