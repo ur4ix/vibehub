@@ -168,7 +168,7 @@ function ExploreContent() {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, username, display_name')
-        .in('id', ownerIds)
+        .in('id', ownerIds) as { data: { id: string; username: string; display_name: string | null }[] | null; error: unknown }
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) ?? [])
 

@@ -77,12 +77,12 @@ export function ProfileView() {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single(),
+        .single() as Promise<{ data: Profile | null; error: unknown }>,
       supabase
         .from('repositories')
         .select('*')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false }) as Promise<{ data: Repository[] | null; error: unknown }>,
     ]).then(([{ data: p }, { data: r }]) => {
       setProfile(p)
       setRepos(r ?? [])
@@ -155,7 +155,7 @@ export function ProfileView() {
       .from('users')
       .select('*')
       .eq('id', authUser.id)
-      .maybeSingle()
+      .maybeSingle() as { data: Profile | null; error: unknown }
 
     setProfile(refreshed)
     setEditing(false)

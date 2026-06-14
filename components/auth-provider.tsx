@@ -42,7 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('users')
         .select('username, display_name, avatar_url, reputation')
         .eq('id', supabaseUserId)
-        .single()
+        .single() as {
+          data: { username: string; display_name: string | null; avatar_url: string | null; reputation: number } | null
+          error: unknown
+        }
 
       setUser({
         id: supabaseUserId,
