@@ -108,6 +108,14 @@ export function ProfileView() {
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
+    // Validate (and if needed refresh) the session before writing
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) {
+      setSaving(false)
+      setSaveError('Session expired — please sign in again.')
+      return
+    }
+
     const patch = {
       username: draft.username.trim() || user.username,
       display_name: draft.displayName.trim() || null,
@@ -120,8 +128,8 @@ export function ProfileView() {
     const { data: rows, error: updateError } = await supabase
       .from('users')
       .update(patch)
-      .eq('id', user.id)
-      .select('id')   // returns array — never throws "coerce to single JSON"
+      .eq('id', authUser.id)   // use freshly-validated ID
+      .select('id')
 
     setSaving(false)
 
@@ -131,7 +139,7 @@ export function ProfileView() {
     }
 
     if (!rows || rows.length === 0) {
-      setSaveError('Save failed: no rows updated. Make sure the migration has been applied.')
+      setSaveError('Save failed: no rows updated. Check RLS policies in Supabase.')
       return
     }
 

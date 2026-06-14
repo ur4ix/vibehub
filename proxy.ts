@@ -25,9 +25,10 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Refreshes expired session and validates token (do not use getSession)
-  const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims);
+  // getUser() validates the JWT against Supabase Auth AND refreshes the
+  // access token if expired, writing updated cookies into supabaseResponse.
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = Boolean(user);
 
   const { pathname } = request.nextUrl;
 
