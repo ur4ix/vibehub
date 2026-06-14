@@ -132,8 +132,7 @@ export function ProfileView() {
 
     const { data: rows, error: updateError } = await supabase
       .from('users')
-      .update(patch)
-      .eq('id', authUser.id)
+      .upsert({ id: authUser.id, ...patch }, { onConflict: 'id' })
       .select('id')
 
     console.log('[save] result data:', rows)
@@ -147,7 +146,7 @@ export function ProfileView() {
     }
 
     if (!rows || rows.length === 0) {
-      setSaveError('Save failed: no rows updated. Check RLS policies in Supabase.')
+      setSaveError('Save failed — check browser console for details.')
       return
     }
 
