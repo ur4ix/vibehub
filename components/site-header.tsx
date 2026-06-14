@@ -21,6 +21,8 @@ const AUTH_NAV = [
   { label: 'Code', href: '/explore' },
   { label: 'Hiring', href: '/hire' },
   { label: 'Orders', href: '/orders' },
+  { label: 'My Projects', href: '/profile' },
+  { label: 'Dashboard', href: '/dashboard' },
 ]
 
 // ─── Notification Bell ────────────────────────────────────────────────────────
