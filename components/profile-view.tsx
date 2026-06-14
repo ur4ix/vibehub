@@ -10,7 +10,7 @@ import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
-import type { Profile, Repository } from '@/types/database'
+import type { Profile, ProfileDraft, Repository } from '@/types/database'
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -51,7 +51,7 @@ export function ProfileView() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [repos, setRepos] = useState<Repository[]>([])
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({
+  const [draft, setDraft] = useState<ProfileDraft>({
     username: '',
     displayName: '',
     bio: '',

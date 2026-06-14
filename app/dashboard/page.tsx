@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
-import type { Profile } from '@/types/database'
+import type { Profile, DashboardRepo } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Dashboard — VibeHub',
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     .from('repositories')
     .select('id, title, slug, type, price_cents, is_published, created_at')
     .eq('owner_id', user.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: DashboardRepo[] | null; error: unknown }
 
   return (
     <div className="min-h-screen bg-background">

@@ -8,23 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { createClient } from '@/lib/supabase/client'
-
-// ─── types ────────────────────────────────────────────────────────────────────
-
-type Repo = {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  type: 'free' | 'paid'
-  price_cents: number | null
-  tags: string[]
-  category: string | null
-  created_at: string
-  owner_id: string
-  owner_username: string
-  owner_display_name: string | null
-}
+import type { ExploreRepo } from '@/types/database'
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -49,7 +33,7 @@ const SORT = [
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
-function RepoCard({ repo }: { repo: Repo }) {
+function RepoCard({ repo }: { repo: ExploreRepo }) {
   const icon = CATEGORIES.find((c) => c.value === repo.category)?.icon ?? '▢'
   const avatarColor = colorFromId(repo.owner_id)
 
@@ -133,7 +117,7 @@ function ExploreContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [repos, setRepos] = useState<Repo[]>([])
+  const [repos, setRepos] = useState<ExploreRepo[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '')
   const [category, setCategory] = useState(searchParams.get('cat') ?? 'all')
@@ -189,8 +173,17 @@ function ExploreContent() {
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) ?? [])
 
       setRepos(
-        repoRows.map((r) => ({
-          ...r,
+        repoRows.map((r): ExploreRepo => ({
+          id: r.id,
+          title: r.title,
+          slug: r.slug,
+          description: r.description ?? null,
+          type: r.type as 'free' | 'paid',
+          price_cents: r.price_cents ?? null,
+          tags: (r.tags ?? []) as string[],
+          category: r.category ?? null,
+          created_at: r.created_at,
+          owner_id: r.owner_id,
           owner_username: profileMap.get(r.owner_id)?.username ?? 'unknown',
           owner_display_name: profileMap.get(r.owner_id)?.display_name ?? null,
         })),

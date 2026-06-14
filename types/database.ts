@@ -691,6 +691,47 @@ export interface Profile {
   x_username: string | null
 }
 
+export type Notification = Tables<"notifications">;
+export type NotificationInsert = TablesInsert<"notifications">;
+export type NotificationUpdate = TablesUpdate<"notifications">;
+
+/** Shape of the edit-profile form draft (camelCase for UI) */
+export interface ProfileDraft {
+  username: string
+  displayName: string
+  bio: string
+  github_username: string
+  huggingface_username: string
+  x_username: string
+}
+
+/** Repository row enriched with owner info — used in Explore page */
+export interface ExploreRepo {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  type: 'free' | 'paid'
+  price_cents: number | null
+  tags: string[]
+  category: string | null
+  created_at: string
+  owner_id: string
+  owner_username: string
+  owner_display_name: string | null
+}
+
+/** Dashboard / profile repo row — lean shape returned by Supabase query */
+export interface DashboardRepo {
+  id: string
+  title: string
+  slug: string | null
+  type: string
+  price_cents: number | null
+  is_published: boolean
+  created_at: string
+}
+
 export type ChatStatus = Enums<"chat_status">;
 export type ListingStatus = Enums<"listing_status">;
 export type PurchaseStatus = Enums<"purchase_status">;

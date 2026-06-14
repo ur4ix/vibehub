@@ -9,6 +9,7 @@ import { PixelAvatar } from './pixel-avatar'
 import { PublishModal } from './publish-modal'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
+import type { Notification } from '@/types/database'
 
 const UNAUTH_NAV = [
   { label: 'Catalog', href: '/#catalog' },
@@ -21,17 +22,6 @@ const AUTH_NAV = [
   { label: 'My Projects', href: '/profile' },
   { label: 'Dashboard', href: '/dashboard' },
 ]
-
-// ─── types ────────────────────────────────────────────────────────────────────
-
-type Notification = {
-  id: string
-  type: string
-  title: string
-  body: string | null
-  is_read: boolean
-  created_at: string
-}
 
 // ─── Notification Bell ────────────────────────────────────────────────────────
 
