@@ -108,39 +108,35 @@ export function ProfileView() {
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
-    const { error: updateError } = await supabase
+    const patch = {
+      username: draft.username.trim() || user.username,
+      display_name: draft.displayName.trim() || null,
+      bio: draft.bio.trim() || null,
+      github_username: draft.github_username.trim() || null,
+      huggingface_username: draft.huggingface_username.trim() || null,
+      x_username: draft.x_username.trim() || null,
+    }
+
+    const { data: rows, error: updateError } = await supabase
       .from('users')
-      .update({
-        username: draft.username.trim() || user.username,
-        display_name: draft.displayName.trim() || null,
-        bio: draft.bio.trim() || null,
-        github_username: draft.github_username.trim() || null,
-        huggingface_username: draft.huggingface_username.trim() || null,
-        x_username: draft.x_username.trim() || null,
-      })
+      .update(patch)
       .eq('id', user.id)
+      .select('id')   // returns array — never throws "coerce to single JSON"
+
+    setSaving(false)
 
     if (updateError) {
-      setSaving(false)
       setSaveError(updateError.message)
       return
     }
 
-    // Re-fetch the row to confirm what was saved
-    const { data: refreshed, error: fetchError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    setSaving(false)
-
-    if (fetchError || !refreshed) {
-      setSaveError(fetchError?.message ?? 'Could not reload profile after save')
+    if (!rows || rows.length === 0) {
+      setSaveError('Save failed: no rows updated. Make sure the migration has been applied.')
       return
     }
 
-    setProfile(refreshed)
+    // Apply patch to local state — no second round-trip needed
+    setProfile((prev) => prev ? { ...prev, ...patch } : null)
     setEditing(false)
     router.refresh()
   }
