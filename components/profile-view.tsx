@@ -108,7 +108,7 @@ export function ProfileView() {
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
-    const { data: updated, error } = await supabase
+    const { error: updateError } = await supabase
       .from('users')
       .update({
         username: draft.username.trim() || user.username,
@@ -119,14 +119,28 @@ export function ProfileView() {
         x_username: draft.x_username.trim() || null,
       })
       .eq('id', user.id)
-      .select()
-      .single()
-    setSaving(false)
-    if (error) {
-      setSaveError(error.message)
+
+    if (updateError) {
+      setSaving(false)
+      setSaveError(updateError.message)
       return
     }
-    if (updated) setProfile(updated)
+
+    // Re-fetch the row to confirm what was saved
+    const { data: refreshed, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    setSaving(false)
+
+    if (fetchError || !refreshed) {
+      setSaveError(fetchError?.message ?? 'Could not reload profile after save')
+      return
+    }
+
+    setProfile(refreshed)
     setEditing(false)
     router.refresh()
   }
