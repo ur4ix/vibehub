@@ -8,7 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { createClient } from '@/lib/supabase/client'
-import type { ExploreRepo } from '@/types/database'
+import type { ExploreRepo, Repository } from '@/types/database'
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -159,7 +159,7 @@ function ExploreContent() {
         query = query.order('created_at', { ascending: false })
       }
 
-      const { data: repoRows } = await query.limit(48)
+      const { data: repoRows } = await query.limit(48) as { data: Repository[] | null; error: unknown }
 
       if (!repoRows?.length) { setRepos([]); setLoading(false); return }
 
