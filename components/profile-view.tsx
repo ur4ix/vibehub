@@ -10,7 +10,7 @@ import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
-import type { Profile, ProfileDraft, Repository } from '@/types/database'
+import type { Profile, ProfileDraft, Repository, UserUpdate } from '@/types/database'
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -100,67 +100,28 @@ export function ProfileView() {
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
-    // Validate (and if needed refresh) the session before writing
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    console.log('[save] authUser:', authUser?.id ?? 'null')
-    if (!authUser) {
-      setSaving(false)
-      setSaveError('Session expired — please sign in again.')
-      return
-    }
 
-    const patch = {
-      username: draft.username.trim() || user.username,
-      display_name: draft.displayName.trim() || null,
-      bio: draft.bio.trim() || null,
-      github_username: draft.github_username.trim() || null,
-      huggingface_username: draft.huggingface_username.trim() || null,
-      x_username: draft.x_username.trim() || null,
-    }
-
-    console.log('[save] user.id:', user.id)
-    console.log('[save] authUser.id:', authUser.id)
-    console.log('[save] data to save:', patch)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await supabase
-      .from('users')
-      .update(patch as any)
-      .eq('id', authUser.id)
-
-    // If update matched 0 rows (row missing), insert it
-    let insertError = null
-    if (!updateError) {
-      const { data: checkRows } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', authUser.id)
-        .limit(1)
-      const rows = checkRows as { id: string }[] | null
-      if (!rows?.length) {
-        const { error: ie } = await supabase
-          .from('users')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert({ id: authUser.id, ...patch } as any)
-        insertError = ie
-      }
-    }
-
-    const finalError = updateError ?? insertError
-    console.log('[save] error:', finalError)
+    const { error: rpcError } = await supabase.rpc('save_profile', {
+      p_username:             draft.username.trim() || user.username,
+      p_display_name:         draft.displayName.trim() || null,
+      p_bio:                  draft.bio.trim() || null,
+      p_github_username:      draft.github_username.trim() || null,
+      p_huggingface_username: draft.huggingface_username.trim() || null,
+      p_x_username:           draft.x_username.trim() || null,
+    })
 
     setSaving(false)
 
-    if (finalError) {
-      setSaveError(finalError.message)
+    if (rpcError) {
+      setSaveError(rpcError.message)
       return
     }
 
-    // Re-fetch the full row so the profile card shows fresh data
+    // Re-fetch fresh profile row
     const { data: refreshedRaw } = await supabase
       .from('users')
       .select('*')
-      .eq('id', authUser.id)
+      .eq('id', user.id)
       .maybeSingle()
 
     setProfile(refreshedRaw as Profile | null)
@@ -194,9 +155,10 @@ export function ProfileView() {
 
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
 
+    const avatarPatch: UserUpdate = { avatar_url: publicUrl }
     await supabase
       .from('users')
-      .update({ avatar_url: publicUrl })
+      .update(avatarPatch)
       .eq('id', user.id)
 
     setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null)

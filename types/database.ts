@@ -37,6 +37,7 @@ export type Database = {
           is_read?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
       chats: {
         Row: {
@@ -512,6 +513,17 @@ export type Database = {
       };
     };
     Functions: {
+      save_profile: {
+        Args: {
+          p_username: string;
+          p_display_name: string | null;
+          p_bio: string | null;
+          p_github_username: string | null;
+          p_huggingface_username: string | null;
+          p_x_username: string | null;
+        };
+        Returns: void;
+      };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
         Returns: number;
