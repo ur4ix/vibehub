@@ -108,7 +108,7 @@ export function ProfileView() {
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('users')
       .update({
         username: draft.username.trim() || user.username,
@@ -119,13 +119,16 @@ export function ProfileView() {
         x_username: draft.x_username.trim() || null,
       })
       .eq('id', user.id)
+      .select()
+      .single()
     setSaving(false)
-    if (error) { setSaveError(error.message); return }
-    // Refresh profile
-    const supabase2 = createClient()
-    const { data } = await supabase2.from('users').select('*').eq('id', user.id).single()
-    setProfile(data)
+    if (error) {
+      setSaveError(error.message)
+      return
+    }
+    if (updated) setProfile(updated)
     setEditing(false)
+    router.refresh()
   }
 
   if (loading || !user) {
