@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock, Smartphone, CheckCircle, AlertCircle } from 'lucide-react'
+import { Shield, Mail, Lock, Smartphone, CircleCheck, CircleAlert } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
@@ -44,7 +44,7 @@ function StatusMsg({ status, message }: { status: SectionStatus; message: string
   if (!message || status === 'idle' || status === 'loading') return null
   return (
     <div className={'flex items-center gap-2 font-mono text-xs ' + (status === 'success' ? 'text-primary' : 'text-destructive')}>
-      {status === 'success' ? <CheckCircle className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
+      {status === 'success' ? <CircleCheck className="h-4 w-4 shrink-0" /> : <CircleAlert className="h-4 w-4 shrink-0" />}
       {message}
     </div>
   )
@@ -253,7 +253,7 @@ function TwoFactorSection() {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3 border-2 border-primary bg-primary/10 px-4 py-3">
-          <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
+          <CircleCheck className="h-4 w-4 shrink-0 text-primary" />
           <span className="font-mono text-xs text-primary">2FA is active on your account</span>
         </div>
         <StatusMsg status={status} message={msg} />
@@ -316,7 +316,7 @@ function TwoFactorSection() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3 border-2 border-border bg-secondary px-4 py-3">
-        <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <CircleAlert className="h-4 w-4 shrink-0 text-muted-foreground" />
         <span className="font-mono text-xs text-muted-foreground">2FA is not enabled on your account</span>
       </div>
       <StatusMsg status={status} message={msg} />
