@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, SlidersHorizontal } from 'lucide-react'
@@ -129,7 +129,7 @@ function FilterPill({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ExplorePage() {
+function ExploreContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -309,5 +309,30 @@ export default function ExplorePage() {
 
       <SiteFooter />
     </div>
+  )
+}
+
+function ExploreSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="mb-8 h-8 w-48 animate-pulse bg-card border-2 border-border" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-48 animate-pulse border-2 border-border bg-card" />
+          ))}
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
+  )
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<ExploreSkeleton />}>
+      <ExploreContent />
+    </Suspense>
   )
 }
