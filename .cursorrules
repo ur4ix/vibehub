@@ -1,0 +1,19 @@
+# VIbeHub — маркетплейс для вайбкодеров
+
+## Стек
+- Next.js 14 App Router
+- TypeScript (строгий)
+- Supabase (DB, Auth, Storage)
+- Stripe (платежи + эскроу)
+- Tailwind + shadcn/ui
+- Vercel (деплой)
+
+## Стиль кода
+- Компоненты в /components, страницы в /app
+- Бизнес-логика в /lib
+- Типы в /types
+- Минималистичный UI в стиле Linear.app
+
+## Контекст продукта
+Платформа где вайбкодеры продают, покупают и форкают код.
+Главные сущности: User, Repository, Listing, Purchase, Fork, Review

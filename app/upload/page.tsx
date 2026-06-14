@@ -1,0 +1,47 @@
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { SiteHeader } from '@/components/site-header'
+import { SiteFooter } from '@/components/site-footer'
+import { UploadForm } from '@/components/upload-form'
+
+export const metadata: Metadata = {
+  title: 'Publish repository — VibeHub',
+}
+
+export default async function UploadPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth')
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+
+      <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+        <nav className="mb-8 font-mono text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-primary">~</Link>
+          {' / '}
+          <Link href="/dashboard" className="hover:text-primary">dashboard</Link>
+          {' / '}
+          <span className="text-foreground">publish</span>
+        </nav>
+
+        <div className="mb-8">
+          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
+            // new repository
+          </span>
+          <h1 className="mt-3 font-pixel text-lg">Publish repository</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Publish your code as free or paid — the community can buy, fork and review it.
+          </p>
+        </div>
+
+        <UploadForm userId={user.id} />
+      </main>
+
+      <SiteFooter />
+    </div>
+  )
+}
