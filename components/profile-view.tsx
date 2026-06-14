@@ -10,9 +10,7 @@ import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
-import type { Tables, Profile } from '@/types/database'
-
-type Repository = Tables<'repositories'>
+import type { Profile, Repository } from '@/types/database'
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (

@@ -650,7 +650,24 @@ export type Reaction = Tables<"reactions">;
 export type ReactionInsert = TablesInsert<"reactions">;
 export type ReactionUpdate = TablesUpdate<"reactions">;
 
-export type Repository = Tables<"repositories">;
+export interface Repository {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  type: 'free' | 'paid'
+  price_cents: number | null
+  is_published: boolean
+  is_verified: boolean
+  downloads: number
+  owner_id: string
+  created_at: string
+  tags: string[]
+  file_url: string | null
+  demo_url: string | null
+  fork_of: string | null
+  category: string | null
+}
 export type RepositoryInsert = TablesInsert<"repositories">;
 export type RepositoryUpdate = TablesUpdate<"repositories">;
 
