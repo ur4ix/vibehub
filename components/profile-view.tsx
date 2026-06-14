@@ -110,6 +110,7 @@ export function ProfileView() {
     const supabase = createClient()
     // Validate (and if needed refresh) the session before writing
     const { data: { user: authUser } } = await supabase.auth.getUser()
+    console.log('[save] authUser:', authUser?.id ?? 'null')
     if (!authUser) {
       setSaving(false)
       setSaveError('Session expired — please sign in again.')
@@ -125,11 +126,18 @@ export function ProfileView() {
       x_username: draft.x_username.trim() || null,
     }
 
+    console.log('[save] user.id:', user.id)
+    console.log('[save] authUser.id:', authUser.id)
+    console.log('[save] data to save:', patch)
+
     const { data: rows, error: updateError } = await supabase
       .from('users')
       .update(patch)
-      .eq('id', authUser.id)   // use freshly-validated ID
+      .eq('id', authUser.id)
       .select('id')
+
+    console.log('[save] result data:', rows)
+    console.log('[save] result error:', updateError)
 
     setSaving(false)
 
