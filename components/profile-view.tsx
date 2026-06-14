@@ -122,23 +122,37 @@ export function ProfileView() {
     console.log('[save] authUser.id:', authUser.id)
     console.log('[save] data to save:', patch)
 
-    const { data: rows, error: updateError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await supabase
       .from('users')
-      .upsert({ id: authUser.id, ...patch }, { onConflict: 'id' })
-      .select('id')
+      .update(patch as any)
+      .eq('id', authUser.id)
 
-    console.log('[save] result data:', rows)
-    console.log('[save] result error:', updateError)
+    // If update matched 0 rows (row missing), insert it
+    let insertError = null
+    if (!updateError) {
+      const { data: checkRows } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', authUser.id)
+        .limit(1)
+      const rows = checkRows as { id: string }[] | null
+      if (!rows?.length) {
+        const { error: ie } = await supabase
+          .from('users')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert({ id: authUser.id, ...patch } as any)
+        insertError = ie
+      }
+    }
+
+    const finalError = updateError ?? insertError
+    console.log('[save] error:', finalError)
 
     setSaving(false)
 
-    if (updateError) {
-      setSaveError(updateError.message)
-      return
-    }
-
-    if (!rows || rows.length === 0) {
-      setSaveError('Save failed — check browser console for details.')
+    if (finalError) {
+      setSaveError(finalError.message)
       return
     }
 
