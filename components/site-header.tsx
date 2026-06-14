@@ -18,9 +18,9 @@ const UNAUTH_NAV = [
 ]
 
 const AUTH_NAV = [
-  { label: 'Explore', href: '/explore' },
-  { label: 'My Projects', href: '/profile' },
-  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Code', href: '/explore' },
+  { label: 'Hiring', href: '/hire' },
+  { label: 'Orders', href: '/orders' },
 ]
 
 // ─── Notification Bell ────────────────────────────────────────────────────────

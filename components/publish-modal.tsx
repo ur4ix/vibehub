@@ -16,7 +16,7 @@ const CARDS = [
     icon: '◈',
     title: 'Post a Job',
     description: 'Find a vibe coder for your project — offer equity or credit.',
-    href: '/hire',
+    href: '/hire/new',
     tag: 'Hiring',
   },
   {
