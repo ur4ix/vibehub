@@ -150,8 +150,14 @@ export function ProfileView() {
       return
     }
 
-    // Apply patch to local state — no second round-trip needed
-    setProfile((prev) => prev ? { ...prev, ...patch } : null)
+    // Re-fetch the full row so the profile card shows fresh data
+    const { data: refreshed } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .maybeSingle()
+
+    setProfile(refreshed)
     setEditing(false)
     router.refresh()
   }
