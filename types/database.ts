@@ -536,7 +536,6 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_connect_account_id: string | null;
           github_username: string | null;
-          huggingface_username: string | null;
           x_username: string | null;
           created_at: string;
           updated_at: string;
@@ -552,7 +551,6 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_connect_account_id?: string | null;
           github_username?: string | null;
-          huggingface_username?: string | null;
           x_username?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -568,7 +566,6 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_connect_account_id?: string | null;
           github_username?: string | null;
-          huggingface_username?: string | null;
           x_username?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -596,11 +593,12 @@ export type Database = {
           p_username: string;
           p_display_name: string | null;
           p_bio: string | null;
-          p_github_username: string | null;
-          p_huggingface_username: string | null;
-          p_x_username: string | null;
         };
         Returns: void;
+      };
+      sync_verified_socials: {
+        Args: Record<PropertyKey, never>;
+        Returns: { github_username: string | null; x_username: string | null }[];
       };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
@@ -787,7 +785,6 @@ export interface Profile {
   bio: string | null
   reputation: number
   github_username: string | null
-  huggingface_username: string | null
   x_username: string | null
 }
 
@@ -795,14 +792,12 @@ export type Notification = Tables<"notifications">;
 export type NotificationInsert = TablesInsert<"notifications">;
 export type NotificationUpdate = TablesUpdate<"notifications">;
 
-/** Shape of the edit-profile form draft (camelCase for UI) */
+/** Shape of the edit-profile form draft (free-text fields only; social handles
+ *  are managed via verified OAuth connect, not this form) */
 export interface ProfileDraft {
   username: string
   displayName: string
   bio: string
-  github_username: string
-  huggingface_username: string
-  x_username: string
 }
 
 /** Repository row enriched with owner info — used in Explore page */

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Camera } from 'lucide-react'
+import { Shield, Camera, Check, Plus } from 'lucide-react'
+import type { UserIdentity } from '@supabase/supabase-js'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
 import { PixelButton } from './pixel-button'
@@ -11,6 +12,18 @@ import { PixelAvatar } from './pixel-avatar'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ProfileDraft, Repository, UserUpdate } from '@/types/database'
+
+// Verified-connect providers. `key` is the Supabase provider id; X uses 'twitter'.
+type ProviderKey = 'github' | 'twitter'
+const SOCIAL_PROVIDERS: {
+  key: ProviderKey
+  title: string
+  baseUrl: string
+  field: 'github_username' | 'x_username'
+}[] = [
+  { key: 'github',  title: 'GitHub', baseUrl: 'https://github.com/', field: 'github_username' },
+  { key: 'twitter', title: 'X',      baseUrl: 'https://x.com/',      field: 'x_username' },
+]
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -37,14 +50,6 @@ function XIcon(props: React.ComponentProps<'svg'>) {
   )
 }
 
-function HuggingFaceIcon(props: React.ComponentProps<'svg'>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <text y="18" fontSize="18">🤗</text>
-    </svg>
-  )
-}
-
 export function ProfileView() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -55,14 +60,14 @@ export function ProfileView() {
     username: '',
     displayName: '',
     bio: '',
-    github_username: '',
-    huggingface_username: '',
-    x_username: '',
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  // Linked OAuth identities — drive the verified Connect state
+  const [identities, setIdentities] = useState<UserIdentity[]>([])
+  const [linking, setLinking] = useState<ProviderKey | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -72,13 +77,27 @@ export function ProfileView() {
   useEffect(() => {
     if (!user) return
     const supabase = createClient()
-    Promise.all([
-      supabase.from('users').select('*').eq('id', user.id).single(),
-      supabase.from('repositories').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
-    ]).then(([{ data: p }, { data: r }]) => {
+    let active = true
+
+    ;(async () => {
+      // Reconcile users.github_username / x_username with the currently linked
+      // identities (covers the return-from-OAuth case and GitHub-login signups).
+      // Ignored if the migration hasn't been applied yet.
+      await supabase.rpc('sync_verified_socials')
+
+      const [{ data: p }, { data: r }, identRes] = await Promise.all([
+        supabase.from('users').select('*').eq('id', user.id).single(),
+        supabase.from('repositories').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
+        supabase.auth.getUserIdentities(),
+      ])
+
+      if (!active) return
       setProfile(p as Profile | null)
       setRepos((r as Repository[] | null) ?? [])
-    })
+      setIdentities(identRes.data?.identities ?? [])
+    })()
+
+    return () => { active = false }
   }, [user])
 
   function startEdit() {
@@ -86,9 +105,6 @@ export function ProfileView() {
       username: profile?.username ?? user?.username ?? '',
       displayName: profile?.display_name ?? user?.displayName ?? '',
       bio: profile?.bio ?? '',
-      github_username: profile?.github_username ?? '',
-      huggingface_username: profile?.huggingface_username ?? '',
-      x_username: profile?.x_username ?? '',
     })
     setSaveError(null)
     setEditing(true)
@@ -102,12 +118,9 @@ export function ProfileView() {
     const supabase = createClient()
 
     const { error: rpcError } = await supabase.rpc('save_profile', {
-      p_username:             draft.username.trim() || user.username,
-      p_display_name:         draft.displayName.trim() || null,
-      p_bio:                  draft.bio.trim() || null,
-      p_github_username:      draft.github_username.trim() || null,
-      p_huggingface_username: draft.huggingface_username.trim() || null,
-      p_x_username:           draft.x_username.trim() || null,
+      p_username:     draft.username.trim() || user.username,
+      p_display_name: draft.displayName.trim() || null,
+      p_bio:          draft.bio.trim() || null,
     })
 
     setSaving(false)
@@ -126,6 +139,57 @@ export function ProfileView() {
 
     setProfile(refreshedRaw as Profile | null)
     setEditing(false)
+    router.refresh()
+  }
+
+  // ── Verified social connect / disconnect ──────────────────────────────────
+
+  function identityFor(provider: ProviderKey) {
+    return identities.find((i) => i.provider === provider)
+  }
+
+  async function connectSocial(provider: ProviderKey) {
+    if (!user) return
+    setSaveError(null)
+    setLinking(provider)
+    const supabase = createClient()
+    // linkIdentity needs "Manual Linking" enabled in Supabase Auth settings.
+    const { error } = await supabase.auth.linkIdentity({
+      provider,
+      options: { redirectTo: `${location.origin}/auth/callback?next=/profile` },
+    })
+    if (error) {
+      // Stay on the page and surface the error (e.g. manual linking disabled,
+      // provider not configured). On success the browser redirects to the provider.
+      setSaveError(error.message)
+      setLinking(null)
+    }
+  }
+
+  async function disconnectSocial(provider: ProviderKey) {
+    if (!user) return
+    const identity = identityFor(provider)
+    if (!identity) return
+    setSaveError(null)
+    setLinking(provider)
+    const supabase = createClient()
+
+    const { error: unlinkError } = await supabase.auth.unlinkIdentity(identity)
+    if (unlinkError) {
+      // Supabase refuses to unlink your only identity (would orphan the account).
+      setSaveError(unlinkError.message)
+      setLinking(null)
+      return
+    }
+
+    await supabase.rpc('sync_verified_socials')
+    const [{ data: refreshed }, identRes] = await Promise.all([
+      supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
+      supabase.auth.getUserIdentities(),
+    ])
+    setProfile(refreshed as Profile | null)
+    setIdentities(identRes.data?.identities ?? [])
+    setLinking(null)
     router.refresh()
   }
 
@@ -183,9 +247,6 @@ export function ProfileView() {
   const socialLinks = [
     profile?.github_username
       ? { href: `https://github.com/${profile.github_username}`, label: profile.github_username, icon: <GithubIcon className="h-4 w-4" />, title: 'GitHub' }
-      : null,
-    profile?.huggingface_username
-      ? { href: `https://huggingface.co/${profile.huggingface_username}`, label: profile.huggingface_username, icon: <span className="text-sm leading-none">🤗</span>, title: 'Hugging Face' }
       : null,
     profile?.x_username
       ? { href: `https://x.com/${profile.x_username}`, label: profile.x_username, icon: <XIcon className="h-4 w-4" />, title: 'X' }
@@ -245,9 +306,9 @@ export function ProfileView() {
                   </div>
 
                   <Field label="Username" value={draft.username}
-                    onChange={(v) => setDraft((d) => ({ ...d, username: v }))} placeholder="vibecoder" />
+                    onChange={(v) => setDraft((d) => ({ ...d, username: v }))} placeholder="username" />
                   <Field label="Display name" value={draft.displayName}
-                    onChange={(v) => setDraft((d) => ({ ...d, displayName: v }))} placeholder="Vibe Coder" />
+                    onChange={(v) => setDraft((d) => ({ ...d, displayName: v }))} placeholder="Your Name" />
 
                   <div className="flex flex-col gap-2">
                     <label htmlFor="bio" className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Bio</label>
@@ -262,29 +323,27 @@ export function ProfileView() {
                   </div>
 
                   <div className="border-t border-border pt-4">
-                    <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Social links</p>
-                    <div className="flex flex-col gap-3">
-                      <SocialField
-                        label="GitHub username"
-                        prefix="github.com/"
-                        value={draft.github_username}
-                        onChange={(v) => setDraft((d) => ({ ...d, github_username: v }))}
-                        placeholder="username"
-                      />
-                      <SocialField
-                        label="Hugging Face username"
-                        prefix="huggingface.co/"
-                        value={draft.huggingface_username}
-                        onChange={(v) => setDraft((d) => ({ ...d, huggingface_username: v }))}
-                        placeholder="username"
-                      />
-                      <SocialField
-                        label="X username"
-                        prefix="x.com/"
-                        value={draft.x_username}
-                        onChange={(v) => setDraft((d) => ({ ...d, x_username: v }))}
-                        placeholder="username"
-                      />
+                    <p className="mb-1 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Connected accounts</p>
+                    <p className="mb-3 font-mono text-[10px] leading-relaxed text-muted-foreground/70">
+                      Verified by signing in — no one can claim a handle they don&apos;t own.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {SOCIAL_PROVIDERS.map((p) => {
+                        const handle = profile?.[p.field] ?? null
+                        const connected = Boolean(identityFor(p.key)) || Boolean(handle)
+                        const busy = linking === p.key
+                        return (
+                          <SocialConnectRow
+                            key={p.key}
+                            title={p.title}
+                            handle={handle}
+                            connected={connected}
+                            busy={busy}
+                            onConnect={() => connectSocial(p.key)}
+                            onDisconnect={() => disconnectSocial(p.key)}
+                          />
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -440,26 +499,46 @@ function Field({ label, value, onChange, placeholder }: {
   )
 }
 
-function SocialField({ label, prefix, value, onChange, placeholder }: {
-  label: string; prefix: string; value: string; onChange: (v: string) => void; placeholder?: string
+function SocialConnectRow({ title, handle, connected, busy, onConnect, onDisconnect }: {
+  title: string
+  handle: string | null
+  connected: boolean
+  busy: boolean
+  onConnect: () => void
+  onDisconnect: () => void
 }) {
-  const id = label.toLowerCase().replace(/\s+/g, '-')
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        {label}
-      </label>
-      <div className="flex border-2 border-input bg-background focus-within:border-primary transition-colors">
-        <span className="flex items-center border-r border-border bg-secondary px-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-          {prefix}
-        </span>
-        <input
-          id={id} type="text" value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ''))}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent px-3 py-2.5 font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
-        />
+    <div className="flex items-center gap-2 border-2 border-input bg-background px-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="font-mono text-xs text-foreground">{title}</span>
+        {connected && handle ? (
+          <span className="flex items-center gap-1 font-mono text-[10px] text-primary">
+            <Check className="h-3 w-3 shrink-0" />
+            <span className="truncate">@{handle}</span>
+          </span>
+        ) : (
+          <span className="font-mono text-[10px] text-muted-foreground/70">Not connected</span>
+        )}
       </div>
+      {connected ? (
+        <button
+          type="button"
+          onClick={onDisconnect}
+          disabled={busy}
+          className="shrink-0 border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-destructive hover:text-destructive disabled:opacity-50"
+        >
+          {busy ? '…' : 'Disconnect'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onConnect}
+          disabled={busy}
+          className="flex shrink-0 items-center gap-1 border border-primary bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
+        >
+          {busy ? '…' : (<><Plus className="h-3 w-3" />Connect</>)}
+        </button>
+      )}
     </div>
   )
 }
