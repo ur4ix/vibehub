@@ -12,7 +12,7 @@ export function NewsletterForm() {
 
   return (
     <div className="mt-16 border-2 border-border bg-card p-8 text-center sm:p-10">
-      <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// newsletter</span>
+      <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// newsletter'}</span>
       <h2 className="mt-5 font-pixel text-lg leading-[1.5]">Get new posts in your inbox</h2>
       <p className="mt-4 font-mono text-sm text-muted-foreground">Weekly. No noise. Unsubscribe any time.</p>
 

@@ -87,6 +87,91 @@ export type Database = {
         };
         Relationships: [];
       };
+      posts: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          excerpt: string | null;
+          body: string;
+          cover_url: string | null;
+          category: string | null;
+          author_id: string;
+          status: 'draft' | 'published';
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          excerpt?: string | null;
+          body?: string;
+          cover_url?: string | null;
+          category?: string | null;
+          author_id: string;
+          status?: 'draft' | 'published';
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          title?: string;
+          excerpt?: string | null;
+          body?: string;
+          cover_url?: string | null;
+          category?: string | null;
+          author_id?: string;
+          status?: 'draft' | 'published';
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_roles: {
+        Row: {
+          id: number;
+          user_id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          granted_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           id: string;
@@ -600,6 +685,14 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: { github_username: string | null; x_username: string | null }[];
       };
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] };
+        Returns: boolean;
+      };
+      is_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
         Returns: number;
@@ -612,6 +705,7 @@ export type Database = {
       };
     };
     Enums: {
+      app_role: "admin" | "author";
       chat_status: "locked" | "active" | "closed" | "expired";
       listing_status:
         | "draft"
@@ -791,6 +885,32 @@ export interface Profile {
 export type Notification = Tables<"notifications">;
 export type NotificationInsert = TablesInsert<"notifications">;
 export type NotificationUpdate = TablesUpdate<"notifications">;
+
+export type Post = Tables<"posts">;
+export type PostInsert = TablesInsert<"posts">;
+export type PostUpdate = TablesUpdate<"posts">;
+
+export type UserRole = Tables<"user_roles">;
+export type AppRole = Enums<"app_role">;
+
+/** Blog post enriched with author info — used in list + reader pages */
+export interface BlogPost {
+  id: string
+  slug: string
+  title: string
+  excerpt: string | null
+  body: string
+  cover_url: string | null
+  category: string | null
+  status: 'draft' | 'published'
+  published_at: string | null
+  created_at: string
+  author: {
+    username: string
+    display_name: string | null
+    avatar_url: string | null
+  } | null
+}
 
 /** Shape of the edit-profile form draft (free-text fields only; social handles
  *  are managed via verified OAuth connect, not this form) */
