@@ -41,7 +41,7 @@ export function CtaSection() {
                 name="email"
                 type="email"
                 required
-                placeholder="you@vibecode.dev"
+                placeholder="you@vydex.dev"
                 className="flex-1 border-2 border-border bg-background px-4 py-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
               />
               <PixelButton type="submit">Create account</PixelButton>
