@@ -103,9 +103,9 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Vydex</CardTitle>
+        <CardTitle className="text-xl">VYDEX</CardTitle>
         <CardDescription>
-          Маркетплейс кода для вайбкодеров
+          Marketplace for vibe coders
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

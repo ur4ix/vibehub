@@ -170,7 +170,7 @@ export function SiteHeader() {
             <span className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground" aria-hidden="true">
               <span className="font-pixel text-[12px]">{'>'}</span>
             </span>
-            <span className="font-pixel text-xs tracking-tight">Vydex</span>
+            <span className="font-pixel text-xs tracking-tight">VYDEX</span>
           </Link>
 
           {/* Desktop nav */}

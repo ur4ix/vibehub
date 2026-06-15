@@ -26,8 +26,8 @@ const CHANNELS = [
   {
     icon: <Mail className="h-5 w-5" />,
     title: 'Email',
-    value: 'hi@Vydex.dev',
-    href: 'mailto:hi@Vydex.dev',
+    value: 'hi@vydex.dev',
+    href: 'mailto:hi@vydex.dev',
     desc: 'For general questions, partnerships and press.',
   },
   {

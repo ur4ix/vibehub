@@ -315,7 +315,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           </Label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground select-none">
-              Vydex.io/
+              vydex.dev/
             </span>
             <Input
               id="slug"

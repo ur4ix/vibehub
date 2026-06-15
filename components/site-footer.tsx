@@ -42,7 +42,7 @@ export function SiteFooter() {
               >
                 <span className="font-pixel text-[12px]">{'>'}</span>
               </span>
-              <span className="font-pixel text-xs">Vydex</span>
+              <span className="font-pixel text-xs">VYDEX</span>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               A marketplace built by vibe coders, for vibe coders.

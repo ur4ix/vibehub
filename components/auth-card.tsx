@@ -90,7 +90,7 @@ export function AuthCard() {
         >
           <span className="font-pixel text-[12px]">{'>'}</span>
         </span>
-        <span className="font-pixel text-xs tracking-tight">Vydex</span>
+        <span className="font-pixel text-xs tracking-tight">VYDEX</span>
       </Link>
 
       <div className="border-2 border-border bg-card p-6 pixel-shadow-border sm:p-8">
