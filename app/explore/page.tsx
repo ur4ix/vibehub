@@ -39,7 +39,7 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
 
   return (
     <Link
-      href={`/listing?slug=${repo.slug}`}
+      href={`/listing/${repo.id}`}
       className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
     >
       <div className="flex items-start gap-3">

@@ -1,0 +1,546 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import {
+  Download, ShoppingCart, Star, GitFork, Eye,
+  Calendar, Tag, Send, ExternalLink,
+} from 'lucide-react'
+import { SiteHeader } from '@/components/site-header'
+import { SiteFooter } from '@/components/site-footer'
+import { PixelButton } from '@/components/pixel-button'
+import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
+import { useAuth } from '@/components/auth-provider'
+import { useToast } from '@/components/pixel-toast'
+import { createClient } from '@/lib/supabase/client'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface RepoDetail {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  readme: string | null
+  type: 'free' | 'paid'
+  price_cents: number | null
+  tags: string[]
+  category: string | null
+  storage_path: string | null
+  github_url: string | null
+  reaction_count: number
+  fork_count: number
+  average_rating: number
+  review_count: number
+  is_published: boolean
+  published_at: string | null
+  created_at: string
+  owner_id: string
+  owner: {
+    id: string
+    username: string
+    display_name: string | null
+    avatar_url: string | null
+    reputation: number
+  } | null
+}
+
+interface ReviewRow {
+  id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  reviewer: { username: string; avatar_url: string | null } | null
+}
+
+interface SimilarRepo {
+  id: string
+  title: string
+  slug: string
+  type: 'free' | 'paid'
+  price_cents: number | null
+  category: string | null
+  tags: string[]
+  owner: { username: string } | null
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const CATEGORY_ICONS: Record<string, string> = {
+  apps: '▢',
+  'ui-components': '◧',
+  prompts: '☰',
+  templates: '▦',
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function StarRating({ value, max = 5 }: { value: number; max?: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {Array.from({ length: max }).map((_, i) => (
+        <Star
+          key={i}
+          className={'h-3 w-3 ' + (i < Math.round(value) ? 'fill-primary text-primary' : 'text-muted-foreground/30')}
+        />
+      ))}
+    </span>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function ListingPage() {
+  const { id }   = useParams<{ id: string }>()
+  const router   = useRouter()
+  const { user } = useAuth()
+  const toast    = useToast()
+
+  const [repo,      setRepo]      = useState<RepoDetail | null>(null)
+  const [reviews,   setReviews]   = useState<ReviewRow[]>([])
+  const [similar,   setSimilar]   = useState<SimilarRepo[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [comment,   setComment]   = useState('')
+  const [rating,    setRating]    = useState(5)
+  const [hoveredStar, setHoveredStar] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Fetch all data
+  useEffect(() => {
+    if (!id) return
+    const supabase = createClient()
+
+    // Main repo + owner
+    supabase
+      .from('repositories')
+      .select('*, owner:owner_id(id, username, display_name, avatar_url, reputation)')
+      .eq('id', id)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) { setLoading(false); return }
+        const r = data as RepoDetail
+        setRepo(r)
+        setLoading(false)
+
+        // Reviews
+        supabase
+          .from('reviews')
+          .select('id, rating, comment, created_at, reviewer:reviewer_id(username, avatar_url)')
+          .eq('repository_id', id)
+          .order('created_at', { ascending: false })
+          .limit(20)
+          .then(({ data: rv }) => setReviews((rv as ReviewRow[] | null) ?? []))
+
+        // Similar (same tags, exclude self)
+        if (r.tags.length > 0) {
+          supabase
+            .from('repositories')
+            .select('id, title, slug, type, price_cents, category, tags, owner:owner_id(username)')
+            .eq('is_published', true)
+            .neq('id', id)
+            .overlaps('tags', r.tags)
+            .limit(3)
+            .then(({ data: sim }) => setSimilar((sim as SimilarRepo[] | null) ?? []))
+        }
+      })
+  }, [id])
+
+  async function handleBuy() {
+    if (!user) { router.push('/auth'); return }
+    toast.info('Checkout coming soon', 'Stripe integration is on the way.')
+  }
+
+  async function handleDownload() {
+    if (!repo?.storage_path) {
+      toast.error('File not available', 'The author has not uploaded a file yet.')
+      return
+    }
+    const supabase = createClient()
+    const { data } = supabase.storage.from('repositories').getPublicUrl(repo.storage_path)
+    window.open(data.publicUrl, '_blank')
+    toast.success('Download started!')
+  }
+
+  async function handleReview(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) { router.push('/auth'); return }
+    if (!comment.trim()) return
+    setSubmitting(true)
+
+    // For free repos we use a stub purchase_id; in production
+    // purchases are created on actual payment/download
+    toast.info('Reviews require a purchase', 'Leave a review after downloading or buying.')
+    setSubmitting(false)
+  }
+
+  // ─── Loading skeleton ─────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+          <div className="mb-6 h-4 w-48 animate-pulse bg-secondary" />
+          <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+            <div className="flex flex-col gap-4">
+              <div className="h-8 w-3/4 animate-pulse bg-secondary" />
+              <div className="h-40 animate-pulse bg-card border-2 border-border" />
+            </div>
+            <div className="h-64 animate-pulse bg-card border-2 border-border" />
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    )
+  }
+
+  if (!repo) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="grid flex-1 place-items-center px-4">
+          <div className="text-center">
+            <p className="font-pixel text-xs text-muted-foreground">Repository not found.</p>
+            <Link href="/explore" className="mt-4 block font-mono text-sm text-primary hover:underline">← Back to explore</Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    )
+  }
+
+  const isPaid     = repo.type === 'paid'
+  const price      = repo.price_cents ? `$${(repo.price_cents / 100).toFixed(2)}` : 'Free'
+  const categoryIcon = CATEGORY_ICONS[repo.category ?? ''] ?? '▢'
+  const isOwner    = user?.id === repo.owner_id
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
+
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+
+        {/* Breadcrumb */}
+        <nav className="mb-8 font-mono text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-primary">~</Link>
+          {' / '}
+          <Link href="/explore" className="hover:text-primary">explore</Link>
+          {' / '}
+          <span className="text-foreground truncate">{repo.title}</span>
+        </nav>
+
+        {/* Two-column layout */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+
+          {/* ── Left column ──────────────────────────────────────────────── */}
+          <div className="min-w-0">
+
+            {/* Title + meta */}
+            <div className="flex items-start gap-4">
+              <span className="hidden sm:grid h-14 w-14 shrink-0 place-items-center border-2 border-border bg-secondary font-pixel text-2xl text-primary">
+                {categoryIcon}
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  {repo.category && (
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {repo.category.replace('-', ' ')}
+                    </span>
+                  )}
+                  {!repo.is_published && (
+                    <span className="border border-border px-2 py-0.5 font-pixel text-[9px] text-muted-foreground">draft</span>
+                  )}
+                </div>
+                <h1 className="mt-1 font-pixel text-sm leading-relaxed">{repo.title}</h1>
+                <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
+                  {repo.average_rating > 0 && (
+                    <span className="flex items-center gap-1">
+                      <StarRating value={repo.average_rating} />
+                      <span>{repo.average_rating.toFixed(1)}</span>
+                      <span>({repo.review_count})</span>
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" />{repo.reaction_count} likes
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <GitFork className="h-3 w-3" />{repo.fork_count} forks
+                  </span>
+                  {repo.published_at && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />{formatDate(repo.published_at)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {repo.description && (
+              <div className="mt-6 border-2 border-border bg-card p-5">
+                <p className="text-sm leading-relaxed text-foreground">{repo.description}</p>
+              </div>
+            )}
+
+            {/* README / long description */}
+            {repo.readme && (
+              <div className="mt-4 border-2 border-border bg-card p-5">
+                <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">README</p>
+                <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/80">{repo.readme}</pre>
+              </div>
+            )}
+
+            {/* Tags */}
+            {repo.tags.length > 0 && (
+              <div className="mt-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tag className="h-3 w-3 text-muted-foreground" />
+                  {repo.tags.map((t) => (
+                    <Link
+                      key={t}
+                      href={`/explore?q=${encodeURIComponent(t)}`}
+                      className="border border-border bg-secondary px-3 py-1.5 font-mono text-[10px] text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    >
+                      {t}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* GitHub link */}
+            {repo.github_url && (
+              <div className="mt-5">
+                <a
+                  href={repo.github_url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  View on GitHub
+                </a>
+              </div>
+            )}
+
+            {/* ── Reviews / Comments ───────────────────────────────────── */}
+            <div className="mt-10">
+              <h2 className="font-pixel text-[10px] uppercase tracking-wider">
+                Reviews
+                {reviews.length > 0 && <span className="ml-2 font-mono text-muted-foreground">({reviews.length})</span>}
+              </h2>
+
+              {reviews.length === 0 ? (
+                <div className="mt-4 border-2 border-dashed border-border p-8 text-center">
+                  <Star className="mx-auto mb-3 h-8 w-8 text-muted-foreground/20" />
+                  <p className="font-mono text-xs text-muted-foreground">No reviews yet. Be the first!</p>
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-col gap-3">
+                  {reviews.map((rv) => (
+                    <div key={rv.id} className="border-2 border-border bg-card p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <PixelAvatar
+                            username={rv.reviewer?.username ?? '?'}
+                            avatarColor={colorFromId(rv.id)}
+                            size={24}
+                          />
+                          <span className="font-mono text-xs text-foreground">
+                            @{rv.reviewer?.username ?? 'anonymous'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StarRating value={rv.rating} />
+                          <span className="font-mono text-[10px] text-muted-foreground">
+                            {formatDate(rv.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                      {rv.comment && (
+                        <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground">{rv.comment}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Review form */}
+              {user && !isOwner && (
+                <form onSubmit={handleReview} className="mt-4 border-2 border-border bg-card p-4">
+                  <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Leave a review</p>
+
+                  {/* Star picker */}
+                  <div className="mb-3 flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s} type="button"
+                        onMouseEnter={() => setHoveredStar(s)}
+                        onMouseLeave={() => setHoveredStar(0)}
+                        onClick={() => setRating(s)}
+                        aria-label={`Rate ${s} stars`}
+                      >
+                        <Star className={'h-4 w-4 transition-colors ' + (s <= (hoveredStar || rating) ? 'fill-primary text-primary' : 'text-muted-foreground/30')} />
+                      </button>
+                    ))}
+                    <span className="ml-2 font-mono text-[10px] text-muted-foreground">{rating}/5</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <textarea
+                      rows={2}
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Share your experience with this project…"
+                      className="flex-1 resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                    />
+                    <PixelButton type="submit" disabled={submitting} className="shrink-0 px-3">
+                      <Send className="h-3.5 w-3.5" />
+                    </PixelButton>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* ── Right sidebar ──────────────────────────────────────────── */}
+          <aside className="flex flex-col gap-4">
+
+            {/* Price + CTA */}
+            <div className="border-2 border-border bg-card p-5 pixel-shadow-border">
+              <div className="flex items-baseline justify-between">
+                <span className="font-pixel text-xl text-primary">{price}</span>
+                {isPaid && <span className="font-mono text-[10px] text-muted-foreground">one-time</span>}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-2">
+                {isPaid ? (
+                  <PixelButton className="w-full py-3 gap-2" onClick={handleBuy}>
+                    <ShoppingCart className="h-4 w-4" />
+                    Buy now
+                  </PixelButton>
+                ) : (
+                  <PixelButton className="w-full py-3 gap-2" onClick={handleDownload}>
+                    <Download className="h-4 w-4" />
+                    Download free
+                  </PixelButton>
+                )}
+                {isOwner && (
+                  <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
+                    Edit listing
+                  </PixelButton>
+                )}
+              </div>
+
+              {/* Stats row */}
+              <div className="mt-5 grid grid-cols-3 gap-0 border-t border-border pt-4 text-center">
+                <div>
+                  <p className="font-pixel text-[10px] text-primary">{repo.reaction_count}</p>
+                  <p className="mt-1 font-mono text-[9px] text-muted-foreground">likes</p>
+                </div>
+                <div className="border-x border-border">
+                  <p className="font-pixel text-[10px] text-primary">{repo.fork_count}</p>
+                  <p className="mt-1 font-mono text-[9px] text-muted-foreground">forks</p>
+                </div>
+                <div>
+                  <p className="font-pixel text-[10px] text-primary">{repo.review_count}</p>
+                  <p className="mt-1 font-mono text-[9px] text-muted-foreground">reviews</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Author */}
+            {repo.owner && (
+              <div className="border-2 border-border bg-card p-5">
+                <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Author</p>
+                <Link
+                  href={`/u/${repo.owner.username}`}
+                  className="group flex items-center gap-3 transition-colors hover:text-primary"
+                >
+                  <PixelAvatar
+                    username={repo.owner.username}
+                    avatarColor={colorFromId(repo.owner.id)}
+                    size={40}
+                    imageUrl={repo.owner.avatar_url ?? undefined}
+                    className="!border-2 shrink-0"
+                  />
+                  <div>
+                    <p className="font-mono text-sm text-foreground group-hover:text-primary">
+                      {repo.owner.display_name ?? repo.owner.username}
+                    </p>
+                    <p className="font-mono text-[10px] text-muted-foreground">@{repo.owner.username}</p>
+                    <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                      {repo.owner.reputation} reputation
+                    </p>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* Published date */}
+            <div className="border-2 border-border bg-card px-5 py-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] text-muted-foreground">Published</span>
+                <span className="font-mono text-[10px] text-foreground">
+                  {repo.published_at ? formatDate(repo.published_at) : formatDate(repo.created_at)}
+                </span>
+              </div>
+              {repo.category && (
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-muted-foreground">Category</span>
+                  <span className="font-mono text-[10px] text-foreground capitalize">{repo.category.replace('-', ' ')}</span>
+                </div>
+              )}
+              <div className="mt-2 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-muted-foreground">Type</span>
+                <span className={`font-pixel text-[9px] ${isPaid ? 'text-primary' : 'text-green-400'}`}>
+                  {isPaid ? 'Paid' : 'Free'}
+                </span>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* ── Similar projects ─────────────────────────────────────────────── */}
+        {similar.length > 0 && (
+          <section className="mt-14">
+            <h2 className="mb-5 font-pixel text-[10px] uppercase tracking-wider">Similar projects</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {similar.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/listing/${s.id}`}
+                  className="group flex flex-col gap-3 border-2 border-border bg-card p-4 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center border border-border bg-secondary font-pixel text-sm text-primary">
+                      {CATEGORY_ICONS[s.category ?? ''] ?? '▢'}
+                    </span>
+                    <span className="border border-primary bg-primary/10 px-2 py-0.5 font-pixel text-[9px] text-primary">
+                      {s.type === 'free' ? 'Free' : s.price_cents ? `$${(s.price_cents / 100).toFixed(0)}` : 'Paid'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-mono text-sm text-foreground group-hover:text-primary line-clamp-1">{s.title}</p>
+                    {s.owner && (
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">@{s.owner.username}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {s.tags.slice(0, 3).map((t) => (
+                      <span key={t} className="border border-border bg-secondary px-2 py-0.5 font-mono text-[9px] text-muted-foreground">{t}</span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+      </main>
+
+      <SiteFooter />
+    </div>
+  )
+}
