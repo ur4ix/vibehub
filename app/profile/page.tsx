@@ -1,8 +1,8 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { ProfileView } from '@/components/profile-view'
 
 export const metadata: Metadata = {
-  title: 'Profile — VibeHub',
+  title: 'Profile — Vydex',
   description: 'Your repositories, stats and settings.',
 }
 

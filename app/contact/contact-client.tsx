@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Mail, MessageSquare } from 'lucide-react'
@@ -26,28 +26,28 @@ const CHANNELS = [
   {
     icon: <Mail className="h-5 w-5" />,
     title: 'Email',
-    value: 'hi@vibehub.dev',
-    href: 'mailto:hi@vibehub.dev',
+    value: 'hi@Vydex.dev',
+    href: 'mailto:hi@Vydex.dev',
     desc: 'For general questions, partnerships and press.',
   },
   {
     icon: <MessageSquare className="h-5 w-5" />,
     title: 'Discord',
-    value: 'discord.gg/vibehub',
+    value: 'discord.gg/Vydex',
     href: '#',
     desc: 'Live community chat, support, and off-topic vibes.',
   },
   {
     icon: <GithubSvg />,
     title: 'GitHub',
-    value: 'github.com/vibehub',
+    value: 'github.com/Vydex',
     href: '#',
     desc: 'Report bugs, request features, or contribute.',
   },
   {
     icon: <XSvg />,
     title: 'X / Twitter',
-    value: '@vibehub_dev',
+    value: '@Vydex_dev',
     href: '#',
     desc: 'Product updates, launches and community highlights.',
   },

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
@@ -166,11 +166,11 @@ export function SiteHeader() {
       <header className="sticky top-0 z-50 border-b-2 border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3" aria-label="VibeHub — home">
+          <Link href="/" className="flex items-center gap-3" aria-label="Vydex — home">
             <span className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground" aria-hidden="true">
               <span className="font-pixel text-[12px]">{'>'}</span>
             </span>
-            <span className="font-pixel text-xs tracking-tight">VIBEHUB</span>
+            <span className="font-pixel text-xs tracking-tight">Vydex</span>
           </Link>
 
           {/* Desktop nav */}

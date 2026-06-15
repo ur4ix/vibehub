@@ -1,4 +1,4 @@
-create table public.notifications (
+﻿create table public.notifications (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references public.users on delete cascade,
   type       text not null default 'system',
@@ -33,7 +33,7 @@ begin
   values (
     new.id,
     'system',
-    'Welcome to VibeHub!',
+    'Welcome to Vydex!',
     'Your account is set up. Start by publishing your first project.'
   );
   return new;

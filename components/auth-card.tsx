@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -82,7 +82,7 @@ export function AuthCard() {
       <Link
         href="/"
         className="mb-8 flex items-center justify-center gap-3"
-        aria-label="VibeHub — home"
+        aria-label="Vydex — home"
       >
         <span
           className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground"
@@ -90,7 +90,7 @@ export function AuthCard() {
         >
           <span className="font-pixel text-[12px]">{'>'}</span>
         </span>
-        <span className="font-pixel text-xs tracking-tight">VIBEHUB</span>
+        <span className="font-pixel text-xs tracking-tight">Vydex</span>
       </Link>
 
       <div className="border-2 border-border bg-card p-6 pixel-shadow-border sm:p-8">

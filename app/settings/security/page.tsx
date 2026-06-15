@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -199,7 +199,7 @@ function TwoFactorSection() {
     const supabase = createClient()
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
-      issuer: 'VibeHub',
+      issuer: 'Vydex',
       friendlyName: 'Authenticator App',
     })
     setStatus('idle')

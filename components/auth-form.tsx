@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -103,7 +103,7 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">VibeHub</CardTitle>
+        <CardTitle className="text-xl">Vydex</CardTitle>
         <CardDescription>
           Маркетплейс кода для вайбкодеров
         </CardDescription>

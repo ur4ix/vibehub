@@ -1,4 +1,4 @@
--- VibeHub initial schema
+﻿-- Vydex initial schema
 
 create extension if not exists "pgcrypto";
 

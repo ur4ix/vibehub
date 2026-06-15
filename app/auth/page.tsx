@@ -1,10 +1,10 @@
-import { Suspense } from 'react'
+﻿import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AuthCard } from '@/components/auth-card'
 
 export const metadata = {
-  title: 'Sign in — VibeHub',
+  title: 'Sign in — Vydex',
 }
 
 export default async function AuthPage() {

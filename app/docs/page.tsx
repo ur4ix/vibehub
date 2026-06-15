@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
 export const metadata: Metadata = {
-  title: 'Docs — VibeHub',
+  title: 'Docs — Vydex',
   description: 'Documentation for buyers, sellers and contributors.',
 }
 
@@ -13,7 +13,7 @@ const SECTIONS = [
     icon: '▢',
     title: 'Getting started',
     articles: [
-      { title: 'What is VibeHub?', slug: 'what-is-vibehub' },
+      { title: 'What is Vydex?', slug: 'what-is-Vydex' },
       { title: 'Creating your account', slug: 'create-account' },
       { title: 'Publishing your first project', slug: 'first-project' },
       { title: 'Uploading a ZIP archive', slug: 'zip-upload' },
@@ -89,7 +89,7 @@ export default function DocsPage() {
           <div className="pixel-grid absolute inset-0 opacity-30" aria-hidden="true" />
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// documentation</span>
-            <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">VibeHub docs</h1>
+            <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">Vydex docs</h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
               Everything you need to publish, buy and manage repositories on the platform.
             </p>

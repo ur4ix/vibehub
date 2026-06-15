@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { NewsletterForm } from './newsletter-form'
 
 export const metadata: Metadata = {
-  title: 'Blog — VibeHub',
+  title: 'Blog — Vydex',
   description: 'Thoughts on vibe coding, marketplace updates and builder stories.',
 }
 
@@ -25,7 +25,7 @@ const POSTS = [
     slug: 'how-to-price-your-repo',
     category: 'Business',
     categoryIcon: '▦',
-    title: 'How to price your repository on VibeHub',
+    title: 'How to price your repository on Vydex',
     excerpt:
       "Pricing digital products is hard. We analyzed 800+ listings to find what actually sells. Spoiler: it's not what you think.",
     author: 'pixel_kate',
@@ -38,7 +38,7 @@ const POSTS = [
     categoryIcon: '▢',
     title: 'Building a production-ready AI starter kit in 4 hours',
     excerpt:
-      'A step-by-step breakdown of how @bytesmith built and published the most-forked repository on VibeHub — from zero to listing in one session.',
+      'A step-by-step breakdown of how @bytesmith built and published the most-forked repository on Vydex — from zero to listing in one session.',
     author: 'bytesmith',
     date: 'Jun 3, 2026',
     readTime: '12 min',
@@ -47,7 +47,7 @@ const POSTS = [
     slug: 'community-review-system',
     category: 'Product',
     categoryIcon: '◧',
-    title: "How VibeHub's community review system works",
+    title: "How Vydex's community review system works",
     excerpt:
       "We don't use editors or AI to gatekeep quality. Here's how the community-driven review pipeline keeps junk out without slowing good work down.",
     author: 'neon_dev',
@@ -71,7 +71,7 @@ const POSTS = [
     categoryIcon: '▢',
     title: 'Open source vs. paid: how to decide',
     excerpt:
-      "There's no universal answer. But there's a clear framework. We interviewed 40 VibeHub sellers to find out how they think about it.",
+      "There's no universal answer. But there's a clear framework. We interviewed 40 Vydex sellers to find out how they think about it.",
     author: 'bytesmith',
     date: 'May 14, 2026',
     readTime: '8 min',
@@ -90,7 +90,7 @@ export default function BlogPage() {
         {/* Heading */}
         <div className="mb-12">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// blog</span>
-          <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">The VibeHub blog</h1>
+          <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">The Vydex blog</h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Guides, stories, and updates from the team and community.
           </p>

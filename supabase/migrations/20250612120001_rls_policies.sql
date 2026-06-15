@@ -1,4 +1,4 @@
--- Row Level Security policies for VibeHub
+﻿-- Row Level Security policies for Vydex
 
 alter table public.users enable row level security;
 alter table public.repositories enable row level security;

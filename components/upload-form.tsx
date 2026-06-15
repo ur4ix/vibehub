@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -236,7 +236,7 @@ export function UploadForm({ userId }: UploadFormProps) {
       }
 
       setStatus("done");
-      toast.success("Repository published!", "Your project is now live on VibeHub.");
+      toast.success("Repository published!", "Your project is now live on Vydex.");
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -315,7 +315,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           </Label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground select-none">
-              vibehub.io/
+              Vydex.io/
             </span>
             <Input
               id="slug"

@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
 export const metadata: Metadata = {
-  title: 'About — VibeHub',
+  title: 'About — Vydex',
   description: 'The marketplace built by vibe coders, for vibe coders.',
 }
 
@@ -60,7 +60,7 @@ export default function AboutPage() {
               <span className="text-primary">for vibe coders</span>
             </h1>
             <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground">
-              VibeHub started as a side project to answer one question: where do you sell the
+              Vydex started as a side project to answer one question: where do you sell the
               thing you just vibed into existence at 2 AM? Turns out, nowhere good. So we
               built it.
             </p>
@@ -107,7 +107,7 @@ export default function AboutPage() {
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">How it started</h2>
             <div className="mt-8 space-y-5 text-base leading-relaxed text-muted-foreground">
               <p>
-                The first version of VibeHub was a Discord bot that pinged a channel every time
+                The first version of Vydex was a Discord bot that pinged a channel every time
                 someone posted a &ldquo;repo for sale&rdquo; message. It worked — embarrassingly well.
               </p>
               <p>
@@ -116,7 +116,7 @@ export default function AboutPage() {
                 and most of them had no good place to monetize that output.
               </p>
               <p>
-                Today VibeHub is the marketplace where those developers list their work — apps,
+                Today Vydex is the marketplace where those developers list their work — apps,
                 components, prompts, templates — and where buyers find battle-tested building
                 blocks instead of starting from scratch.
               </p>

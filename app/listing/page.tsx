@@ -1,9 +1,9 @@
-import { SiteHeader } from '@/components/site-header'
+﻿import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ListingDetail } from '@/components/listing-detail'
 
 export const metadata = {
-  title: 'ai-chat-starter — VibeHub',
+  title: 'ai-chat-starter — Vydex',
 }
 
 export default function ListingPage() {

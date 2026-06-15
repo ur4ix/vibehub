@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { ContactPageClient } from './contact-client'
 
 export const metadata: Metadata = {
-  title: 'Contact — VibeHub',
-  description: 'Get in touch with the VibeHub team.',
+  title: 'Contact — Vydex',
+  description: 'Get in touch with the Vydex team.',
 }
 
 export default function ContactPage() {

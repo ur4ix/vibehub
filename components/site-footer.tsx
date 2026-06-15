@@ -1,4 +1,4 @@
-const COLS = [
+﻿const COLS = [
   {
     title: 'Marketplace',
     links: [
@@ -42,7 +42,7 @@ export function SiteFooter() {
               >
                 <span className="font-pixel text-[12px]">{'>'}</span>
               </span>
-              <span className="font-pixel text-xs">VIBEHUB</span>
+              <span className="font-pixel text-xs">Vydex</span>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               A marketplace built by vibe coders, for vibe coders.
@@ -71,7 +71,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t-2 border-border pt-6 font-mono text-xs text-muted-foreground sm:flex-row">
-          <span>© 2026 VIBEHUB. All rights reserved.</span>
+          <span>© 2026 Vydex. All rights reserved.</span>
           <span>
             Built on vibes <span className="text-primary blink">▮</span>
           </span>

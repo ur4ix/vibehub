@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next'
+﻿import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Press_Start_2P } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { ToastProvider } from '@/components/pixel-toast'
@@ -16,7 +16,7 @@ const pressStart = Press_Start_2P({
 })
 
 export const metadata: Metadata = {
-  title: 'VibeHub — marketplace for vibe coders',
+  title: 'Vydex — marketplace for vibe coders',
   description:
     'Buy and sell apps, components, prompts and templates. Everything you built on vibes — now earns money.',
 }

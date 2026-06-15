@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { UploadForm } from '@/components/upload-form'
 
 export const metadata: Metadata = {
-  title: 'Publish repository — VibeHub',
+  title: 'Publish repository — Vydex',
 }
 
 export default async function UploadPage() {
