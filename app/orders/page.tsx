@@ -141,7 +141,7 @@ export default function OrdersPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((order) => (
-              <div key={order.id} className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border">
+              <Link key={order.id} href={`/orders/${order.id}`} className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -166,7 +166,7 @@ export default function OrdersPage() {
                     {order.owner?.username && <span>@{order.owner.username}</span>}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

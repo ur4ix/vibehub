@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Briefcase, ChevronRight, Clock, Users } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
@@ -135,7 +136,7 @@ export default function HirePage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((job) => (
-              <div key={job.id} className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border">
+              <Link key={job.id} href={`/hire/${job.id}`} className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h2 className="font-mono text-sm text-foreground group-hover:text-primary">{job.title}</h2>
@@ -155,7 +156,7 @@ export default function HirePage() {
                     {job.owner?.username && <span>@{job.owner.username}</span>}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
