@@ -158,7 +158,7 @@ export function AuthCard() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="vibecoder"
+                placeholder="username"
                 pattern="[a-z0-9_]{3,30}"
                 title="3–30 chars: lowercase, digits, underscore"
                 className="border-2 border-input bg-background px-4 py-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"

@@ -122,7 +122,7 @@ export function ContactPageClient() {
               ) : (
                 <form className="mt-6 flex flex-col gap-5" onSubmit={handleSubmit}>
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Field id="name" label="Your name" value={name} onChange={setName} placeholder="Vibe Coder" required />
+                    <Field id="name" label="Your name" value={name} onChange={setName} placeholder="Your Name" required />
                     <Field id="email" label="Email address" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
                   </div>
                   <Field id="subject" label="Subject" value={subject} onChange={setSubject} placeholder="Partnership / Bug / Question…" required />

@@ -6,49 +6,67 @@ import { useRouter } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
+import { useAuth } from '@/components/auth-provider'
+import { useToast } from '@/components/pixel-toast'
+import { createClient } from '@/lib/supabase/client'
 
 const DELIVERY_OPTIONS = [
-  { value: '3', label: '3 days' },
-  { value: '7', label: '1 week' },
-  { value: '14', label: '2 weeks' },
-  { value: '30', label: '1 month' },
+  { value: '3',        label: '3 days' },
+  { value: '7',        label: '1 week' },
+  { value: '14',       label: '2 weeks' },
+  { value: '30',       label: '1 month' },
   { value: 'flexible', label: 'Flexible' },
 ]
 
 export default function NewOrderPage() {
-  const router = useRouter()
-  const [title, setTitle] = useState('')
+  const router   = useRouter()
+  const { user } = useAuth()
+  const toast    = useToast()
+
+  const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
-  const [budget, setBudget] = useState('')
-  const [delivery, setDelivery] = useState('7')
-  const [tagInput, setTagInput] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-  const [submitting, setSubmitting] = useState(false)
+  const [budget,      setBudget]      = useState('')
+  const [delivery,    setDelivery]    = useState('7')
+  const [tagInput,    setTagInput]    = useState('')
+  const [tags,        setTags]        = useState<string[]>([])
+  const [submitting,  setSubmitting]  = useState(false)
 
   function addTag(raw: string) {
     const tag = raw.trim().replace(/[^a-zA-Z0-9._\-+#]/g, '')
-    if (tag && !tags.includes(tag) && tags.length < 8) {
-      setTags((t) => [...t, tag])
-    }
+    if (tag && !tags.includes(tag) && tags.length < 8) setTags((t) => [...t, tag])
     setTagInput('')
   }
 
   function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag(tagInput)
-    }
-    if (e.key === 'Backspace' && !tagInput) {
-      setTags((t) => t.slice(0, -1))
-    }
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput) }
+    if (e.key === 'Backspace' && !tagInput)  setTags((t) => t.slice(0, -1))
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!user) { router.push('/auth'); return }
     setSubmitting(true)
-    // TODO: persist to Supabase orders table
-    await new Promise((r) => setTimeout(r, 600))
+
+    const supabase   = createClient()
+    const deliveryDays = delivery === 'flexible' ? null : Number(delivery)
+
+    const { error } = await supabase.from('orders').insert({
+      owner_id:     user.id,
+      title:        title.trim(),
+      description:  description.trim(),
+      budget:       Number(budget),
+      delivery_days: deliveryDays,
+      tags,
+    })
+
     setSubmitting(false)
+
+    if (error) {
+      toast.error('Failed to post order', error.message)
+      return
+    }
+
+    toast.success('Order posted!', 'Vibe coders can now bid on your project.')
     router.push('/orders')
   }
 
@@ -57,7 +75,6 @@ export default function NewOrderPage() {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6">
-        {/* Breadcrumb */}
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
@@ -74,45 +91,29 @@ export default function NewOrderPage() {
         </div>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-          {/* Title */}
           <Field label="What do you need?" required>
             <input
-              type="text"
-              required
-              value={title}
+              type="text" required value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Stripe checkout integration for my SaaS"
               className="w-full border-2 border-input bg-background px-4 py-3 font-mono text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
             />
           </Field>
 
-          {/* Description */}
-          <Field
-            label="Detailed description"
-            required
-            hint="The more detail, the better bids you'll receive."
-          >
+          <Field label="Detailed description" required hint="The more detail, the better bids you'll receive.">
             <textarea
-              required
-              rows={7}
-              value={description}
+              required rows={7} value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the feature, expected behavior, tech stack you're using, and what 'done' looks like…"
+              placeholder="Describe the feature, expected behavior, tech stack, and what 'done' looks like…"
               className="w-full resize-none border-2 border-input bg-background px-4 py-3 font-mono text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
             />
           </Field>
 
-          {/* Budget */}
           <Field label="Your budget (USD)" required>
             <div className="flex border-2 border-input bg-background focus-within:border-primary transition-colors">
-              <span className="flex items-center border-r border-border bg-secondary px-3 font-mono text-[11px] text-muted-foreground">
-                $
-              </span>
+              <span className="flex items-center border-r border-border bg-secondary px-3 font-mono text-[11px] text-muted-foreground">$</span>
               <input
-                type="number"
-                required
-                min={10}
-                value={budget}
+                type="number" required min={10} value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 placeholder="250"
                 className="flex-1 bg-transparent px-3 py-3 font-mono text-sm outline-none placeholder:text-muted-foreground/60"
@@ -120,14 +121,10 @@ export default function NewOrderPage() {
             </div>
           </Field>
 
-          {/* Delivery */}
           <Field label="Expected delivery">
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
               {DELIVERY_OPTIONS.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => setDelivery(d.value)}
+                <button key={d.value} type="button" onClick={() => setDelivery(d.value)}
                   className={
                     'border-2 py-2 font-pixel text-[10px] uppercase tracking-wider transition-colors ' +
                     (delivery === d.value
@@ -141,25 +138,17 @@ export default function NewOrderPage() {
             </div>
           </Field>
 
-          {/* Tags */}
           <Field label="Required skills" hint="Press Enter or comma to add · max 8">
             <div className="flex flex-wrap gap-2 border-2 border-input bg-background p-2 focus-within:border-primary transition-colors">
               {tags.map((t) => (
                 <span key={t} className="flex items-center gap-1 border border-border bg-secondary px-2 py-1 font-mono text-[10px]">
                   {t}
-                  <button
-                    type="button"
-                    onClick={() => setTags((prev) => prev.filter((x) => x !== t))}
-                    className="ml-1 text-muted-foreground hover:text-destructive"
-                    aria-label={`Remove ${t}`}
-                  >
-                    ×
-                  </button>
+                  <button type="button" onClick={() => setTags((prev) => prev.filter((x) => x !== t))}
+                    className="ml-1 text-muted-foreground hover:text-destructive" aria-label={`Remove ${t}`}>×</button>
                 </span>
               ))}
               <input
-                type="text"
-                value={tagInput}
+                type="text" value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 onBlur={() => addTag(tagInput)}
@@ -169,7 +158,6 @@ export default function NewOrderPage() {
             </div>
           </Field>
 
-          {/* Escrow notice */}
           <div className="border-2 border-border bg-secondary px-4 py-3">
             <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
               <span className="text-primary">✦</span>{' '}
@@ -178,17 +166,11 @@ export default function NewOrderPage() {
             </p>
           </div>
 
-          {/* Submit */}
           <div className="flex gap-3 pt-2">
             <PixelButton type="submit" disabled={submitting} className="flex-1 py-3">
               {submitting ? 'Posting…' : 'Post order'}
             </PixelButton>
-            <PixelButton
-              type="button"
-              variant="outline"
-              className="flex-1 py-3"
-              onClick={() => router.push('/orders')}
-            >
+            <PixelButton type="button" variant="outline" className="flex-1 py-3" onClick={() => router.push('/orders')}>
               Cancel
             </PixelButton>
           </div>
@@ -200,16 +182,13 @@ export default function NewOrderPage() {
   )
 }
 
-function Field({
-  label, children, required, hint,
-}: {
+function Field({ label, children, required, hint }: {
   label: string; children: React.ReactNode; required?: boolean; hint?: string
 }) {
   return (
     <div className="flex flex-col gap-2">
       <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-        {label}
-        {required && <span className="ml-1 text-primary">*</span>}
+        {label}{required && <span className="ml-1 text-primary">*</span>}
       </label>
       {hint && <p className="font-mono text-[10px] text-muted-foreground/70">{hint}</p>}
       {children}

@@ -182,13 +182,13 @@ export function ProfileView() {
 
   const socialLinks = [
     profile?.github_username
-      ? { href: `https://github.com/${profile.github_username}`, label: `@${profile.github_username}`, icon: <GithubIcon className="h-4 w-4" />, title: 'GitHub' }
+      ? { href: `https://github.com/${profile.github_username}`, label: profile.github_username, icon: <GithubIcon className="h-4 w-4" />, title: 'GitHub' }
       : null,
     profile?.huggingface_username
       ? { href: `https://huggingface.co/${profile.huggingface_username}`, label: profile.huggingface_username, icon: <span className="text-sm leading-none">🤗</span>, title: 'Hugging Face' }
       : null,
     profile?.x_username
-      ? { href: `https://x.com/${profile.x_username}`, label: `@${profile.x_username}`, icon: <XIcon className="h-4 w-4" />, title: 'X' }
+      ? { href: `https://x.com/${profile.x_username}`, label: profile.x_username, icon: <XIcon className="h-4 w-4" />, title: 'X' }
       : null,
   ].filter(Boolean) as NonNullable<{ href: string; label: string; icon: React.ReactNode; title: string }>[]
 
@@ -269,14 +269,14 @@ export function ProfileView() {
                         prefix="github.com/"
                         value={draft.github_username}
                         onChange={(v) => setDraft((d) => ({ ...d, github_username: v }))}
-                        placeholder="torvalds"
+                        placeholder="username"
                       />
                       <SocialField
                         label="Hugging Face username"
                         prefix="huggingface.co/"
                         value={draft.huggingface_username}
                         onChange={(v) => setDraft((d) => ({ ...d, huggingface_username: v }))}
-                        placeholder="your-hf-name"
+                        placeholder="username"
                       />
                       <SocialField
                         label="X username"

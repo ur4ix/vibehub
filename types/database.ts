@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      jobs: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          budget_type: 'fixed' | 'equity' | 'hourly';
+          budget_value: number;
+          tags: string[];
+          status: 'open' | 'closed';
+          applicants_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          budget_type: 'fixed' | 'equity' | 'hourly';
+          budget_value: number;
+          tags?: string[];
+          status?: 'open' | 'closed';
+          applicants_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string;
+          budget_type?: 'fixed' | 'equity' | 'hourly';
+          budget_value?: number;
+          tags?: string[];
+          status?: 'open' | 'closed';
+          applicants_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          budget: number;
+          delivery_days: number | null;
+          tags: string[];
+          status: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
+          bids_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          description: string;
+          budget: number;
+          delivery_days?: number | null;
+          tags?: string[];
+          status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
+          bids_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string;
+          budget?: number;
+          delivery_days?: number | null;
+          tags?: string[];
+          status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
+          bids_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       notifications: {
         Row: {
           id: string;

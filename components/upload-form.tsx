@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ type Status = "idle" | "uploading" | "saving" | "done";
 
 export function UploadForm({ userId }: UploadFormProps) {
   const router = useRouter();
+  const toast  = useToast();
 
   // form fields
   const [title, setTitle] = useState("");
@@ -234,6 +236,7 @@ export function UploadForm({ userId }: UploadFormProps) {
       }
 
       setStatus("done");
+      toast.success("Repository published!", "Your project is now live on VibeHub.");
       router.push("/dashboard");
       router.refresh();
     } catch (err) {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Press_Start_2P } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
+import { ToastProvider } from '@/components/pixel-toast'
 import './globals.css'
 
 const geistMono = Geist_Mono({
@@ -36,7 +37,9 @@ export default function RootLayout({
       className={`dark ${pressStart.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   )
