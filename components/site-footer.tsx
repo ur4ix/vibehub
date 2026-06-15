@@ -25,6 +25,7 @@
       { label: 'Blog', href: '/blog' },
       { label: 'Contact', href: '/contact' },
       { label: 'Docs', href: '/docs' },
+      { label: 'Privacy', href: '/privacy' },
     ],
   },
 ]
@@ -72,9 +73,14 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t-2 border-border pt-6 font-mono text-xs text-muted-foreground sm:flex-row">
           <span>© 2026 Vydex. All rights reserved.</span>
-          <span>
-            Built on vibes <span className="text-primary blink">▮</span>
-          </span>
+          <div className="flex items-center gap-4">
+            <a href="/privacy" className="transition-colors hover:text-primary">
+              Privacy Policy
+            </a>
+            <span>
+              Built on vibes <span className="text-primary blink">▮</span>
+            </span>
+          </div>
         </div>
       </div>
     </footer>
