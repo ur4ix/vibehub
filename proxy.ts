@@ -50,8 +50,18 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
+// Only run on routes that actually need the session: the protected areas and
+// the auth page (to bounce already-signed-in users to the dashboard). Public
+// pages skip the Supabase getUser() round-trip entirely.
+//
+// Note: data access is still guarded by Postgres RLS, so narrowing the matcher
+// only affects the UX redirect, not security.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/dashboard/:path*",
+    "/upload/:path*",
+    "/profile/:path*",
+    "/settings/:path*",
+    "/auth",
   ],
 };

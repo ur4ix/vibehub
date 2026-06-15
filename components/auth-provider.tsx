@@ -56,23 +56,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
     }
 
-    // Use getSession() for fast initial render (no network round-trip)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        loadProfile(session.user.id, session.user.email ?? '').finally(() => setLoading(false))
-      } else {
-        setLoading(false)
-      }
-    })
+    // onAuthStateChange fires INITIAL_SESSION on subscribe (initial load),
+    // then SIGNED_IN / SIGNED_OUT / TOKEN_REFRESHED / USER_UPDATED. We track the
+    // last loaded user id so token refreshes for the same user don't refetch.
+    let loadedUserId: string | null = null
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        loadProfile(session.user.id, session.user.email ?? '')
-      } else {
+      const sessionUser = session?.user ?? null
+
+      if (!sessionUser) {
+        loadedUserId = null
         setUser(null)
+        setLoading(false)
+        return
       }
+
+      if (sessionUser.id === loadedUserId) {
+        setLoading(false)
+        return
+      }
+
+      loadedUserId = sessionUser.id
+      loadProfile(sessionUser.id, sessionUser.email ?? '').finally(() => setLoading(false))
     })
 
     return () => subscription.unsubscribe()

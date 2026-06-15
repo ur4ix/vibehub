@@ -740,23 +740,33 @@ export type Reaction = Tables<"reactions">;
 export type ReactionInsert = TablesInsert<"reactions">;
 export type ReactionUpdate = TablesUpdate<"reactions">;
 
+/**
+ * Curated repository shape used across the UI. Mirrors the real
+ * `public.repositories` columns — keep in sync with the DB schema and the
+ * generated `Tables<'repositories'>` Row type above.
+ */
 export interface Repository {
   id: string
+  owner_id: string
   title: string
   slug: string
   description: string | null
+  readme: string | null
+  storage_path: string | null
+  github_url: string | null
   type: 'free' | 'paid'
   price_cents: number | null
+  chat_reaction_threshold: number
+  reaction_count: number
+  fork_count: number
+  average_rating: number
+  review_count: number
   is_published: boolean
-  is_verified: boolean
-  downloads: number
-  owner_id: string
-  created_at: string
+  published_at: string | null
   tags: string[]
-  file_url: string | null
-  demo_url: string | null
-  fork_of: string | null
   category: string | null
+  created_at: string
+  updated_at: string
 }
 export type RepositoryInsert = TablesInsert<"repositories">;
 export type RepositoryUpdate = TablesUpdate<"repositories">;

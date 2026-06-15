@@ -107,6 +107,10 @@ export default function ListingPage() {
   const [rating,    setRating]    = useState(5)
   const [hoveredStar, setHoveredStar] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  // Review eligibility: reviews are gated to buyers with a completed purchase
+  // (enforced by the validate_review trigger + RLS). null = not yet checked.
+  const [purchaseId, setPurchaseId] = useState<string | null>(null)
+  const [hasReviewed, setHasReviewed] = useState(false)
 
   // Fetch all data
   useEffect(() => {
@@ -148,6 +152,40 @@ export default function ListingPage() {
       })
   }, [id])
 
+  // Check whether the current user may review (has a completed purchase, no prior review).
+  // The review form is gated on `user` in render, so we don't need to reset
+  // synchronously when there's no user — async results overwrite on next sign-in.
+  useEffect(() => {
+    if (!id || !user) return
+    const supabase = createClient()
+    let active = true
+
+    supabase
+      .from('purchases')
+      .select('id')
+      .eq('repository_id', id)
+      .eq('buyer_id', user.id)
+      .eq('status', 'completed')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return
+        const purchase = data as { id: string } | null
+        setPurchaseId(purchase?.id ?? null)
+      })
+
+    supabase
+      .from('reviews')
+      .select('id')
+      .eq('repository_id', id)
+      .eq('reviewer_id', user.id)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setHasReviewed(Boolean(data)) })
+
+    return () => { active = false }
+  }, [id, user])
+
   async function handleBuy() {
     if (!user) { router.push('/auth'); return }
     toast.info('Checkout coming soon', 'Stripe integration is on the way.')
@@ -158,22 +196,62 @@ export default function ListingPage() {
       toast.error('File not available', 'The author has not uploaded a file yet.')
       return
     }
+    if (!user) { router.push('/auth'); return }
+
+    // The `repositories` bucket is private — a public URL would 401.
+    // Mint a short-lived signed URL; Storage RLS still enforces access.
     const supabase = createClient()
-    const { data } = supabase.storage.from('repositories').getPublicUrl(repo.storage_path)
-    window.open(data.publicUrl, '_blank')
+    const { data, error } = await supabase.storage
+      .from('repositories')
+      .createSignedUrl(repo.storage_path, 60)
+
+    if (error || !data) {
+      toast.error('Download failed', error?.message ?? 'Could not generate a download link.')
+      return
+    }
+
+    window.open(data.signedUrl, '_blank')
     toast.success('Download started!')
   }
 
   async function handleReview(e: React.FormEvent) {
     e.preventDefault()
     if (!user) { router.push('/auth'); return }
+    if (!purchaseId) {
+      toast.info('Reviews require a purchase', 'You can review this project after buying it.')
+      return
+    }
     if (!comment.trim()) return
     setSubmitting(true)
 
-    // For free repos we use a stub purchase_id; in production
-    // purchases are created on actual payment/download
-    toast.info('Reviews require a purchase', 'Leave a review after downloading or buying.')
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        purchase_id: purchaseId,
+        repository_id: repo!.id,
+        reviewer_id: user.id,
+        rating,
+        comment: comment.trim(),
+      })
+      .select('id, rating, comment, created_at')
+      .single()
+
     setSubmitting(false)
+
+    if (error || !data) {
+      toast.error('Could not post review', error?.message ?? 'Please try again.')
+      return
+    }
+
+    const inserted = data as { id: string; rating: number; comment: string | null; created_at: string }
+    setReviews((prev) => [
+      { ...inserted, reviewer: { username: user.username, avatar_url: user.avatarUrl } },
+      ...prev,
+    ])
+    setComment('')
+    setHasReviewed(true)
+    toast.success('Review posted!', 'Thanks for sharing your feedback.')
   }
 
   // ─── Loading skeleton ─────────────────────────────────────────────────────
@@ -366,8 +444,8 @@ export default function ListingPage() {
                 </div>
               )}
 
-              {/* Review form */}
-              {user && !isOwner && (
+              {/* Review form — only for buyers with a completed purchase who haven't reviewed yet */}
+              {user && !isOwner && purchaseId && !hasReviewed && (
                 <form onSubmit={handleReview} className="mt-4 border-2 border-border bg-card p-4">
                   <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Leave a review</p>
 
