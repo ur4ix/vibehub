@@ -277,8 +277,14 @@ function TwoFactorSection() {
             1. Open Google Authenticator or any TOTP app and scan this QR code:
           </p>
           <div className="flex justify-center border-2 border-border bg-white p-4">
+            {/* Supabase may return qr_code already as a data: URL, or as raw SVG
+                markup — handle both instead of double-wrapping (which broke it). */}
             <img
-              src={`data:image/svg+xml;utf8,${encodeURIComponent(enrollData.qr_code)}`}
+              src={
+                enrollData.qr_code.startsWith('data:')
+                  ? enrollData.qr_code
+                  : `data:image/svg+xml;utf-8,${encodeURIComponent(enrollData.qr_code)}`
+              }
               alt="2FA QR code"
               width={200}
               height={200}
@@ -371,7 +377,7 @@ export default function SecurityPage() {
 
         <div className="mb-8">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-            // settings
+            {'// settings'}
           </span>
           <h1 className="mt-3 font-pixel text-lg flex items-center gap-3">
             <Shield className="h-5 w-5 text-primary" />
