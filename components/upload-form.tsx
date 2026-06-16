@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,9 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 const MAX_TAGS = 10;
 const TAG_MAX_LEN = 30;
 
+const AI_PRESETS = ["Claude", "ChatGPT", "Cursor", "v0", "Copilot", "Gemini", "Lovable", "Bolt"];
+const MAX_AI_TOOLS = 8;
+
 // ─── UploadForm ───────────────────────────────────────────────────────────────
 
 interface UploadFormProps {
@@ -56,6 +59,8 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [price, setPrice] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [aiTools, setAiTools] = useState<string[]>([]);
+  const [aiInput, setAiInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -68,13 +73,6 @@ export function UploadForm({ userId }: UploadFormProps) {
   const tagInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // auto-generate slug from title unless user edited it
-  useEffect(() => {
-    if (!slugTouched) {
-      setSlug(toSlug(title));
-    }
-  }, [title, slugTouched]);
-
   // ── tag helpers ─────────────────────────────────────────────────────────────
 
   function addTag(raw: string) {
@@ -86,6 +84,29 @@ export function UploadForm({ userId }: UploadFormProps) {
 
   function removeTag(tag: string) {
     setTags((prev) => prev.filter((t) => t !== tag));
+  }
+
+  // ── AI tools helpers ──────────────────────────────────────────────────────────
+
+  function toggleAiTool(tool: string) {
+    setAiTools((prev) =>
+      prev.includes(tool)
+        ? prev.filter((t) => t !== tool)
+        : prev.length >= MAX_AI_TOOLS
+          ? prev
+          : [...prev, tool],
+    );
+  }
+
+  function addAiTool(raw: string) {
+    const value = raw.trim().slice(0, 30);
+    if (!value || aiTools.some((t) => t.toLowerCase() === value.toLowerCase()) || aiTools.length >= MAX_AI_TOOLS) return;
+    setAiTools((prev) => [...prev, value]);
+    setAiInput("");
+  }
+
+  function removeAiTool(tool: string) {
+    setAiTools((prev) => prev.filter((t) => t !== tool));
   }
 
   function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -217,6 +238,8 @@ export function UploadForm({ userId }: UploadFormProps) {
           storage_path: storagePath,
           tags,
           category: category || null,
+          ai_tools: aiTools,
+          ai_assisted: aiTools.length > 0,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
         });
@@ -265,7 +288,11 @@ export function UploadForm({ userId }: UploadFormProps) {
             id="title"
             placeholder="My Awesome Vibe"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setTitle(v);
+              if (!slugTouched) setSlug(toSlug(v));
+            }}
             maxLength={120}
             required
             disabled={isSubmitting}
@@ -412,6 +439,85 @@ export function UploadForm({ userId }: UploadFormProps) {
           <p className="text-xs text-muted-foreground">
             Press Enter or comma to add a tag
           </p>
+        </div>
+
+        {/* Built with AI */}
+        <div className="flex flex-col gap-2">
+          <Label>
+            Built with AI{" "}
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Disclose which AI tools you used. Shown as a badge on your listing.
+          </p>
+
+          {/* Preset toggles */}
+          <div className="flex flex-wrap gap-2">
+            {AI_PRESETS.map((tool) => {
+              const active = aiTools.includes(tool);
+              return (
+                <button
+                  key={tool}
+                  type="button"
+                  onClick={() => toggleAiTool(tool)}
+                  disabled={isSubmitting}
+                  className={cn(
+                    "border-2 px-3 py-1.5 font-mono text-xs transition-colors outline-none",
+                    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary hover:text-foreground",
+                  )}
+                >
+                  {tool}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom (non-preset) tools as removable chips */}
+          {aiTools.some((t) => !AI_PRESETS.includes(t)) && (
+            <div className="flex flex-wrap gap-1.5">
+              {aiTools
+                .filter((t) => !AI_PRESETS.includes(t))
+                .map((tool) => (
+                  <span
+                    key={tool}
+                    className="inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                  >
+                    {tool}
+                    <button
+                      type="button"
+                      onClick={() => removeAiTool(tool)}
+                      disabled={isSubmitting}
+                      className="opacity-60 transition-opacity hover:opacity-100"
+                      aria-label={`Remove ${tool}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+            </div>
+          )}
+
+          {/* Add a custom tool */}
+          {aiTools.length < MAX_AI_TOOLS && (
+            <input
+              type="text"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                  e.preventDefault();
+                  addAiTool(aiInput);
+                }
+              }}
+              onBlur={() => { if (aiInput) addAiTool(aiInput); }}
+              placeholder="Other tool — type and press Enter"
+              disabled={isSubmitting}
+              className="border-2 border-input bg-background px-3 py-2 font-mono text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+            />
+          )}
         </div>
       </section>
 

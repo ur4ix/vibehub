@@ -495,6 +495,8 @@ export type Database = {
           published_at: string | null;
           tags: string[];
           category: string | null;
+          ai_assisted: boolean;
+          ai_tools: string[];
           created_at: string;
           updated_at: string;
         };
@@ -518,6 +520,8 @@ export type Database = {
           published_at?: string | null;
           tags?: string[];
           category?: string | null;
+          ai_assisted?: boolean;
+          ai_tools?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -541,6 +545,8 @@ export type Database = {
           published_at?: string | null;
           tags?: string[];
           category?: string | null;
+          ai_assisted?: boolean;
+          ai_tools?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -857,6 +863,8 @@ export interface Repository {
   published_at: string | null
   tags: string[]
   category: string | null
+  ai_assisted: boolean
+  ai_tools: string[]
   created_at: string
   updated_at: string
 }
