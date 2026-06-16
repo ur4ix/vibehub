@@ -595,7 +595,7 @@ export default function ListingPage() {
                     <span className="grid h-8 w-8 shrink-0 place-items-center border border-border bg-secondary font-pixel text-sm text-primary">
                       {CATEGORY_ICONS[s.category ?? ''] ?? '▢'}
                     </span>
-                    <span className="border border-primary bg-primary/10 px-2 py-0.5 font-pixel text-[9px] text-primary">
+                    <span className="border border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
                       {s.type === 'free' ? 'Free' : s.price_cents ? `$${(s.price_cents / 100).toFixed(0)}` : 'Paid'}
                     </span>
                   </div>

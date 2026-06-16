@@ -145,7 +145,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                       <h3 className="font-mono text-sm text-foreground group-hover:text-primary">
                         {profile.username}/{r.slug}
                       </h3>
-                      <span className="shrink-0 border-2 border-primary bg-primary/10 px-2 py-0.5 font-pixel text-[9px] text-primary">
+                      <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
                         {r.type === 'free' ? 'Free' : r.price_cents ? `$${(r.price_cents / 100).toFixed(0)}` : 'Paid'}
                       </span>
                     </div>
