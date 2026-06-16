@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
+import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,9 @@ type Status = "idle" | "uploading" | "saving" | "done";
 export function UploadForm({ userId }: UploadFormProps) {
   const router = useRouter();
   const toast  = useToast();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEdit = Boolean(editId);
 
   // form fields
   const [title, setTitle] = useState("");
@@ -63,6 +67,44 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [aiInput, setAiInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [changelog, setChangelog] = useState("");
+
+  // edit-mode state
+  const [editLoading, setEditLoading] = useState(isEdit);
+  const [editForbidden, setEditForbidden] = useState(false);
+  const [existingStoragePath, setExistingStoragePath] = useState<string | null>(null);
+  const [existingPublishedAt, setExistingPublishedAt] = useState<string | null>(null);
+
+  // Load the repository when editing.
+  useEffect(() => {
+    if (!editId) return;
+    const supabase = createClient();
+    let active = true;
+    supabase
+      .from("repositories")
+      .select("*")
+      .eq("id", editId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        const r = data as Repository | null;
+        if (!r) { setEditForbidden(true); setEditLoading(false); return; }
+        if (r.owner_id !== userId) { setEditForbidden(true); setEditLoading(false); return; }
+        setTitle(r.title);
+        setSlug(r.slug);
+        setSlugTouched(true);
+        setDescription(r.description ?? "");
+        setCategory(r.category ?? "");
+        setRepoType(r.type);
+        setPrice(r.price_cents ? (r.price_cents / 100).toString() : "");
+        setTags(r.tags ?? []);
+        setAiTools(r.ai_tools ?? []);
+        setExistingStoragePath(r.storage_path);
+        setExistingPublishedAt(r.published_at);
+        setEditLoading(false);
+      });
+    return () => { active = false; };
+  }, [editId, userId]);
 
   // submission state
   const [status, setStatus] = useState<Status>("idle");
@@ -192,39 +234,93 @@ export function UploadForm({ userId }: UploadFormProps) {
     }
 
     const supabase = createClient();
-    const repoId = crypto.randomUUID();
-    let storagePath: string | null = null;
+    const priceCents =
+      repoType === "paid" ? Math.round(parseFloat(price) * 100) : null;
 
     try {
-      // ── 1. Upload file to Storage ──────────────────────────────────────────
+      // ════ EDIT: update metadata + (if a new ZIP is attached) a new version ════
+      if (isEdit && editId) {
+        let newStoragePath = existingStoragePath;
+
+        if (file) {
+          setStatus("uploading");
+          startFakeProgress();
+          const versionId = crypto.randomUUID();
+          const path = `${userId}/${editId}/${versionId}.zip`;
+          const { error: upErr } = await supabase.storage
+            .from("repositories")
+            .upload(path, file, { contentType: "application/zip", upsert: false });
+          stopFakeProgress(true);
+          if (upErr) { setStatus("idle"); setError(`File upload error: ${upErr.message}`); return; }
+
+          // next version label = vN
+          const { count } = await supabase
+            .from("repository_versions")
+            .select("id", { count: "exact", head: true })
+            .eq("repository_id", editId);
+
+          const { error: vErr } = await supabase.from("repository_versions").insert({
+            repository_id: editId,
+            version: `v${(count ?? 0) + 1}`,
+            changelog: changelog.trim() || null,
+            storage_path: path,
+          });
+          if (vErr) {
+            await supabase.storage.from("repositories").remove([path]);
+            setStatus("idle"); setError(vErr.message); return;
+          }
+          newStoragePath = path;
+        }
+
+        setStatus("saving");
+        const { error: dbError } = await supabase
+          .from("repositories")
+          .update({
+            title: title.trim(),
+            slug: slug.trim(),
+            description: description.trim() || null,
+            type: repoType,
+            price_cents: priceCents,
+            storage_path: newStoragePath,
+            tags,
+            category: category || null,
+            ai_tools: aiTools,
+            ai_assisted: aiTools.length > 0,
+            is_published: publish,
+            published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
+          })
+          .eq("id", editId);
+
+        if (dbError) {
+          setStatus("idle");
+          setError(dbError.code === "23505" ? "A repository with this slug already exists" : dbError.message);
+          return;
+        }
+
+        setStatus("done");
+        toast.success(file ? "New version published!" : "Repository updated");
+        router.push(`/listing/${editId}`);
+        router.refresh();
+        return;
+      }
+
+      // ════ CREATE ═══════════════════════════════════════════════════════════
+      const repoId = crypto.randomUUID();
+      let storagePath: string | null = null;
+
       if (file) {
         setStatus("uploading");
         startFakeProgress();
-
-        storagePath = `${userId}/${repoId}/source.zip`;
-
+        const versionId = crypto.randomUUID();
+        storagePath = `${userId}/${repoId}/${versionId}.zip`;
         const { error: uploadError } = await supabase.storage
           .from("repositories")
-          .upload(storagePath, file, {
-            contentType: "application/zip",
-            upsert: false,
-          });
-
+          .upload(storagePath, file, { contentType: "application/zip", upsert: false });
         stopFakeProgress(true);
-
-        if (uploadError) {
-          setStatus("idle");
-          setError(`File upload error: ${uploadError.message}`);
-          return;
-        }
+        if (uploadError) { setStatus("idle"); setError(`File upload error: ${uploadError.message}`); return; }
       }
 
-      // ── 2. Insert repository record ───────────────────────────────────────
       setStatus("saving");
-
-      const priceCents =
-        repoType === "paid" ? Math.round(parseFloat(price) * 100) : null;
-
       const { error: dbError } = await supabase
         .from("repositories")
         .insert({
@@ -245,17 +341,20 @@ export function UploadForm({ userId }: UploadFormProps) {
         });
 
       if (dbError) {
-        // rollback Storage upload
-        if (storagePath) {
-          await supabase.storage.from("repositories").remove([storagePath]);
-        }
+        if (storagePath) await supabase.storage.from("repositories").remove([storagePath]);
         setStatus("idle");
-        setError(
-          dbError.code === "23505"
-            ? "A repository with this slug already exists"
-            : dbError.message,
-        );
+        setError(dbError.code === "23505" ? "A repository with this slug already exists" : dbError.message);
         return;
+      }
+
+      // record the first version
+      if (storagePath) {
+        await supabase.from("repository_versions").insert({
+          repository_id: repoId,
+          version: "v1",
+          changelog: changelog.trim() || "Initial release",
+          storage_path: storagePath,
+        });
       }
 
       setStatus("done");
@@ -272,6 +371,17 @@ export function UploadForm({ userId }: UploadFormProps) {
   const isSubmitting = status === "uploading" || status === "saving";
 
   // ── render ────────────────────────────────────────────────────────────────────
+
+  if (editLoading) {
+    return <p className="font-mono text-sm text-muted-foreground">Loading<span className="blink">_</span></p>;
+  }
+  if (editForbidden) {
+    return (
+      <div className="border-2 border-border bg-card p-8 text-center">
+        <p className="font-pixel text-xs text-muted-foreground">You can only edit your own repositories.</p>
+      </div>
+    );
+  }
 
   return (
     <form className="flex flex-col gap-8">
@@ -584,7 +694,14 @@ export function UploadForm({ userId }: UploadFormProps) {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Label>ZIP archive</Label>
+          <Label>
+            {isEdit ? "Upload new version" : "ZIP archive"}{" "}
+            {isEdit && (
+              <span className="font-normal text-muted-foreground">
+                (optional — leave empty to keep the current version)
+              </span>
+            )}
+          </Label>
 
           {/* Drop zone */}
           <div
@@ -655,6 +772,25 @@ export function UploadForm({ userId }: UploadFormProps) {
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Changelog — only relevant when a ZIP is attached (a new version) */}
+        {file && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="changelog">
+              {isEdit ? "What changed in this version?" : "Release notes"}{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              id="changelog"
+              rows={2}
+              value={changelog}
+              onChange={(e) => setChangelog(e.target.value)}
+              placeholder={isEdit ? "Fixed X, added Y…" : "Initial release notes…"}
+              maxLength={500}
+              disabled={isSubmitting}
+            />
+          </div>
+        )}
       </section>
 
       {/* ── Upload progress ── */}
@@ -700,8 +836,12 @@ export function UploadForm({ userId }: UploadFormProps) {
           {status === "uploading"
             ? "Uploading…"
             : status === "saving"
-              ? "Publishing…"
-              : "Publish"}
+              ? "Saving…"
+              : isEdit && file
+                ? "Publish version"
+                : isEdit
+                  ? "Publish"
+                  : "Publish"}
         </Button>
       </div>
     </form>

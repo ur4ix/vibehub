@@ -5,8 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
-  Calendar, Tag, Send, ExternalLink, Heart, Trash2,
+  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History,
 } from 'lucide-react'
+import type { RepositoryVersion } from '@/types/database'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
@@ -102,6 +103,7 @@ export default function ListingPage() {
   const [repo,      setRepo]      = useState<RepoDetail | null>(null)
   const [reviews,   setReviews]   = useState<ReviewRow[]>([])
   const [similar,   setSimilar]   = useState<SimilarRepo[]>([])
+  const [versions,  setVersions]  = useState<RepositoryVersion[]>([])
   const [loading,   setLoading]   = useState(true)
   const [comment,   setComment]   = useState('')
   const [rating,    setRating]    = useState(5)
@@ -144,6 +146,14 @@ export default function ListingPage() {
           .order('created_at', { ascending: false })
           .limit(20)
           .then(({ data: rv }) => setReviews((rv as ReviewRow[] | null) ?? []))
+
+        // Version history
+        supabase
+          .from('repository_versions')
+          .select('*')
+          .eq('repository_id', id)
+          .order('created_at', { ascending: false })
+          .then(({ data: vs }) => setVersions((vs as RepositoryVersion[] | null) ?? []))
 
         // Similar (same tags, exclude self)
         if (r.tags.length > 0) {
@@ -226,6 +236,18 @@ export default function ListingPage() {
       return
     }
 
+    window.open(data.signedUrl, '_blank')
+    toast.success('Download started!')
+  }
+
+  async function downloadVersion(path: string) {
+    if (!user) { router.push('/auth'); return }
+    const supabase = createClient()
+    const { data, error } = await supabase.storage.from('repositories').createSignedUrl(path, 60)
+    if (error || !data) {
+      toast.error('Download failed', error?.message ?? 'You may not have access to this version.')
+      return
+    }
     window.open(data.signedUrl, '_blank')
     toast.success('Download started!')
   }
@@ -515,6 +537,43 @@ export default function ListingPage() {
                   <ExternalLink className="h-3.5 w-3.5" />
                   View on GitHub
                 </a>
+              </div>
+            )}
+
+            {/* ── Version history ───────────────────────────────────────── */}
+            {versions.length > 0 && (
+              <div className="mt-10">
+                <h2 className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider">
+                  <History className="h-3.5 w-3.5" />
+                  Versions
+                  <span className="font-mono text-muted-foreground">({versions.length})</span>
+                </h2>
+                <div className="mt-4 flex flex-col gap-3">
+                  {versions.map((v, i) => (
+                    <div key={v.id} className="border-2 border-border bg-card p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-pixel text-[10px] text-primary">
+                          {v.version}
+                          {i === 0 && <span className="ml-2 font-mono text-[9px] text-green-400">latest</span>}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-[10px] text-muted-foreground">{formatDate(v.created_at)}</span>
+                          <button
+                            type="button"
+                            onClick={() => downloadVersion(v.storage_path)}
+                            className="text-muted-foreground transition-colors hover:text-primary"
+                            aria-label={`Download ${v.version}`}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      {v.changelog && (
+                        <p className="mt-2 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{v.changelog}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

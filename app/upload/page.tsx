@@ -10,10 +10,16 @@ export const metadata: Metadata = {
   title: 'Publish repository — Vydex',
 }
 
-export default async function UploadPage() {
+export default async function UploadPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ edit?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
+
+  const editing = Boolean((await searchParams).edit)
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,11 +36,13 @@ export default async function UploadPage() {
 
         <div className="mb-8">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-            // new repository
+            {editing ? '// edit repository' : '// new repository'}
           </span>
-          <h1 className="mt-3 font-pixel text-lg">Publish repository</h1>
+          <h1 className="mt-3 font-pixel text-lg">{editing ? 'Edit repository' : 'Publish repository'}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Publish your code as free or paid — the community can buy, fork and review it.
+            {editing
+              ? 'Update the details, or upload a new version with a changelog — older versions stay in the history.'
+              : 'Publish your code as free or paid — the community can buy, fork and review it.'}
           </p>
         </div>
 

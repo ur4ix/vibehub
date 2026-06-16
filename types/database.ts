@@ -172,6 +172,44 @@ export type Database = {
           },
         ];
       };
+      repository_versions: {
+        Row: {
+          id: string;
+          repository_id: string;
+          version: string;
+          changelog: string | null;
+          storage_path: string;
+          price_cents: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          repository_id: string;
+          version: string;
+          changelog?: string | null;
+          storage_path: string;
+          price_cents?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          repository_id?: string;
+          version?: string;
+          changelog?: string | null;
+          storage_path?: string;
+          price_cents?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "repository_versions_repository_id_fkey";
+            columns: ["repository_id"];
+            isOneToOne: false;
+            referencedRelation: "repositories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           id: string;
@@ -900,6 +938,8 @@ export type PostUpdate = TablesUpdate<"posts">;
 
 export type UserRole = Tables<"user_roles">;
 export type AppRole = Enums<"app_role">;
+
+export type RepositoryVersion = Tables<"repository_versions">;
 
 /** Blog post enriched with author info — used in list + reader pages */
 export interface BlogPost {
