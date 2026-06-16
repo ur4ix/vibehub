@@ -37,7 +37,7 @@ export default async function DashboardPage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-              // dashboard
+              {'// dashboard'}
             </span>
             <h1 className="mt-3 font-pixel text-lg">
               {profile?.display_name ?? profile?.username ?? user.email}
