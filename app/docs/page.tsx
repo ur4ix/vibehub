@@ -88,7 +88,7 @@ export default function DocsPage() {
         <section className="relative border-b-2 border-border">
           <div className="pixel-grid absolute inset-0 opacity-30" aria-hidden="true" />
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// documentation</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// documentation'}</span>
             <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">Vydex docs</h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
               Everything you need to publish, buy and manage repositories on the platform.
@@ -107,7 +107,7 @@ export default function DocsPage() {
         {/* Quickstart */}
         <section className="border-b-2 border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// quickstart</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// quickstart'}</span>
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">Get up and running</h2>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -128,7 +128,7 @@ export default function DocsPage() {
 
         {/* Article grid */}
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// all topics</span>
+          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// all topics'}</span>
           <h2 className="mt-5 font-pixel text-xl leading-[1.5]">Browse by topic</h2>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -175,12 +175,14 @@ export default function DocsPage() {
                 >
                   Contact us
                 </Link>
-                <Link
-                  href="#"
+                <a
+                  href="https://x.com/VydeXdev"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="font-pixel inline-flex items-center justify-center border-2 border-border bg-transparent px-5 py-3 text-[10px] uppercase leading-none tracking-wider text-foreground pixel-shadow-border transition-all duration-100 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none"
                 >
-                  Discord
-                </Link>
+                  Follow on X
+                </a>
               </div>
             </div>
           </div>
