@@ -41,15 +41,15 @@ export function Hero() {
 
           <div className="mx-auto mt-12 inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-2 border-border bg-card px-5 py-3 font-mono text-xs text-muted-foreground">
             <span>
-              <span className="text-primary">12,400+</span> projects
-            </span>
-            <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
-            <span>
-              <span className="text-primary">3,100+</span> authors
-            </span>
-            <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
-            <span>
               <span className="text-primary">0%</span> fee first month
+            </span>
+            <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
+            <span>
+              <span className="text-primary">Minutes</span> to publish
+            </span>
+            <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
+            <span>
+              <span className="text-primary">Community</span>-reviewed
             </span>
           </div>
         </div>

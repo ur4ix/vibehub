@@ -6,28 +6,24 @@ const CATEGORIES = [
     title: 'Apps',
     cat: 'apps',
     desc: 'Ready-made SaaS, bots and microservices. Deploy in minutes.',
-    count: '4,200+',
   },
   {
     icon: '◧',
     title: 'UI Components',
     cat: 'ui-components',
     desc: 'Buttons, dashboards, forms. Copy — paste — ship.',
-    count: '5,800+',
   },
   {
     icon: '☰',
     title: 'Prompts',
     cat: 'prompts',
     desc: 'Tested system prompts and agent chains that actually work.',
-    count: '1,900+',
   },
   {
     icon: '▦',
     title: 'Templates',
     cat: 'templates',
     desc: 'Starters for Next.js, Vite and more. Backend included.',
-    count: '500+',
   },
 ]
 
@@ -43,8 +39,8 @@ export function Catalog() {
             Everything you need to build on vibes
           </h2>
           <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
-            Four categories, thousands of reviewed listings. Every item passes
-            community review — no junk.
+            Four categories, one bar for quality. Every item passes community
+            review — no junk.
           </p>
         </div>
 
@@ -63,7 +59,9 @@ export function Catalog() {
               </span>
               <h3 className="mt-5 font-pixel text-xs leading-relaxed">{c.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{c.desc}</p>
-              <p className="mt-5 font-mono text-xs text-primary">{c.count} listings</p>
+              <p className="mt-5 font-mono text-xs text-primary transition-transform group-hover:translate-x-1">
+                Explore →
+              </p>
             </Link>
           ))}
         </div>

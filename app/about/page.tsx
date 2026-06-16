@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 }
 
 const STATS = [
-  { value: '12,400+', label: 'Projects listed' },
-  { value: '3,100+', label: 'Active authors' },
-  { value: '$0', label: 'Fee first month' },
-  { value: '4.9/5', label: 'Avg. review score' },
+  { value: '0%', label: 'Fee your first month' },
+  { value: 'Minutes', label: 'From ZIP to listed' },
+  { value: 'Community', label: 'Reviewed for quality' },
+  { value: 'Free', label: 'To join & publish' },
 ]
 
 const VALUES = [
@@ -38,12 +38,6 @@ const VALUES = [
   },
 ]
 
-const TEAM = [
-  { username: 'neon_dev', role: 'Founder & product', color: 'oklch(0.82 0.19 145)' },
-  { username: 'pixel_kate', role: 'Design & UX', color: 'oklch(0.7 0.15 200)' },
-  { username: 'bytesmith', role: 'Infrastructure', color: 'oklch(0.75 0.16 90)' },
-]
-
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +48,7 @@ export default function AboutPage() {
         <section className="relative overflow-hidden border-b-2 border-border">
           <div className="pixel-grid absolute inset-0 opacity-40" aria-hidden="true" />
           <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// about</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// about'}</span>
             <h1 className="mt-5 max-w-2xl text-balance font-pixel text-2xl leading-[1.4] sm:text-3xl sm:leading-[1.4]">
               Built by vibe coders,<br />
               <span className="text-primary">for vibe coders</span>
@@ -84,7 +78,7 @@ export default function AboutPage() {
         {/* Values */}
         <section className="border-b-2 border-border">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// values</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// values'}</span>
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">What we believe in</h2>
 
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -103,7 +97,7 @@ export default function AboutPage() {
         <section className="relative border-b-2 border-border">
           <div className="pixel-grid absolute inset-0 opacity-20" aria-hidden="true" />
           <div className="relative mx-auto max-w-3xl px-4 py-20 sm:px-6">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// story</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// story'}</span>
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">How it started</h2>
             <div className="mt-8 space-y-5 text-base leading-relaxed text-muted-foreground">
               <p>
@@ -126,27 +120,18 @@ export default function AboutPage() {
 
         {/* Team */}
         <section className="border-b-2 border-border">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// team</span>
+          <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// team'}</span>
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">The builders</h2>
-
-            <div className="mt-12 flex flex-wrap gap-6">
-              {TEAM.map((m) => (
-                <div key={m.username} className="flex items-center gap-4 border-2 border-border bg-card px-5 py-4">
-                  <span
-                    className="grid h-12 w-12 place-items-center border-2 border-border font-pixel text-sm uppercase text-primary-foreground"
-                    style={{ backgroundColor: m.color }}
-                    aria-hidden="true"
-                  >
-                    {m.username.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div>
-                    <p className="font-mono text-sm text-foreground">@{m.username}</p>
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">{m.role}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="mt-8 text-base leading-relaxed text-muted-foreground">
+              Vydex is built by a small, independent team of vibe coders — the same people who
+              wanted this marketplace and decided to make it. We&rsquo;re building in public and
+              shipping fast.
+            </p>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              Got feedback or want to get involved?{' '}
+              <Link href="/contact" className="text-primary hover:underline">Say hi</Link>.
+            </p>
           </div>
         </section>
 
@@ -154,7 +139,7 @@ export default function AboutPage() {
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <div className="scanlines relative overflow-hidden border-2 border-primary bg-card p-8 text-center pixel-shadow sm:p-14">
             <div className="relative">
-              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// join us</span>
+              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// join us'}</span>
               <h2 className="mx-auto mt-6 max-w-xl text-balance font-pixel text-xl leading-[1.5] sm:text-2xl">
                 Ready to ship something great?
               </h2>

@@ -19,7 +19,7 @@ export function CtaSection() {
         <div className="scanlines relative overflow-hidden border-2 border-primary bg-card p-8 text-center pixel-shadow sm:p-14">
           <div className="relative">
             <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-              // ready to start?
+              {'// ready to start?'}
             </span>
             <h2 className="mx-auto mt-6 max-w-2xl text-balance font-pixel text-xl leading-[1.5] sm:text-3xl sm:leading-[1.45]">
               Turn your vibes into income
@@ -48,7 +48,7 @@ export function CtaSection() {
             </form>
 
             <p className="mt-5 font-mono text-xs text-muted-foreground">
-              3,100+ authors already with us. No spam.
+              Free to start. No credit card, no spam.
             </p>
           </div>
         </div>
