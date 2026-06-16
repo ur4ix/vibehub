@@ -1,25 +1,31 @@
+import Link from 'next/link'
+
 const CATEGORIES = [
   {
     icon: '▢',
     title: 'Apps',
+    cat: 'apps',
     desc: 'Ready-made SaaS, bots and microservices. Deploy in minutes.',
     count: '4,200+',
   },
   {
     icon: '◧',
     title: 'UI Components',
+    cat: 'ui-components',
     desc: 'Buttons, dashboards, forms. Copy — paste — ship.',
     count: '5,800+',
   },
   {
     icon: '☰',
     title: 'Prompts',
+    cat: 'prompts',
     desc: 'Tested system prompts and agent chains that actually work.',
     count: '1,900+',
   },
   {
     icon: '▦',
     title: 'Templates',
+    cat: 'templates',
     desc: 'Starters for Next.js, Vite and more. Backend included.',
     count: '500+',
   },
@@ -31,7 +37,7 @@ export function Catalog() {
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-            // catalog
+            {'// catalog'}
           </span>
           <h2 className="mt-5 text-balance font-pixel text-xl leading-[1.5] sm:text-2xl sm:leading-[1.5]">
             Everything you need to build on vibes
@@ -44,9 +50,10 @@ export function Catalog() {
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {CATEGORIES.map((c) => (
-            <article
+            <Link
               key={c.title}
-              className="group cursor-pointer border-2 border-border bg-card p-6 transition-all duration-100 hover:-translate-x-1 hover:-translate-y-1 hover:border-primary pixel-shadow-border"
+              href={`/explore?cat=${c.cat}`}
+              className="group block border-2 border-border bg-card p-6 transition-all duration-100 hover:-translate-x-1 hover:-translate-y-1 hover:border-primary pixel-shadow-border"
             >
               <span
                 className="grid h-12 w-12 place-items-center border-2 border-border bg-secondary font-pixel text-lg text-primary"
@@ -57,7 +64,7 @@ export function Catalog() {
               <h3 className="mt-5 font-pixel text-xs leading-relaxed">{c.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{c.desc}</p>
               <p className="mt-5 font-mono text-xs text-primary">{c.count} listings</p>
-            </article>
+            </Link>
           ))}
         </div>
       </div>

@@ -63,24 +63,31 @@ const BRANDS: Brand[] = [
   { name: 'Figma', mark: <FigmaMark className="h-5 w-5" /> },
 ]
 
+// Repeat the set inside each copy so a single copy is always wider than the
+// viewport — otherwise the -50% loop reveals a gap on wide screens (the
+// "break / retrigger" effect).
+const REPEAT = 4
+
 function BrandRow({ ariaHidden }: { ariaHidden?: boolean }) {
   return (
     <ul className="flex shrink-0 items-center" aria-hidden={ariaHidden}>
-      {BRANDS.map((b) => (
-        <li
-          key={b.name}
-          className="flex items-center gap-2.5 px-8 text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {b.wordmark ? (
-            <span className="font-pixel text-base leading-none">{b.wordmark}</span>
-          ) : (
-            <>
-              {b.mark}
-              <span className="font-mono text-sm whitespace-nowrap">{b.name}</span>
-            </>
-          )}
-        </li>
-      ))}
+      {Array.from({ length: REPEAT }).flatMap((_, rep) =>
+        BRANDS.map((b) => (
+          <li
+            key={`${rep}-${b.name}`}
+            className="flex items-center gap-2.5 px-8 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {b.wordmark ? (
+              <span className="font-pixel text-base leading-none">{b.wordmark}</span>
+            ) : (
+              <>
+                {b.mark}
+                <span className="font-mono text-sm whitespace-nowrap">{b.name}</span>
+              </>
+            )}
+          </li>
+        )),
+      )}
     </ul>
   )
 }
