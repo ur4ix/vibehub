@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
-  Calendar, Tag, Send, ExternalLink,
+  Calendar, Tag, Send, ExternalLink, Heart, Trash2,
 } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
@@ -111,6 +111,12 @@ export default function ListingPage() {
   // (enforced by the validate_review trigger + RLS). null = not yet checked.
   const [purchaseId, setPurchaseId] = useState<string | null>(null)
   const [hasReviewed, setHasReviewed] = useState(false)
+  // Likes (reactions)
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [likeBusy, setLikeBusy] = useState(false)
+  const [forking, setForking] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   // Fetch all data
   useEffect(() => {
@@ -127,6 +133,7 @@ export default function ListingPage() {
         if (error || !data) { setLoading(false); return }
         const r = data as RepoDetail
         setRepo(r)
+        setLikeCount(r.reaction_count)
         setLoading(false)
 
         // Reviews
@@ -182,6 +189,15 @@ export default function ListingPage() {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => { if (active) setHasReviewed(Boolean(data)) })
+
+    supabase
+      .from('reactions')
+      .select('id')
+      .eq('repository_id', id)
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setLiked(Boolean(data)) })
 
     return () => { active = false }
   }, [id, user])
@@ -252,6 +268,106 @@ export default function ListingPage() {
     setComment('')
     setHasReviewed(true)
     toast.success('Review posted!', 'Thanks for sharing your feedback.')
+  }
+
+  async function toggleLike() {
+    if (!user) { router.push('/auth'); return }
+    if (!repo || likeBusy) return
+    setLikeBusy(true)
+
+    const supabase = createClient()
+    const next = !liked
+    // optimistic
+    setLiked(next)
+    setLikeCount((c) => Math.max(0, c + (next ? 1 : -1)))
+
+    const { error } = next
+      ? await supabase.from('reactions').insert({ repository_id: repo.id, user_id: user.id })
+      : await supabase.from('reactions').delete().eq('repository_id', repo.id).eq('user_id', user.id)
+
+    if (error) {
+      // revert
+      setLiked(!next)
+      setLikeCount((c) => Math.max(0, c + (next ? -1 : 1)))
+      toast.error('Could not update like', error.message)
+    }
+    setLikeBusy(false)
+  }
+
+  async function handleFork() {
+    if (!user) { router.push('/auth'); return }
+    if (!repo || forking) return
+    if (repo.type !== 'free') {
+      toast.info('Fork after purchase', 'Paid repositories can be forked once purchased.')
+      return
+    }
+    if (!repo.storage_path) {
+      toast.error('Nothing to fork', 'This repository has no source file yet.')
+      return
+    }
+    setForking(true)
+
+    const supabase = createClient()
+    const newId = crypto.randomUUID()
+    const newPath = `${user.id}/${newId}/source.zip`
+
+    // Copy the source within the private bucket (RLS: read source as a free
+    // published repo, write into your own folder).
+    const { error: copyErr } = await supabase.storage.from('repositories').copy(repo.storage_path, newPath)
+    if (copyErr) { setForking(false); toast.error('Fork failed', copyErr.message); return }
+
+    const { error: insErr } = await supabase.from('repositories').insert({
+      id: newId,
+      owner_id: user.id,
+      title: repo.title,
+      slug: `${repo.slug}-fork-${newId.slice(0, 6)}`.slice(0, 80),
+      description: repo.description,
+      readme: repo.readme,
+      type: 'free',
+      storage_path: newPath,
+      tags: repo.tags,
+      category: repo.category,
+      is_published: false,
+    })
+    if (insErr) {
+      await supabase.storage.from('repositories').remove([newPath])
+      setForking(false)
+      toast.error('Fork failed', insErr.message)
+      return
+    }
+
+    // Link the fork — the forks trigger bumps the original's fork_count.
+    await supabase.from('forks').insert({
+      original_repository_id: repo.id,
+      forked_repository_id: newId,
+      forked_by: user.id,
+    })
+
+    setForking(false)
+    toast.success('Forked!', 'A draft copy was added to your projects.')
+    router.push(`/upload?edit=${newId}`)
+  }
+
+  async function handleDelete() {
+    if (!user || !repo || user.id !== repo.owner_id || deleting) return
+    if (!window.confirm('Delete this repository permanently? This cannot be undone.')) return
+    setDeleting(true)
+
+    const supabase = createClient()
+    if (repo.storage_path) {
+      await supabase.storage.from('repositories').remove([repo.storage_path])
+    }
+    const { error } = await supabase.from('repositories').delete().eq('id', repo.id)
+    setDeleting(false)
+
+    if (error) {
+      // e.g. FK restrict if the repo has purchases
+      toast.error('Could not delete', error.message)
+      return
+    }
+    toast.success('Repository deleted')
+    router.push('/dashboard')
+    router.refresh()
   }
 
   // ─── Loading skeleton ─────────────────────────────────────────────────────
@@ -342,7 +458,7 @@ export default function ListingPage() {
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />{repo.reaction_count} likes
+                    <Eye className="h-3 w-3" />{likeCount} likes
                   </span>
                   <span className="flex items-center gap-1">
                     <GitFork className="h-3 w-3" />{repo.fork_count} forks
@@ -504,17 +620,51 @@ export default function ListingPage() {
                     Download free
                   </PixelButton>
                 )}
+                {!isOwner && (
+                  <div className="flex gap-2">
+                    <PixelButton
+                      variant="outline"
+                      className="flex-1 gap-1.5 py-2.5 text-xs"
+                      onClick={toggleLike}
+                      disabled={likeBusy}
+                    >
+                      <Heart className={'h-3.5 w-3.5 ' + (liked ? 'fill-current text-destructive' : '')} />
+                      {likeCount}
+                    </PixelButton>
+                    <PixelButton
+                      variant="outline"
+                      className="flex-1 gap-1.5 py-2.5 text-xs"
+                      onClick={handleFork}
+                      disabled={forking}
+                    >
+                      <GitFork className="h-3.5 w-3.5" />
+                      {forking ? '…' : 'Fork'}
+                    </PixelButton>
+                  </div>
+                )}
+
                 {isOwner && (
-                  <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
-                    Edit listing
-                  </PixelButton>
+                  <>
+                    <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
+                      Edit listing
+                    </PixelButton>
+                    <PixelButton
+                      variant="outline"
+                      className="w-full gap-1.5 py-2.5 text-xs border-destructive text-destructive hover:border-destructive hover:text-destructive"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {deleting ? 'Deleting…' : 'Delete'}
+                    </PixelButton>
+                  </>
                 )}
               </div>
 
               {/* Stats row */}
               <div className="mt-5 grid grid-cols-3 gap-0 border-t border-border pt-4 text-center">
                 <div>
-                  <p className="font-pixel text-[10px] text-primary">{repo.reaction_count}</p>
+                  <p className="font-pixel text-[10px] text-primary">{likeCount}</p>
                   <p className="mt-1 font-mono text-[9px] text-muted-foreground">likes</p>
                 </div>
                 <div className="border-x border-border">
