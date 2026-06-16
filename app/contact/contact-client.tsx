@@ -84,14 +84,14 @@ export function ContactPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main>
+      <main className="flex-1">
         <section className="relative border-b-2 border-border">
           <div className="pixel-grid absolute inset-0 opacity-30" aria-hidden="true" />
           <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// contact</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// contact'}</span>
             <h1 className="mt-5 font-pixel text-2xl leading-[1.4]">Get in touch</h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
               Have a question, a partnership idea, or just want to say hello? We read every message.
@@ -103,7 +103,7 @@ export function ContactPageClient() {
           <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
             {/* Form */}
             <div>
-              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// send a message</span>
+              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// send a message'}</span>
 
               {sent ? (
                 <div className="mt-6 border-2 border-primary bg-primary/10 p-8 text-center">
@@ -145,7 +145,7 @@ export function ContactPageClient() {
 
             {/* Channels */}
             <div>
-              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// other channels</span>
+              <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// other channels'}</span>
               <div className="mt-6 flex flex-col gap-4">
                 {CHANNELS.map((c) => (
                   <a

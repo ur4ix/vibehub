@@ -73,10 +73,10 @@ export default function HirePage() {
   })
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         {/* Heading */}
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>

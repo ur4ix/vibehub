@@ -707,15 +707,15 @@ export default function ListingPage() {
                     <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
                       Edit listing
                     </PixelButton>
-                    <PixelButton
-                      variant="outline"
-                      className="w-full gap-1.5 py-2.5 text-xs border-destructive text-destructive hover:border-destructive hover:text-destructive"
+                    <button
+                      type="button"
                       onClick={handleDelete}
                       disabled={deleting}
+                      className="inline-flex w-full items-center justify-center gap-1.5 border-2 border-destructive bg-destructive/5 px-5 py-2.5 font-pixel text-[10px] uppercase leading-none tracking-wider text-destructive transition-all duration-100 [box-shadow:3px_3px_0_0_var(--destructive)] hover:bg-destructive hover:text-white active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-60"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       {deleting ? 'Deleting…' : 'Delete'}
-                    </PixelButton>
+                    </button>
                   </>
                 )}
               </div>

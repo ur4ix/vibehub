@@ -197,10 +197,10 @@ function ExploreContent() {
   }, [category, pricing, sort, searchQuery])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         {/* Heading */}
         <div className="mb-8">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// explore'}</span>
@@ -310,9 +310,9 @@ function ExploreContent() {
 
 function ExploreSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <div className="mb-8 h-8 w-48 animate-pulse bg-card border-2 border-border" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (

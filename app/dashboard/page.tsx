@@ -30,10 +30,10 @@ export default async function DashboardPage() {
   const repos = reposRaw as DashboardRepo[] | null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
