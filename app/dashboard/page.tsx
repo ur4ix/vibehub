@@ -90,7 +90,7 @@ export default async function DashboardPage() {
                   <p className="font-mono text-sm text-foreground truncate">{r.slug ?? r.title}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-pixel text-[9px] text-primary">
+                  <span className="font-pixel text-[9px] text-green-400">
                     {r.type === 'free' ? 'Free' : r.price_cents ? `$${(r.price_cents / 100).toFixed(0)}` : 'Paid'}
                   </span>
                   <span className={
