@@ -1,5 +1,6 @@
 import { SiteHeader } from '@/components/site-header'
 import { Hero } from '@/components/hero'
+import { BuiltWith } from '@/components/built-with'
 import { Catalog } from '@/components/catalog'
 import { HowItWorks } from '@/components/how-it-works'
 import { CtaSection } from '@/components/cta-section'
@@ -11,6 +12,7 @@ export default function HomePage() {
       <SiteHeader />
       <main>
         <Hero />
+        <BuiltWith />
         <Catalog />
         <HowItWorks />
         <CtaSection />
