@@ -25,10 +25,11 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // getUser() validates the JWT against Supabase Auth AND refreshes the
-  // access token if expired, writing updated cookies into supabaseResponse.
-  const { data: { user } } = await supabase.auth.getUser();
-  const isAuthenticated = Boolean(user);
+  // Use getClaims() (cryptographically verifies the JWT) — the SAME check the
+  // /auth page uses. Mixing getUser() here with getClaims() there made the two
+  // disagree for some sessions, bouncing /profile -> /auth -> /dashboard.
+  const { data } = await supabase.auth.getClaims();
+  const isAuthenticated = Boolean(data?.claims);
 
   const { pathname } = request.nextUrl;
 
