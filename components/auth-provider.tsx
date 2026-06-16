@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useRouter } from 'next/navigation'
+import type { Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { colorFromId } from '@/components/pixel-avatar'
 
@@ -36,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient()
+    let loadedUserId: string | null = null
+    let active = true
 
     async function loadProfile(supabaseUserId: string, email: string) {
       const { data: rawData } = await supabase
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', supabaseUserId)
         .single()
       const data = rawData as { username: string; display_name: string | null; avatar_url: string | null; reputation: number } | null
+      if (!active) return
 
       setUser({
         id: supabaseUserId,
@@ -56,33 +60,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
     }
 
-    // onAuthStateChange fires INITIAL_SESSION on subscribe (initial load),
-    // then SIGNED_IN / SIGNED_OUT / TOKEN_REFRESHED / USER_UPDATED. We track the
-    // last loaded user id so token refreshes for the same user don't refetch.
-    let loadedUserId: string | null = null
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Single path for both the authoritative initial read and later auth events.
+    // Deduped by user id so token refreshes for the same user don't refetch.
+    async function apply(session: Session | null) {
       const sessionUser = session?.user ?? null
 
       if (!sessionUser) {
         loadedUserId = null
-        setUser(null)
-        setLoading(false)
+        if (active) { setUser(null); setLoading(false) }
         return
       }
 
       if (sessionUser.id === loadedUserId) {
-        setLoading(false)
+        if (active) setLoading(false)
         return
       }
 
       loadedUserId = sessionUser.id
-      loadProfile(sessionUser.id, sessionUser.email ?? '').finally(() => setLoading(false))
-    })
+      await loadProfile(sessionUser.id, sessionUser.email ?? '')
+      if (active) setLoading(false)
+    }
 
-    return () => subscription.unsubscribe()
+    // Authoritative initial read — covers a transient null INITIAL_SESSION event
+    // (which was briefly flipping `user` to null and bouncing protected pages).
+    supabase.auth.getSession().then(({ data: { session } }) => apply(session))
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => apply(session))
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function signOut() {

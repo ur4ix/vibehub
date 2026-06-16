@@ -71,9 +71,15 @@ export function ProfileView() {
   const [linking, setLinking] = useState<ProviderKey | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Authoritative auth gate: check the session directly (reads cookies) instead
+  // of the AuthProvider's `user`, which is briefly null right after F5 and was
+  // racing this redirect — bouncing an authenticated user /auth -> /dashboard.
   useEffect(() => {
-    if (!loading && !user) router.push('/auth')
-  }, [user, loading, router])
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push('/auth')
+    })
+  }, [router])
 
   useEffect(() => {
     if (!user) return
