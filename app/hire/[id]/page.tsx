@@ -34,7 +34,7 @@ const BUDGET_LABELS: Record<BudgetType, (v: number) => string> = {
 }
 
 const BUDGET_COLORS: Record<BudgetType, string> = {
-  fixed:  'text-primary border-primary bg-primary/10',
+  fixed:  'text-green-400 border-green-400/50 bg-green-400/10',
   equity: 'text-amber-400 border-amber-400/50 bg-amber-400/10',
   hourly: 'text-blue-400 border-blue-400/50 bg-blue-400/10',
 }

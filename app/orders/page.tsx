@@ -152,7 +152,7 @@ export default function OrdersPage() {
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-2">{order.description}</p>
                   </div>
-                  <span className="shrink-0 border-2 border-primary bg-primary/10 px-3 py-1 font-pixel text-[10px] text-primary">
+                  <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-3 py-1 font-pixel text-[10px] text-green-400">
                     ${order.budget}
                   </span>
                 </div>
