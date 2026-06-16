@@ -18,7 +18,7 @@ const UNAUTH_NAV = [
 ]
 
 const AUTH_NAV = [
-  { label: 'Code', href: '/explore' },
+  { label: 'Explore', href: '/explore' },
   { label: 'Hiring', href: '/hire' },
   { label: 'Orders', href: '/orders' },
   { label: 'My Projects', href: '/profile' },
