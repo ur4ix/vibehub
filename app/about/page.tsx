@@ -101,18 +101,18 @@ export default function AboutPage() {
             <h2 className="mt-5 font-pixel text-xl leading-[1.5]">How it started</h2>
             <div className="mt-8 space-y-5 text-base leading-relaxed text-muted-foreground">
               <p>
-                The first version of Vydex was a Discord bot that pinged a channel every time
-                someone posted a &ldquo;repo for sale&rdquo; message. It worked — embarrassingly well.
+                Vydex started from a simple frustration: vibe coders were shipping real, working
+                software with AI — and had nowhere good to sell it. Gists, DMs and random chat
+                channels aren&rsquo;t a marketplace.
               </p>
               <p>
-                We turned it into a proper web app after realizing that &ldquo;vibe coding&rdquo; wasn&rsquo;t
-                just a meme. Millions of developers were shipping functional apps with AI assistance,
-                and most of them had no good place to monetize that output.
+                So we&rsquo;re building one. A place where the apps, components, prompts and
+                templates you vibe into existence can be listed, discovered and bought — with
+                quality checks and fair economics built in from the start.
               </p>
               <p>
-                Today Vydex is the marketplace where those developers list their work — apps,
-                components, prompts, templates — and where buyers find battle-tested building
-                blocks instead of starting from scratch.
+                We&rsquo;re early and building in public. What you see today is the foundation;
+                where it goes next is shaped by the people who actually use it.
               </p>
             </div>
           </div>
