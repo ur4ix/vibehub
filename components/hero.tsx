@@ -20,7 +20,7 @@ export function Hero() {
 
           <h1 className="mt-8 text-balance font-pixel text-3xl leading-[1.4] tracking-tight sm:text-4xl md:text-5xl md:leading-[1.4]">
             Marketplace for{' '}
-            <span className="text-primary">vibe coders</span>
+            <span className="text-shimmer">vibe coders</span>
           </h1>
 
           <p className="mx-auto mt-8 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
