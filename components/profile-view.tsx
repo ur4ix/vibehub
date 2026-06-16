@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Shield, Camera, Check, Plus } from 'lucide-react'
-import type { UserIdentity } from '@supabase/supabase-js'
+import type { UserIdentity, Provider } from '@supabase/supabase-js'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
 import { PixelButton } from './pixel-button'
@@ -13,16 +13,17 @@ import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ProfileDraft, Repository, UserUpdate } from '@/types/database'
 
-// Verified-connect providers. `key` is the Supabase provider id; X uses 'twitter'.
-type ProviderKey = 'github' | 'twitter'
+// Verified-connect providers. `key` is the Supabase provider id; X now uses 'x'
+// (Supabase renamed the legacy 'twitter' provider).
+type ProviderKey = 'github' | 'x'
 const SOCIAL_PROVIDERS: {
   key: ProviderKey
   title: string
   baseUrl: string
   field: 'github_username' | 'x_username'
 }[] = [
-  { key: 'github',  title: 'GitHub', baseUrl: 'https://github.com/', field: 'github_username' },
-  { key: 'twitter', title: 'X',      baseUrl: 'https://x.com/',      field: 'x_username' },
+  { key: 'github', title: 'GitHub', baseUrl: 'https://github.com/', field: 'github_username' },
+  { key: 'x',      title: 'X',      baseUrl: 'https://x.com/',      field: 'x_username' },
 ]
 
 function Stat({ value, label }: { value: string | number; label: string }) {
@@ -145,7 +146,10 @@ export function ProfileView() {
   // ── Verified social connect / disconnect ──────────────────────────────────
 
   function identityFor(provider: ProviderKey) {
-    return identities.find((i) => i.provider === provider)
+    // Supabase may store the X identity under the new 'x' provider or the
+    // legacy 'twitter' one — match either.
+    const keys = provider === 'x' ? ['x', 'twitter'] : [provider]
+    return identities.find((i) => keys.includes(i.provider))
   }
 
   async function connectSocial(provider: ProviderKey) {
@@ -155,7 +159,7 @@ export function ProfileView() {
     const supabase = createClient()
     // linkIdentity needs "Manual Linking" enabled in Supabase Auth settings.
     const { error } = await supabase.auth.linkIdentity({
-      provider,
+      provider: provider as Provider,
       options: { redirectTo: `${location.origin}/auth/callback?next=/profile` },
     })
     if (error) {

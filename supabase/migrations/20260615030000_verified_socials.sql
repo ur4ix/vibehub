@@ -91,7 +91,8 @@ begin
     and i.provider = 'github'
   limit 1;
 
-  -- X/Twitter stores the handle under user_name / screen_name.
+  -- X/Twitter stores the handle under user_name / screen_name. Supabase renamed
+  -- the provider from 'twitter' to 'x'; match either so existing and new links work.
   select coalesce(
            i.identity_data ->> 'user_name',
            i.identity_data ->> 'preferred_username',
@@ -101,7 +102,7 @@ begin
     into v_x
   from auth.identities i
   where i.user_id = auth.uid()
-    and i.provider = 'twitter'
+    and i.provider in ('twitter', 'x')
   limit 1;
 
   update public.users u
