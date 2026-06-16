@@ -934,6 +934,7 @@ export interface ExploreRepo {
   owner_id: string
   owner_username: string
   owner_display_name: string | null
+  owner_avatar_url: string | null
 }
 
 /** Dashboard / profile repo row — lean shape returned by Supabase query */

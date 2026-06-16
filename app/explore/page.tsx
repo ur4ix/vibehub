@@ -51,7 +51,7 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
             <h3 className="font-mono text-sm font-medium text-foreground group-hover:text-primary truncate">
               {repo.title}
             </h3>
-            <span className="shrink-0 border border-primary bg-primary/10 px-2 py-0.5 font-pixel text-[9px] text-primary">
+            <span className="shrink-0 border border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
               {repo.type === 'free' ? 'Free' : repo.price_cents ? `$${(repo.price_cents / 100).toFixed(0)}` : 'Paid'}
             </span>
           </div>
@@ -73,7 +73,7 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
       </div>
 
       <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-        <PixelAvatar username={repo.owner_username} avatarColor={avatarColor} size={20} />
+        <PixelAvatar username={repo.owner_username} avatarColor={avatarColor} size={20} imageUrl={repo.owner_avatar_url ?? undefined} />
         <span className="font-mono text-[10px] text-muted-foreground">
           @{repo.owner_username}
         </span>
@@ -168,9 +168,9 @@ function ExploreContent() {
       const ownerIds = [...new Set(repoRows.map((r) => r.owner_id))]
       const { data: profilesRaw } = await supabase
         .from('profiles')
-        .select('id, username, display_name')
+        .select('id, username, display_name, avatar_url')
         .in('id', ownerIds)
-      const profiles = profilesRaw as { id: string; username: string; display_name: string | null }[] | null
+      const profiles = profilesRaw as { id: string; username: string; display_name: string | null; avatar_url: string | null }[] | null
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]) ?? [])
 
@@ -188,6 +188,7 @@ function ExploreContent() {
           owner_id: r.owner_id,
           owner_username: profileMap.get(r.owner_id)?.username ?? 'unknown',
           owner_display_name: profileMap.get(r.owner_id)?.display_name ?? null,
+          owner_avatar_url: profileMap.get(r.owner_id)?.avatar_url ?? null,
         })),
       )
       setLoading(false)
@@ -202,7 +203,7 @@ function ExploreContent() {
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         {/* Heading */}
         <div className="mb-8">
-          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// explore</span>
+          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// explore'}</span>
           <h1 className="mt-3 font-pixel text-xl">Browse repositories</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Discover apps, components, prompts and templates built by the vibe coding community.
