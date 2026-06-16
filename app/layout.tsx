@@ -2,6 +2,7 @@
 import { Geist_Mono, Press_Start_2P } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { ToastProvider } from '@/components/pixel-toast'
+import { PageTransition } from '@/components/page-transition'
 import './globals.css'
 
 const geistMono = Geist_Mono({
@@ -38,7 +39,9 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <PageTransition>{children}</PageTransition>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

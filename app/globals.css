@@ -131,6 +131,19 @@
     50% { opacity: 0; }
   }
 
+  /* Page enter — soft fade on each route change. Opacity only, so it doesn't
+     create a containing block that would break the sticky header. */
+  .page-enter {
+    animation: page-enter 0.26s ease-out both;
+  }
+  @keyframes page-enter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter { animation: none; }
+  }
+
   /* Shimmering gradient text — a metallic sheen sweeps across the word.
      Gradient endpoints match so the loop is seamless. */
   .text-shimmer {
