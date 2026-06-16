@@ -37,12 +37,8 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
-              <span
-                className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground"
-                aria-hidden="true"
-              >
-                <span className="font-pixel text-[12px]">{'>'}</span>
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-8 shrink-0 border-2 border-border" />
               <span className="font-pixel text-xs">VYDEX</span>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">

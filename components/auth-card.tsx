@@ -84,12 +84,8 @@ export function AuthCard() {
         className="mb-8 flex items-center justify-center gap-3"
         aria-label="Vydex — home"
       >
-        <span
-          className="grid h-8 w-8 place-items-center border-2 border-primary bg-primary text-primary-foreground"
-          aria-hidden="true"
-        >
-          <span className="font-pixel text-[12px]">{'>'}</span>
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-8 shrink-0 border-2 border-border" />
         <span className="font-pixel text-xs tracking-tight">VYDEX</span>
       </Link>
 
