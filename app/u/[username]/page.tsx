@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
+import { FollowButton } from '@/components/follow-button'
 import { createClient } from '@/lib/supabase/server'
 
 interface PageProps {
@@ -55,7 +56,17 @@ async function getProfile(username: string) {
     .order('published_at', { ascending: false })
     .limit(48)
 
-  return { profile, repos: (reposRaw as ProfileRepo[] | null) ?? [] }
+  const [{ count: followers }, { count: following }] = await Promise.all([
+    supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', profile.id),
+    supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profile.id),
+  ])
+
+  return {
+    profile,
+    repos: (reposRaw as ProfileRepo[] | null) ?? [],
+    followers: followers ?? 0,
+    following: following ?? 0,
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -73,7 +84,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const { username } = await params
   const data = await getProfile(username)
   if (!data) notFound()
-  const { profile, repos } = data
+  const { profile, repos, followers, following } = data
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const currentUserId = user?.id ?? null
+  let isFollowing = false
+  if (user && user.id !== profile.id) {
+    const { data: f } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', profile.id)
+      .maybeSingle()
+    isFollowing = Boolean(f)
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -109,15 +134,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
               )}
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="border-2 border-border bg-background px-3 py-3 text-center">
-                  <div className="font-pixel text-sm text-primary">{profile.reputation}</div>
-                  <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">rep</div>
-                </div>
-                <div className="border-2 border-border bg-background px-3 py-3 text-center">
-                  <div className="font-pixel text-sm text-primary">{repos.length}</div>
-                  <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">repos</div>
-                </div>
+                {[
+                  { v: profile.reputation, l: 'rep' },
+                  { v: repos.length, l: 'repos' },
+                  { v: followers, l: 'followers' },
+                  { v: following, l: 'following' },
+                ].map((s) => (
+                  <div key={s.l} className="border-2 border-border bg-background px-3 py-3 text-center">
+                    <div className="font-pixel text-sm text-primary">{s.v}</div>
+                    <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
+                  </div>
+                ))}
               </div>
+
+              <FollowButton targetUserId={profile.id} currentUserId={currentUserId} initialFollowing={isFollowing} />
 
               <p className="mt-5 text-center font-mono text-[10px] text-muted-foreground">
                 Joined {formatJoined(profile.created_at)}

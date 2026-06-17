@@ -172,6 +172,27 @@ export type Database = {
           },
         ];
       };
+      follows: {
+        Row: {
+          id: number;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       repository_versions: {
         Row: {
           id: string;
