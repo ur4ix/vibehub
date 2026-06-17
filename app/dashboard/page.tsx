@@ -10,6 +10,26 @@ export const metadata: Metadata = {
   title: 'Dashboard — Vydex',
 }
 
+interface DashJob {
+  id: string
+  title: string
+  budget_type: 'fixed' | 'equity' | 'hourly'
+  budget_value: number
+  status: 'open' | 'closed'
+  created_at: string
+}
+interface DashOrder {
+  id: string
+  title: string
+  budget: number
+  status: string
+  created_at: string
+}
+
+function jobBudget(t: DashJob['budget_type'], v: number) {
+  return t === 'fixed' ? `$${v}` : t === 'equity' ? `${v}%` : `$${v}/h`
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -28,6 +48,20 @@ export default async function DashboardPage() {
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
   const repos = reposRaw as DashboardRepo[] | null
+
+  const { data: jobsRaw } = await supabase
+    .from('jobs')
+    .select('id, title, budget_type, budget_value, status, created_at')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: false })
+  const jobs = jobsRaw as DashJob[] | null
+
+  const { data: ordersRaw } = await supabase
+    .from('orders')
+    .select('id, title, budget, status, created_at')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: false })
+  const orders = ordersRaw as DashOrder[] | null
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -101,6 +135,50 @@ export default async function DashboardPage() {
                   </span>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* Jobs */}
+        <div className="mt-12 flex items-center justify-between">
+          <h2 className="font-pixel text-xs uppercase tracking-wider">Jobs</h2>
+          <Link href="/hire/new" className="font-mono text-xs text-primary hover:underline">+ Post a job</Link>
+        </div>
+        {!jobs || jobs.length === 0 ? (
+          <p className="mt-4 font-mono text-sm text-muted-foreground">No jobs posted yet.</p>
+        ) : (
+          <div className="mt-4 flex flex-col gap-3">
+            {jobs.map((j) => (
+              <Link key={j.id} href={`/hire/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+                <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>
+                  <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + (j.status === 'open' ? 'border-primary text-primary' : 'border-border text-muted-foreground')}>
+                    {j.status}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Orders */}
+        <div className="mt-12 flex items-center justify-between">
+          <h2 className="font-pixel text-xs uppercase tracking-wider">Orders</h2>
+          <Link href="/orders/new" className="font-mono text-xs text-primary hover:underline">+ Create order</Link>
+        </div>
+        {!orders || orders.length === 0 ? (
+          <p className="mt-4 font-mono text-sm text-muted-foreground">No orders posted yet.</p>
+        ) : (
+          <div className="mt-4 flex flex-col gap-3">
+            {orders.map((o) => (
+              <Link key={o.id} href={`/orders/${o.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+                <p className="min-w-0 truncate font-mono text-sm text-foreground">{o.title}</p>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="font-pixel text-[9px] text-green-400">${o.budget}</span>
+                  <span className="border-2 border-border px-2 py-1 font-pixel text-[8px] uppercase text-muted-foreground">{o.status.replace('_', ' ')}</span>
+                </div>
+              </Link>
             ))}
           </div>
         )}

@@ -51,11 +51,30 @@ function XIcon(props: React.ComponentProps<'svg'>) {
   )
 }
 
+interface ProfileJob {
+  id: string
+  title: string
+  budget_type: 'fixed' | 'equity' | 'hourly'
+  budget_value: number
+  status: 'open' | 'closed'
+}
+interface ProfileOrder {
+  id: string
+  title: string
+  budget: number
+  status: string
+}
+function jobBudget(t: ProfileJob['budget_type'], v: number) {
+  return t === 'fixed' ? `$${v}` : t === 'equity' ? `${v}%` : `$${v}/h`
+}
+
 export function ProfileView() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [repos, setRepos] = useState<Repository[]>([])
+  const [jobs, setJobs] = useState<ProfileJob[]>([])
+  const [orders, setOrders] = useState<ProfileOrder[]>([])
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<ProfileDraft>({
     username: '',
@@ -92,15 +111,19 @@ export function ProfileView() {
       // Ignored if the migration hasn't been applied yet.
       await supabase.rpc('sync_verified_socials')
 
-      const [{ data: p }, { data: r }, identRes] = await Promise.all([
+      const [{ data: p }, { data: r }, { data: jb }, { data: od }, identRes] = await Promise.all([
         supabase.from('users').select('*').eq('id', user.id).single(),
         supabase.from('repositories').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('jobs').select('id, title, budget_type, budget_value, status').eq('owner_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('orders').select('id, title, budget, status').eq('owner_id', user.id).order('created_at', { ascending: false }),
         supabase.auth.getUserIdentities(),
       ])
 
       if (!active) return
       setProfile(p as Profile | null)
       setRepos((r as Repository[] | null) ?? [])
+      setJobs((jb as ProfileJob[] | null) ?? [])
+      setOrders((od as ProfileOrder[] | null) ?? [])
       setIdentities(identRes.data?.identities ?? [])
     })()
 
@@ -481,6 +504,40 @@ export function ProfileView() {
                   </Link>
                 ))}
               </div>
+            )}
+
+            {jobs.length > 0 && (
+              <>
+                <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Jobs</h2>
+                <div className="mt-5 flex flex-col gap-3">
+                  {jobs.map((j) => (
+                    <Link key={j.id} href={`/hire/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+                      <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>
+                        <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + (j.status === 'open' ? 'border-primary text-primary' : 'border-border text-muted-foreground')}>{j.status}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {orders.length > 0 && (
+              <>
+                <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Orders</h2>
+                <div className="mt-5 flex flex-col gap-3">
+                  {orders.map((o) => (
+                    <Link key={o.id} href={`/orders/${o.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+                      <p className="min-w-0 truncate font-mono text-sm text-foreground">{o.title}</p>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <span className="font-pixel text-[9px] text-green-400">${o.budget}</span>
+                        <span className="border-2 border-border px-2 py-1 font-pixel text-[8px] uppercase text-muted-foreground">{o.status.replace('_', ' ')}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         </div>
