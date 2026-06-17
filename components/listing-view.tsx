@@ -12,6 +12,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
+import { RepoFiles } from '@/components/repo-files'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
@@ -33,6 +34,7 @@ interface RepoDetail {
   github_url: string | null
   demo_url: string | null
   preview_images: string[] | null
+  file_manifest: string[] | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -603,6 +605,14 @@ export function ListingView({ id }: { id: string }) {
                 <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/80">{repo.readme}</pre>
               </div>
             )}
+
+            {/* Files — tree for everyone; contents for free/owner/purchased */}
+            <RepoFiles
+              manifest={repo.file_manifest ?? []}
+              storagePath={repo.storage_path}
+              canView={Boolean(user) && (isOwner || repo.type === 'free' || Boolean(purchaseId))}
+              lockedLabel={!user ? 'Sign in to view' : 'Purchase to view'}
+            />
 
             {/* Tags */}
             {repo.tags.length > 0 && (

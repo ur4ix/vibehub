@@ -705,6 +705,7 @@ export type Database = {
           ai_tools: string[];
           demo_url: string | null;
           preview_images: string[];
+          file_manifest: string[];
           created_at: string;
           updated_at: string;
         };
@@ -719,6 +720,7 @@ export type Database = {
           github_url?: string | null;
           demo_url?: string | null;
           preview_images?: string[];
+          file_manifest?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -746,6 +748,7 @@ export type Database = {
           github_url?: string | null;
           demo_url?: string | null;
           preview_images?: string[];
+          file_manifest?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -1083,6 +1086,7 @@ export interface Repository {
   ai_tools: string[]
   demo_url: string | null
   preview_images: string[]
+  file_manifest: string[]
   created_at: string
   updated_at: string
 }
@@ -1165,6 +1169,7 @@ export interface ExploreRepo {
   owner_username: string
   owner_display_name: string | null
   owner_avatar_url: string | null
+  preview_image: string | null
 }
 
 /** Dashboard / profile repo row — lean shape returned by Supabase query */

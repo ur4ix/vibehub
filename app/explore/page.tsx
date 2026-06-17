@@ -36,25 +36,36 @@ const SORT = [
 function RepoCard({ repo }: { repo: ExploreRepo }) {
   const icon = CATEGORIES.find((c) => c.value === repo.category)?.icon ?? '▢'
   const avatarColor = colorFromId(repo.owner_id)
+  const coverColor = colorFromId(repo.id)
 
   return (
     <div className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border">
       {/* whole-card link to the listing (overlay); the author link sits above it */}
       <Link href={`/${repo.owner_username}/${repo.slug}`} aria-label={repo.title} className="absolute inset-0 z-[1]" />
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-border bg-secondary font-pixel text-base text-primary" aria-hidden="true">
-          {icon}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-mono text-sm font-medium text-foreground group-hover:text-primary truncate">
-              {repo.title}
-            </h3>
-            <span className="shrink-0 border border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
-              {repo.type === 'free' ? 'Free' : repo.price_cents ? `$${(repo.price_cents / 100).toFixed(0)}` : 'Paid'}
-            </span>
+
+      {/* Cover: screenshot, or a generated banner when none */}
+      <div className="relative mb-4 aspect-[16/9] overflow-hidden border-2 border-border">
+        {repo.preview_image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={repo.preview_image} alt="" loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div
+            className="grid h-full w-full place-items-center"
+            style={{ backgroundImage: `linear-gradient(135deg, ${coverColor}, var(--card))` }}
+            aria-hidden="true"
+          >
+            <span className="font-pixel text-3xl text-white/90 drop-shadow">{icon}</span>
           </div>
-        </div>
+        )}
+      </div>
+
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="truncate font-mono text-sm font-medium text-foreground group-hover:text-primary">
+          {repo.title}
+        </h3>
+        <span className="shrink-0 border border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
+          {repo.type === 'free' ? 'Free' : repo.price_cents ? `$${(repo.price_cents / 100).toFixed(0)}` : 'Paid'}
+        </span>
       </div>
 
       {repo.description && (
@@ -146,7 +157,7 @@ function ExploreContent() {
 
       let query = supabase
         .from('repositories')
-        .select('id, title, slug, description, type, price_cents, tags, category, created_at, owner_id, reaction_count')
+        .select('id, title, slug, description, type, price_cents, tags, category, created_at, owner_id, reaction_count, preview_images')
         .eq('is_published', true)
 
       if (category !== 'all') query = query.eq('category', category)
@@ -191,6 +202,7 @@ function ExploreContent() {
           owner_username: profileMap.get(r.owner_id)?.username ?? 'unknown',
           owner_display_name: profileMap.get(r.owner_id)?.display_name ?? null,
           owner_avatar_url: profileMap.get(r.owner_id)?.avatar_url ?? null,
+          preview_image: r.preview_images?.[0] ?? null,
         })),
       )
       setLoading(false)

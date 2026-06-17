@@ -72,6 +72,7 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [demoUrl, setDemoUrl] = useState("");
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewUploading, setPreviewUploading] = useState(false);
+  const [fileManifest, setFileManifest] = useState<string[]>([]);
 
   // edit-mode state
   const [editLoading, setEditLoading] = useState(isEdit);
@@ -105,6 +106,7 @@ export function UploadForm({ userId }: UploadFormProps) {
         setAiTools(r.ai_tools ?? []);
         setDemoUrl(r.demo_url ?? "");
         setPreviewImages(r.preview_images ?? []);
+        setFileManifest(r.file_manifest ?? []);
         setExistingStoragePath(r.storage_path);
         setExistingPublishedAt(r.published_at);
         setEditLoading(false);
@@ -179,6 +181,21 @@ export function UploadForm({ userId }: UploadFormProps) {
     }
     setError(null);
     setFile(f);
+    parseManifest(f);
+  }
+
+  // Read the file list out of the ZIP so the listing can show a file tree.
+  // JSZip is imported lazily so it stays out of the main bundle.
+  async function parseManifest(f: File) {
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(f);
+      const paths: string[] = [];
+      zip.forEach((relativePath, entry) => { if (!entry.dir) paths.push(relativePath); });
+      setFileManifest(paths.sort());
+    } catch {
+      setFileManifest([]);
+    }
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -323,6 +340,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             ai_assisted: aiTools.length > 0,
             demo_url: demoUrl.trim() || null,
             preview_images: previewImages,
+            file_manifest: fileManifest,
             is_published: publish,
             published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
           })
@@ -375,6 +393,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           ai_assisted: aiTools.length > 0,
           demo_url: demoUrl.trim() || null,
           preview_images: previewImages,
+          file_manifest: fileManifest,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
         });
