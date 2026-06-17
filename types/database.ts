@@ -703,6 +703,8 @@ export type Database = {
           category: string | null;
           ai_assisted: boolean;
           ai_tools: string[];
+          demo_url: string | null;
+          preview_images: string[];
           created_at: string;
           updated_at: string;
         };
@@ -715,6 +717,8 @@ export type Database = {
           readme?: string | null;
           storage_path?: string | null;
           github_url?: string | null;
+          demo_url?: string | null;
+          preview_images?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -740,6 +744,8 @@ export type Database = {
           readme?: string | null;
           storage_path?: string | null;
           github_url?: string | null;
+          demo_url?: string | null;
+          preview_images?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -1075,6 +1081,8 @@ export interface Repository {
   category: string | null
   ai_assisted: boolean
   ai_tools: string[]
+  demo_url: string | null
+  preview_images: string[]
   created_at: string
   updated_at: string
 }

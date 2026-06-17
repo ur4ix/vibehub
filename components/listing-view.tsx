@@ -31,6 +31,8 @@ interface RepoDetail {
   category: string | null
   storage_path: string | null
   github_url: string | null
+  demo_url: string | null
+  preview_images: string[] | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -553,6 +555,39 @@ export function ListingView({ id }: { id: string }) {
                 </div>
               </div>
             </div>
+
+            {/* Preview — demo + screenshots so buyers see what they're getting */}
+            {(repo.demo_url || (repo.preview_images?.length ?? 0) > 0) && (
+              <div className="mt-6">
+                {repo.demo_url && (
+                  <a
+                    href={repo.demo_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mb-4 inline-flex items-center gap-2 border-2 border-primary bg-primary px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wider text-primary-foreground pixel-shadow-border transition-all duration-100 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open live demo
+                  </a>
+                )}
+                {(repo.preview_images?.length ?? 0) > 0 && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {repo.preview_images!.map((url, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block overflow-hidden border-2 border-border bg-secondary transition-colors hover:border-primary"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt={`${repo.title} preview ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             {repo.description && (

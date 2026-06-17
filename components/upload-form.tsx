@@ -69,6 +69,9 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [changelog, setChangelog] = useState("");
+  const [demoUrl, setDemoUrl] = useState("");
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewUploading, setPreviewUploading] = useState(false);
 
   // edit-mode state
   const [editLoading, setEditLoading] = useState(isEdit);
@@ -100,6 +103,8 @@ export function UploadForm({ userId }: UploadFormProps) {
         setPrice(r.price_cents ? (r.price_cents / 100).toString() : "");
         setTags(r.tags ?? []);
         setAiTools(r.ai_tools ?? []);
+        setDemoUrl(r.demo_url ?? "");
+        setPreviewImages(r.preview_images ?? []);
         setExistingStoragePath(r.storage_path);
         setExistingPublishedAt(r.published_at);
         setEditLoading(false);
@@ -188,6 +193,34 @@ export function UploadForm({ userId }: UploadFormProps) {
     if (f) validateAndSetFile(f);
   }
 
+  // ── preview screenshots ──────────────────────────────────────────────────────
+
+  const MAX_PREVIEWS = 6;
+
+  async function handlePreviewUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files?.length) return;
+    setPreviewUploading(true);
+    const supabase = createClient();
+    const slots = MAX_PREVIEWS - previewImages.length;
+    const urls: string[] = [];
+    for (const f of Array.from(files).slice(0, Math.max(0, slots))) {
+      if (!f.type.startsWith("image/")) continue;
+      const ext = f.name.split(".").pop() ?? "png";
+      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("repo-previews")
+        .upload(path, f, { contentType: f.type });
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage.from("repo-previews").getPublicUrl(path);
+        urls.push(publicUrl);
+      }
+    }
+    setPreviewImages((prev) => [...prev, ...urls]);
+    setPreviewUploading(false);
+    e.target.value = "";
+  }
+
   // ── validation ───────────────────────────────────────────────────────────────
 
   function validate() {
@@ -195,7 +228,7 @@ export function UploadForm({ userId }: UploadFormProps) {
     if (!slug) return "Slug cannot be empty";
     if (!/^[a-z0-9-]{1,80}$/.test(slug))
       return "Slug: lowercase letters, digits and hyphens, up to 80 characters";
-    if (containsBanned(title, slug, description, tags)) return BANNED_MESSAGE;
+    if (containsBanned(title, slug, description, demoUrl, tags)) return BANNED_MESSAGE;
     if (repoType === "paid") {
       const p = parseFloat(price);
       if (!price || isNaN(p) || p <= 0) return "Enter a price greater than zero";
@@ -288,6 +321,8 @@ export function UploadForm({ userId }: UploadFormProps) {
             category: category || null,
             ai_tools: aiTools,
             ai_assisted: aiTools.length > 0,
+            demo_url: demoUrl.trim() || null,
+            preview_images: previewImages,
             is_published: publish,
             published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
           })
@@ -338,6 +373,8 @@ export function UploadForm({ userId }: UploadFormProps) {
           category: category || null,
           ai_tools: aiTools,
           ai_assisted: aiTools.length > 0,
+          demo_url: demoUrl.trim() || null,
+          preview_images: previewImages,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
         });
@@ -495,6 +532,67 @@ export function UploadForm({ userId }: UploadFormProps) {
           />
           <p className="text-xs text-muted-foreground text-right">
             {description.length}/1000
+          </p>
+        </div>
+
+        {/* Live demo URL */}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="demo-url">
+            Live demo URL{" "}
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
+          <Input
+            id="demo-url"
+            type="url"
+            placeholder="https://your-demo.vercel.app"
+            value={demoUrl}
+            onChange={(e) => setDemoUrl(e.target.value)}
+            disabled={isSubmitting}
+          />
+          <p className="text-xs text-muted-foreground">
+            A working deployment so buyers can try it before paying.
+          </p>
+        </div>
+
+        {/* Preview screenshots */}
+        <div className="flex flex-col gap-2">
+          <Label>
+            Preview screenshots{" "}
+            <span className="font-normal text-muted-foreground">(up to {MAX_PREVIEWS})</span>
+          </Label>
+          {previewImages.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {previewImages.map((url) => (
+                <div key={url} className="group relative aspect-video overflow-hidden border-2 border-border bg-secondary">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImages((prev) => prev.filter((u) => u !== url))}
+                    className="absolute right-1 top-1 grid h-5 w-5 place-items-center border border-border bg-background/80 font-pixel text-[10px] text-muted-foreground transition-colors hover:text-destructive"
+                    aria-label="Remove screenshot"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {previewImages.length < MAX_PREVIEWS && (
+            <label className="flex cursor-pointer items-center justify-center border-2 border-dashed border-border bg-background px-4 py-6 text-center font-mono text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handlePreviewUpload}
+                disabled={isSubmitting || previewUploading}
+              />
+              {previewUploading ? "Uploading…" : "+ Add screenshots"}
+            </label>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Show the UI or output so buyers see exactly what they&apos;re getting.
           </p>
         </div>
 
