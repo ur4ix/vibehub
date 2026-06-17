@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Info } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
@@ -135,12 +136,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {[
-                  { v: profile.reputation, l: 'rep' },
-                  { v: repos.length, l: 'repos' },
-                  { v: followers, l: 'followers' },
-                  { v: following, l: 'following' },
+                  { v: profile.reputation, l: 'rep',       h: 'Points earned from sales, reviews and platform activity.' },
+                  { v: repos.length,       l: 'repos',     h: 'Published repositories visible on this profile.' },
+                  { v: followers,          l: 'followers', h: 'People subscribed to this user’s new publications.' },
+                  { v: following,          l: 'following', h: 'People this user follows.' },
                 ].map((s) => (
-                  <div key={s.l} className="border-2 border-border bg-background px-3 py-3 text-center">
+                  <div key={s.l} className="relative border-2 border-border bg-background px-3 py-3 text-center">
+                    <span className="group/info absolute right-1.5 top-1.5 cursor-help">
+                      <Info className="h-3 w-3 text-muted-foreground/40 transition-colors group-hover/info:text-primary" />
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute right-0 top-5 z-20 w-44 border-2 border-border bg-card px-2.5 py-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/info:opacity-100"
+                      >
+                        {s.h}
+                      </span>
+                    </span>
                     <div className="font-pixel text-sm text-primary">{s.v}</div>
                     <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
                   </div>
