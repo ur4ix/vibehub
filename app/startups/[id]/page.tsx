@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Rocket, Globe, Trash2, ExternalLink, Heart, Send } from 'lucide-react'
+import { Rocket, Globe, Trash2, ExternalLink, Heart, Send, MessageSquare } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
@@ -321,7 +321,14 @@ export default function StartupDetailPage() {
                           <PixelAvatar username={it.investor?.username ?? '?'} avatarColor={colorFromId(it.id)} size={24} imageUrl={it.investor?.avatar_url ?? undefined} />
                           <span className="font-mono text-xs text-foreground group-hover:text-primary">@{it.investor?.username ?? 'unknown'}</span>
                         </Link>
-                        <span className="font-mono text-[10px] text-muted-foreground">{timeAgo(it.created_at)}</span>
+                        <div className="flex items-center gap-3">
+                          {it.investor && (
+                            <Link href={`/messages/${it.investor.username}`} className="inline-flex items-center gap-1 border border-primary bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-primary/20">
+                              <MessageSquare className="h-3 w-3" />Reply
+                            </Link>
+                          )}
+                          <span className="font-mono text-[10px] text-muted-foreground">{timeAgo(it.created_at)}</span>
+                        </div>
                       </div>
                       {it.message && <p className="mt-3 whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-muted-foreground">{it.message}</p>}
                     </div>

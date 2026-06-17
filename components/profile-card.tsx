@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Camera, Check, Plus } from 'lucide-react'
+import { Shield, Camera, Check, Plus, MessageSquare } from 'lucide-react'
 import type { UserIdentity, Provider } from '@supabase/supabase-js'
 import { PixelButton } from './pixel-button'
 import { PixelAvatar, colorFromId } from './pixel-avatar'
@@ -299,7 +299,16 @@ export function ProfileCard(props: ProfileCardProps) {
           <PixelButton className="mt-3 w-full" onClick={() => router.push('/upload')}>+ New repository</PixelButton>
         </>
       ) : (
-        <FollowButton targetUserId={props.userId} currentUserId={props.currentUserId} initialFollowing={props.isFollowing} />
+        <>
+          <FollowButton targetUserId={props.userId} currentUserId={props.currentUserId} initialFollowing={props.isFollowing} />
+          <Link
+            href={`/messages/${username}`}
+            className="mt-3 flex w-full items-center justify-center gap-2 border-2 border-border bg-transparent px-5 py-3 font-pixel text-[10px] uppercase leading-none tracking-wider text-foreground pixel-shadow-border transition-all duration-100 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none"
+          >
+            <MessageSquare className="h-3 w-3" />
+            Message
+          </Link>
+        </>
       )}
 
       <p className="mt-5 text-center font-mono text-[10px] text-muted-foreground">

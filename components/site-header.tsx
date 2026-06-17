@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, ChevronDown, X } from 'lucide-react'
+import { Bell, ChevronDown, X, MessageSquare } from 'lucide-react'
 import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { PublishModal } from './publish-modal'
@@ -142,6 +142,45 @@ function NotificationBell() {
   )
 }
 
+// ─── Messages link ────────────────────────────────────────────────────────────
+
+function MessagesLink() {
+  const { user } = useAuth()
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    let active = true
+    async function load() {
+      const { count } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('recipient_id', user!.id)
+        .eq('is_read', false)
+      if (active) setUnread(count ?? 0)
+    }
+    load()
+    const interval = setInterval(load, 20000)
+    return () => { active = false; clearInterval(interval) }
+  }, [user])
+
+  return (
+    <Link
+      href="/messages"
+      aria-label={`Messages${unread ? ` — ${unread} unread` : ''}`}
+      className="relative grid h-9 w-9 place-items-center border-2 border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+    >
+      <MessageSquare className="h-4 w-4" />
+      {unread > 0 && (
+        <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center border border-background bg-primary font-pixel text-[8px] text-primary-foreground">
+          {unread}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 // ─── SiteHeader ───────────────────────────────────────────────────────────────
 
 export function SiteHeader() {
@@ -206,6 +245,7 @@ export function SiteHeader() {
           {/* Desktop right — authenticated */}
           {user ? (
             <div className="hidden items-center gap-3 md:flex">
+              <MessagesLink />
               <NotificationBell />
 
               <PixelButton className="px-4 py-2.5" onClick={() => setPublishOpen(true)}>
