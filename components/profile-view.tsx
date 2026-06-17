@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Camera, Check, Plus } from 'lucide-react'
+import { Shield, Camera, Check, Plus, Info } from 'lucide-react'
 import type { UserIdentity, Provider } from '@supabase/supabase-js'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
@@ -26,9 +26,20 @@ const SOCIAL_PROVIDERS: {
   { key: 'x',      title: 'X',      baseUrl: 'https://x.com/',      field: 'x_username' },
 ]
 
-function Stat({ value, label }: { value: string | number; label: string }) {
+function Stat({ value, label, hint }: { value: string | number; label: string; hint?: string }) {
   return (
-    <div className="border-2 border-border bg-background px-4 py-3 text-center">
+    <div className="relative border-2 border-border bg-background px-4 py-3 text-center">
+      {hint && (
+        <span className="group/info absolute right-1.5 top-1.5 cursor-help">
+          <Info className="h-3 w-3 text-muted-foreground/40 transition-colors group-hover/info:text-primary" />
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute right-0 top-5 z-20 w-44 border-2 border-border bg-card px-2.5 py-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/info:opacity-100"
+          >
+            {hint}
+          </span>
+        </span>
+      )}
       <div className="font-pixel text-sm text-primary">{value}</div>
       <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
@@ -474,12 +485,12 @@ export function ProfileView() {
           {/* Right column */}
           <section>
             <div className="grid grid-cols-3 gap-3">
-              <Stat value={repos.length} label="repos" />
-              <Stat value={user.reputation} label="reputation" />
-              <Stat value={repos.filter((r) => r.is_published).length} label="published" />
-              <Stat value={followers} label="followers" />
-              <Stat value={following} label="following" />
-              <Stat value={jobs.length + orders.length} label="postings" />
+              <Stat value={repos.length} label="repos" hint="All repositories you own — published and unpublished drafts." />
+              <Stat value={user.reputation} label="reputation" hint="Points earned from sales, reviews and platform activity." />
+              <Stat value={repos.filter((r) => r.is_published).length} label="published" hint="Repositories that are live and visible to everyone in Explore." />
+              <Stat value={followers} label="followers" hint="People subscribed to your new publications." />
+              <Stat value={following} label="following" hint="People whose publications you follow." />
+              <Stat value={jobs.length + orders.length} label="postings" hint="Jobs and orders you've posted on the Hire and Orders boards." />
             </div>
 
             <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Repositories</h2>
