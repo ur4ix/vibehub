@@ -3,6 +3,20 @@
 import { useMemo, useRef, useState } from 'react'
 import { Folder, FolderOpen, FileCode, Lock, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import 'highlight.js/styles/atom-one-dark.css'
+
+// Map file extensions to highlight.js language ids (fallback = auto-detect).
+const LANG: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+  ts: 'typescript', tsx: 'typescript', py: 'python', rb: 'ruby', go: 'go',
+  rs: 'rust', java: 'java', kt: 'kotlin', c: 'c', h: 'c', cpp: 'cpp', cc: 'cpp',
+  hpp: 'cpp', cs: 'csharp', php: 'php', swift: 'swift', dart: 'dart', lua: 'lua',
+  json: 'json', jsonc: 'json', css: 'css', scss: 'scss', sass: 'scss', less: 'less',
+  html: 'xml', htm: 'xml', xml: 'xml', svg: 'xml', vue: 'xml', svelte: 'xml', astro: 'xml',
+  yml: 'yaml', yaml: 'yaml', toml: 'ini', ini: 'ini', env: 'ini', conf: 'ini', cfg: 'ini',
+  sh: 'bash', bash: 'bash', zsh: 'bash', sql: 'sql', md: 'markdown', markdown: 'markdown',
+  graphql: 'graphql', gql: 'graphql', dockerfile: 'dockerfile', makefile: 'makefile',
+}
 
 interface TreeNode {
   name: string
@@ -49,7 +63,8 @@ export function RepoFiles({
     return s
   })
   const [openFile, setOpenFile] = useState<string | null>(null)
-  const [content, setContent] = useState<string | null>(null)
+  const [html, setHtml] = useState<string | null>(null)
+  const [lineCount, setLineCount] = useState(0)
   const [loadingFile, setLoadingFile] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   // Minimal shape of what we use from a loaded JSZip instance.
@@ -69,7 +84,7 @@ export function RepoFiles({
   async function openFileContent(path: string) {
     if (!canView || !storagePath) return
     setOpenFile(path)
-    setContent(null)
+    setHtml(null)
     setFileError(null)
 
     if (!TEXT_EXT.test(path)) {
@@ -90,8 +105,23 @@ export function RepoFiles({
       }
       const entry = zipRef.current.file(path)
       if (!entry) { setFileError('File not found in the archive.'); setLoadingFile(false); return }
-      const text: string = await entry.async('string')
-      setContent(text.length > 200_000 ? text.slice(0, 200_000) + '\n\n… (truncated)' : text)
+      let text = await entry.async('string')
+      if (text.length > 200_000) text = text.slice(0, 200_000) + '\n\n… (truncated)'
+
+      // Syntax highlight (auto-detect by extension, fall back to auto).
+      const hljs = (await import('highlight.js')).default
+      const ext = (path.split('.').pop() ?? '').toLowerCase()
+      const lang = LANG[ext]
+      let value: string
+      try {
+        value = lang && hljs.getLanguage(lang)
+          ? hljs.highlight(text, { language: lang, ignoreIllegals: true }).value
+          : hljs.highlightAuto(text).value
+      } catch {
+        value = hljs.highlightAuto(text).value
+      }
+      setHtml(value)
+      setLineCount(text.split('\n').length)
     } catch (e) {
       setFileError(e instanceof Error ? e.message : 'Could not load this file.')
     }
@@ -167,19 +197,27 @@ export function RepoFiles({
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between gap-2 border-b-2 border-border px-3 py-2">
                 <span className="truncate font-mono text-[11px] text-foreground">{openFile}</span>
-                <button onClick={() => { setOpenFile(null); setContent(null); setFileError(null) }} aria-label="Close" className="text-muted-foreground hover:text-foreground">
+                <button onClick={() => { setOpenFile(null); setHtml(null); setFileError(null) }} aria-label="Close" className="text-muted-foreground hover:text-foreground">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="max-h-[380px] overflow-auto p-3">
-                {loadingFile ? (
-                  <p className="font-mono text-xs text-muted-foreground">Loading<span className="blink">_</span></p>
-                ) : fileError ? (
-                  <p className="font-mono text-xs text-muted-foreground">{fileError}</p>
-                ) : (
-                  <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-foreground/90">{content}</pre>
-                )}
-              </div>
+              {loadingFile ? (
+                <p className="p-3 font-mono text-xs text-muted-foreground">Loading<span className="blink">_</span></p>
+              ) : fileError ? (
+                <p className="p-3 font-mono text-xs text-muted-foreground">{fileError}</p>
+              ) : (
+                <div className="overflow-auto" style={{ maxHeight: 380 }}>
+                  <div className="flex w-max min-w-full">
+                    {/* line-number gutter */}
+                    <div className="sticky left-0 z-10 shrink-0 select-none border-r border-border bg-card px-3 py-3 text-right font-mono text-[11px] leading-[1.6] text-muted-foreground/40">
+                      {Array.from({ length: lineCount }).map((_, i) => <div key={i}>{i + 1}</div>)}
+                    </div>
+                    <pre className="px-3 py-3 font-mono text-[11px] leading-[1.6]">
+                      <code className="hljs !block !bg-transparent !p-0 !overflow-visible" dangerouslySetInnerHTML={{ __html: html ?? '' }} />
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
