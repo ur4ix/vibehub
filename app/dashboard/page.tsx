@@ -30,6 +30,17 @@ function jobBudget(t: DashJob['budget_type'], v: number) {
   return t === 'fixed' ? `$${v}` : t === 'equity' ? `${v}%` : `$${v}/h`
 }
 
+// Shared status badge colours for jobs + orders (border + text, compact).
+function statusBadge(status: string) {
+  switch (status) {
+    case 'open':        return 'border-primary text-primary'
+    case 'in_progress': return 'border-blue-400/50 text-blue-400'
+    case 'review':      return 'border-amber-400/50 text-amber-400'
+    case 'completed':   return 'border-green-400/50 text-green-400'
+    default:            return 'border-border text-muted-foreground' // closed / cancelled
+  }
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -153,7 +164,7 @@ export default async function DashboardPage() {
                 <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>
-                  <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + (j.status === 'open' ? 'border-primary text-primary' : 'border-border text-muted-foreground')}>
+                  <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + statusBadge(j.status)}>
                     {j.status}
                   </span>
                 </div>
@@ -176,7 +187,7 @@ export default async function DashboardPage() {
                 <p className="min-w-0 truncate font-mono text-sm text-foreground">{o.title}</p>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="font-pixel text-[9px] text-green-400">${o.budget}</span>
-                  <span className="border-2 border-border px-2 py-1 font-pixel text-[8px] uppercase text-muted-foreground">{o.status.replace('_', ' ')}</span>
+                  <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + statusBadge(o.status)}>{o.status.replace('_', ' ')}</span>
                 </div>
               </Link>
             ))}
