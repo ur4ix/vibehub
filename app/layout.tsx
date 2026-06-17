@@ -3,6 +3,7 @@ import { Geist_Mono, Press_Start_2P } from 'next/font/google'
 import { AuthProvider } from '@/components/auth-provider'
 import { ToastProvider } from '@/components/pixel-toast'
 import { PageTransition } from '@/components/page-transition'
+import { ScrollReveal } from '@/components/scroll-reveal'
 import './globals.css'
 
 const geistMono = Geist_Mono({
@@ -41,6 +42,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <PageTransition>{children}</PageTransition>
+            <ScrollReveal />
           </ToastProvider>
         </AuthProvider>
       </body>
