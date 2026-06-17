@@ -93,7 +93,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 border-2 border-border bg-card pixel-shadow-border z-50">
+        <div className="absolute right-0 mt-2 w-80 origin-top-right animate-pop border-2 border-border bg-card pixel-shadow-border z-50">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="font-pixel text-[9px] uppercase tracking-wider">Notifications</span>
             <div className="flex items-center gap-3">
@@ -208,7 +208,7 @@ export function SiteHeader() {
                 </button>
 
                 {menuOpen && (
-                  <div role="menu" className="absolute right-0 mt-2 w-52 border-2 border-border bg-card pixel-shadow-border z-50">
+                  <div role="menu" className="absolute right-0 mt-2 w-52 origin-top-right animate-pop border-2 border-border bg-card pixel-shadow-border z-50">
                     <div className="border-b border-border px-4 py-3">
                       <p className="font-pixel text-[9px] text-foreground">{user.username}</p>
                       <p className="mt-1 font-mono text-[10px] text-muted-foreground truncate">{user.email}</p>

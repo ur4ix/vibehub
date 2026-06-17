@@ -14,7 +14,7 @@ export function PixelButton({
   return (
     <button
       className={cn(
-        'font-pixel inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-[10px] uppercase leading-none tracking-wider transition-all duration-100 active:translate-x-1 active:translate-y-1 active:shadow-none',
+        'font-pixel inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-[10px] uppercase leading-none tracking-wider transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-1 active:translate-y-1 active:shadow-none',
         variant === 'primary' &&
           'border-primary bg-primary text-primary-foreground pixel-shadow-border hover:brightness-110',
         variant === 'outline' &&

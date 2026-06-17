@@ -57,13 +57,13 @@ export function PublishModal({ onClose }: { onClose: () => void }) {
     <div
       ref={backdropRef}
       onClick={handleBackdrop}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex animate-fade-in items-center justify-center bg-background/80 backdrop-blur-sm"
     >
-      <div className="relative w-full max-w-2xl border-2 border-border bg-card pixel-shadow-border mx-4">
+      <div className="relative mx-4 w-full max-w-2xl animate-modal border-2 border-border bg-card pixel-shadow-border">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">// publish</span>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// publish'}</span>
             <h2 className="mt-1 font-pixel text-xs">What would you like to create?</h2>
           </div>
           <button
