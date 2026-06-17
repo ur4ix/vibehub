@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState } from 'react'
-import { Mail, MessageSquare } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
@@ -31,25 +31,18 @@ const CHANNELS = [
     desc: 'For general questions, partnerships and press.',
   },
   {
-    icon: <MessageSquare className="h-5 w-5" />,
-    title: 'Discord',
-    value: 'discord.gg/Vydex',
-    href: '#',
-    desc: 'Live community chat, support, and off-topic vibes.',
+    icon: <XSvg />,
+    title: 'X',
+    value: '@VydeXdev',
+    href: 'https://x.com/VydeXdev',
+    desc: 'Product updates, launches and community highlights.',
   },
   {
     icon: <GithubSvg />,
     title: 'GitHub',
-    value: 'github.com/Vydex',
-    href: '#',
+    value: 'github.com/vydex-dev',
+    href: 'https://github.com/vydex-dev',
     desc: 'Report bugs, request features, or contribute.',
-  },
-  {
-    icon: <XSvg />,
-    title: 'X / Twitter',
-    value: '@Vydex_dev',
-    href: '#',
-    desc: 'Product updates, launches and community highlights.',
   },
 ]
 
@@ -151,6 +144,8 @@ export function ContactPageClient() {
                   <a
                     key={c.title}
                     href={c.href}
+                    target={c.href.startsWith('http') ? '_blank' : undefined}
+                    rel={c.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="group flex items-start gap-4 border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary pixel-shadow-border"
                   >
                     <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-border bg-secondary text-primary">
@@ -169,7 +164,7 @@ export function ContactPageClient() {
                 <p className="font-pixel text-[9px] uppercase tracking-wider">Response times</p>
                 <ul className="mt-4 space-y-3 font-mono text-xs text-muted-foreground">
                   <li className="flex justify-between"><span>Email</span><span className="text-primary">{'< 24 hours'}</span></li>
-                  <li className="flex justify-between"><span>Discord</span><span className="text-primary">{'< 2 hours'}</span></li>
+                  <li className="flex justify-between"><span>X / DMs</span><span className="text-primary">{'< 24 hours'}</span></li>
                   <li className="flex justify-between"><span>GitHub issues</span><span className="text-primary">{'< 48 hours'}</span></li>
                 </ul>
               </div>

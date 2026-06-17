@@ -13,7 +13,7 @@ const SECTIONS = [
     icon: '▢',
     title: 'Getting started',
     articles: [
-      { title: 'What is Vydex?', slug: 'what-is-Vydex' },
+      { title: 'What is Vydex?', slug: 'what-is-vydex' },
       { title: 'Creating your account', slug: 'create-account' },
       { title: 'Publishing your first project', slug: 'first-project' },
       { title: 'Uploading a ZIP archive', slug: 'zip-upload' },

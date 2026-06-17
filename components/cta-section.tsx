@@ -25,7 +25,7 @@ export function CtaSection() {
               Turn your vibes into income
             </h2>
             <p className="mx-auto mt-6 max-w-lg text-pretty leading-relaxed text-muted-foreground">
-              Registration is free. First month — 0% commission. Publish your
+              Registration is free. First month — 0% fee. Publish your
               first project today.
             </p>
 

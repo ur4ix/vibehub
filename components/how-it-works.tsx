@@ -2,17 +2,17 @@ const STEPS = [
   {
     n: '01',
     title: 'Upload your project',
-    desc: 'Add code, preview and description. We build a demo and verify everything works.',
+    desc: 'Pack your code as a ZIP, add a preview and a clear description. Minutes from file to listing.',
   },
   {
     n: '02',
-    title: 'Pass the review',
-    desc: 'Community and automated tests check quality. Trust is our currency.',
+    title: 'Earn trust',
+    desc: 'Buyers rate and review what they buy. Reviews and reputation surface the best work — trust is our currency.',
   },
   {
     n: '03',
     title: 'Get paid',
-    desc: 'Buyers pay, you receive money to a card or crypto. No delays.',
+    desc: 'You set the price — free or paid. Buyers pay, and payouts go to your card or crypto.',
   },
 ]
 
@@ -23,7 +23,7 @@ export function HowItWorks() {
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
-            // how it works
+            {'// how it works'}
           </span>
           <h2 className="mt-5 text-balance font-pixel text-xl leading-[1.5] sm:text-2xl sm:leading-[1.5]">
             Three steps to your first sale
