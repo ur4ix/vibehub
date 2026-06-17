@@ -170,7 +170,7 @@ export function SiteHeader() {
   }, [user])
 
   const menuItems = [
-    { label: 'Profile', href: '/profile' },
+    { label: 'Profile', href: user ? `/u/${user.username}` : '/profile' },
     { label: 'Security settings', href: '/settings/security' },
     { label: 'Dashboard', href: '/dashboard' },
     ...(isAdmin ? [{ label: 'Admin panel', href: '/admin' }] : []),
@@ -292,7 +292,7 @@ export function SiteHeader() {
               {user ? (
                 <div className="flex flex-col gap-2 py-3">
                   <Link
-                    href="/profile"
+                    href={`/u/${user.username}`}
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 border-2 border-border bg-background px-3 py-2.5"
                   >
