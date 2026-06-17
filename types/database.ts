@@ -193,6 +193,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      startups: {
+        Row: {
+          id: string;
+          owner_id: string;
+          name: string;
+          tagline: string;
+          description: string;
+          website: string | null;
+          industry: string | null;
+          stage: string;
+          funding_status: string;
+          raising_amount: number | null;
+          tags: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          name: string;
+          tagline: string;
+          description: string;
+          website?: string | null;
+          industry?: string | null;
+          stage?: string;
+          funding_status?: string;
+          raising_amount?: number | null;
+          tags?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          name?: string;
+          tagline?: string;
+          description?: string;
+          website?: string | null;
+          industry?: string | null;
+          stage?: string;
+          funding_status?: string;
+          raising_amount?: number | null;
+          tags?: string[];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       job_applications: {
         Row: {
           id: string;
@@ -825,7 +870,7 @@ export type Database = {
       };
     };
     Enums: {
-      app_role: "admin" | "author";
+      app_role: "admin" | "author" | "investor" | "partner";
       chat_status: "locked" | "active" | "closed" | "expired";
       listing_status:
         | "draft"

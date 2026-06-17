@@ -21,6 +21,13 @@ function formatJoined(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
 }
 
+// Roles worth showing as a badge, in display priority. 'author' is internal.
+const ROLE_BADGES: { role: string; label: string; className: string }[] = [
+  { role: 'partner',  label: 'Partner',  className: 'border-amber-400/50 bg-amber-400/10 text-amber-400' },
+  { role: 'investor', label: 'Investor', className: 'border-green-400/50 bg-green-400/10 text-green-400' },
+  { role: 'admin',    label: 'Team',     className: 'border-primary bg-primary/10 text-primary' },
+]
+
 function handleOf(identity: UserIdentity): string | null {
   const d = (identity.identity_data ?? {}) as Record<string, string | undefined>
   return d.user_name ?? d.preferred_username ?? d.screen_name ?? d.nickname ?? null
@@ -36,6 +43,7 @@ export interface ProfileCardProps {
   createdAt: string
   githubUsername: string | null
   xUsername: string | null
+  roles: string[]
   isOwner: boolean
   currentUserId: string | null
   isFollowing: boolean
@@ -243,6 +251,16 @@ export function ProfileCard(props: ProfileCardProps) {
         <PixelAvatar username={username} avatarColor={colorFromId(props.userId)} size={88} className="!border-4" imageUrl={avatarUrl} />
         <h1 className="mt-5 font-pixel text-sm leading-[1.5]">{displayName ?? username}</h1>
         <p className="mt-1 font-mono text-[10px] text-muted-foreground">@{username}</p>
+
+        {ROLE_BADGES.some((b) => props.roles.includes(b.role)) && (
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+            {ROLE_BADGES.filter((b) => props.roles.includes(b.role)).map((b) => (
+              <span key={b.role} className={`border px-2 py-0.5 font-pixel text-[8px] uppercase tracking-wider ${b.className}`}>
+                {b.label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {bio && <p className="mt-5 text-pretty text-sm leading-relaxed text-foreground">{bio}</p>}

@@ -12,16 +12,17 @@ import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/types/database'
 
 const UNAUTH_NAV = [
-  { label: 'Catalog', href: '/#catalog' },
+  { label: 'Explore', href: '/explore' },
+  { label: 'Startups', href: '/startups' },
   { label: 'How it works', href: '/#how' },
   { label: 'For sellers', href: '/#sellers' },
 ]
 
 const AUTH_NAV = [
   { label: 'Explore', href: '/explore' },
+  { label: 'Startups', href: '/startups' },
   { label: 'Hiring', href: '/hire' },
   { label: 'Orders', href: '/orders' },
-  { label: 'My Projects', href: '/profile' },
   { label: 'Dashboard', href: '/dashboard' },
 ]
 

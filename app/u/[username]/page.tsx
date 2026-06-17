@@ -64,18 +64,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
     ? repoQuery.order('created_at', { ascending: false })
     : repoQuery.eq('is_published', true).order('published_at', { ascending: false })
 
-  const [{ data: reposRaw }, { data: jobsRaw }, { data: ordersRaw }, { count: followers }, { count: following }] =
+  const [{ data: reposRaw }, { data: jobsRaw }, { data: ordersRaw }, { count: followers }, { count: following }, { data: rolesRaw }] =
     await Promise.all([
       repoQuery.limit(48),
       supabase.from('jobs').select('id, title, budget_type, budget_value, status').eq('owner_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('orders').select('id, title, budget, status').eq('owner_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', profile.id),
       supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profile.id),
+      // RLS exposes partner/investor publicly; admin only to self/admins.
+      supabase.from('user_roles').select('role').eq('user_id', profile.id),
     ])
 
   const repos = (reposRaw as RepoItem[] | null) ?? []
   const jobs = (jobsRaw as ProfileJob[] | null) ?? []
   const orders = (ordersRaw as ProfileOrder[] | null) ?? []
+  const roles = ((rolesRaw as { role: string }[] | null) ?? []).map((r) => r.role)
   const publishedCount = repos.filter((r) => r.is_published).length
 
   let isFollowing = false
@@ -117,6 +120,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
               createdAt={profile.created_at}
               githubUsername={profile.github_username}
               xUsername={profile.x_username}
+              roles={roles}
               isOwner={isOwner}
               currentUserId={currentUserId}
               isFollowing={isFollowing}

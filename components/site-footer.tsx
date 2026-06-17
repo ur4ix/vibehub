@@ -34,9 +34,9 @@ const COLS = [
     title: 'Marketplace',
     links: [
       { label: 'Explore', href: '/explore' },
-      { label: 'Apps', href: '/explore?cat=apps' },
-      { label: 'UI Components', href: '/explore?cat=ui-components' },
-      { label: 'Prompts', href: '/explore?cat=prompts' },
+      { label: 'Startups', href: '/startups' },
+      { label: 'Hiring', href: '/hire' },
+      { label: 'Orders', href: '/orders' },
       { label: 'Templates', href: '/explore?cat=templates' },
     ],
   },

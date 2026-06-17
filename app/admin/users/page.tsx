@@ -19,11 +19,13 @@ interface Row {
   roles: AppRole[]
 }
 
-const ALL_ROLES: AppRole[] = ['admin', 'author']
+const ALL_ROLES: AppRole[] = ['admin', 'author', 'investor', 'partner']
 
 const ROLE_STYLE: Record<AppRole, string> = {
-  admin:  'border-primary bg-primary/10 text-primary',
-  author: 'border-blue-400/50 bg-blue-400/10 text-blue-400',
+  admin:    'border-primary bg-primary/10 text-primary',
+  author:   'border-blue-400/50 bg-blue-400/10 text-blue-400',
+  investor: 'border-green-400/50 bg-green-400/10 text-green-400',
+  partner:  'border-amber-400/50 bg-amber-400/10 text-amber-400',
 }
 
 function joined(iso: string) {
