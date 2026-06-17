@@ -3,16 +3,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Camera, Check, Plus, Info } from 'lucide-react'
+import { Shield, Camera, Check, Plus } from 'lucide-react'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 import type { UserIdentity, Provider } from '@supabase/supabase-js'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
 import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
+import { ProfileBody, type ProfileJob, type ProfileOrder, type StatItem } from './profile-body'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ProfileDraft, Repository, UserUpdate } from '@/types/database'
+
+function formatJoined(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+}
 
 // Verified-connect providers. `key` is the Supabase provider id; X now uses 'x'
 // (Supabase renamed the legacy 'twitter' provider).
@@ -26,26 +31,6 @@ const SOCIAL_PROVIDERS: {
   { key: 'github', title: 'GitHub', baseUrl: 'https://github.com/', field: 'github_username' },
   { key: 'x',      title: 'X',      baseUrl: 'https://x.com/',      field: 'x_username' },
 ]
-
-function Stat({ value, label, hint }: { value: string | number; label: string; hint?: string }) {
-  return (
-    <div className="relative border-2 border-border bg-background px-4 py-3 text-center">
-      {hint && (
-        <span className="group/info absolute right-1.5 top-1.5 cursor-help">
-          <Info className="h-3 w-3 text-muted-foreground/40 transition-colors group-hover/info:text-primary" />
-          <span
-            role="tooltip"
-            className="pointer-events-none absolute right-0 top-5 z-20 w-44 border-2 border-border bg-card px-2.5 py-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/info:opacity-100"
-          >
-            {hint}
-          </span>
-        </span>
-      )}
-      <div className="font-pixel text-sm text-primary">{value}</div>
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-    </div>
-  )
-}
 
 function GithubIcon(props: React.ComponentProps<'svg'>) {
   return (
@@ -61,34 +46,6 @@ function XIcon(props: React.ComponentProps<'svg'>) {
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   )
-}
-
-interface ProfileJob {
-  id: string
-  title: string
-  budget_type: 'fixed' | 'equity' | 'hourly'
-  budget_value: number
-  status: 'open' | 'closed'
-}
-interface ProfileOrder {
-  id: string
-  title: string
-  budget: number
-  status: string
-}
-function jobBudget(t: ProfileJob['budget_type'], v: number) {
-  return t === 'fixed' ? `$${v}` : t === 'equity' ? `${v}%` : `$${v}/h`
-}
-
-// Shared status badge colours for jobs + orders (border + text, compact).
-function statusBadge(status: string) {
-  switch (status) {
-    case 'open':        return 'border-primary text-primary'
-    case 'in_progress': return 'border-blue-400/50 text-blue-400'
-    case 'review':      return 'border-amber-400/50 text-amber-400'
-    case 'completed':   return 'border-green-400/50 text-green-400'
-    default:            return 'border-border text-muted-foreground' // closed / cancelled
-  }
 }
 
 export function ProfileView() {
@@ -484,103 +441,43 @@ export function ProfileView() {
                   <PixelButton className="mt-3 w-full" onClick={() => router.push('/upload')}>
                     + New repository
                   </PixelButton>
+
+                  {profile?.created_at && (
+                    <p className="mt-5 text-center font-mono text-[10px] text-muted-foreground">
+                      Joined {formatJoined(profile.created_at)}
+                    </p>
+                  )}
                 </>
               )}
             </div>
           </aside>
 
           {/* Right column */}
-          <section>
-            <div className="grid grid-cols-3 gap-3">
-              <Stat value={repos.length} label="repos" hint="All repositories you own — published and unpublished drafts." />
-              <Stat value={user.reputation} label="reputation" hint="Points earned from sales, reviews and platform activity." />
-              <Stat value={repos.filter((r) => r.is_published).length} label="published" hint="Repositories that are live and visible to everyone in Explore." />
-              <Stat value={followers} label="followers" hint="People subscribed to your new publications." />
-              <Stat value={following} label="following" hint="People whose publications you follow." />
-              <Stat value={jobs.length + orders.length} label="postings" hint="Jobs and orders you've posted on the Hire and Orders boards." />
-            </div>
-
-            <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Repositories</h2>
-
-            {repos.length === 0 ? (
-              <div className="mt-5 border-2 border-border bg-card p-8 text-center">
-                <p className="font-mono text-sm text-muted-foreground">
-                  No repositories yet.{' '}
-                  <Link href="/upload" className="text-primary hover:underline">
-                    Publish your first project
-                  </Link>
-                </p>
-              </div>
-            ) : (
-              <div className="mt-5 flex flex-col gap-4">
-                {repos.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={`/${user.username}/${r.slug}`}
-                    className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="font-mono text-sm text-foreground group-hover:text-primary">
-                          {user.username}/{r.slug}
-                        </h3>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                          {r.description ?? r.title}
-                        </p>
-                      </div>
-                      <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-3 py-1 font-pixel text-[10px] text-green-400">
-                        {r.type === 'free' ? 'Free' : r.price_cents ? `$${(r.price_cents / 100).toFixed(0)}` : 'Paid'}
-                      </span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {r.tags?.slice(0, 4).map((t) => (
-                        <span key={t} className="border border-border bg-secondary px-2 py-1 font-mono text-[10px] text-muted-foreground">
-                          {t}
-                        </span>
-                      ))}
-                      <span className={'ml-auto font-mono text-[10px] ' + (r.is_published ? 'text-primary' : 'text-muted-foreground')}>
-                        {r.is_published ? 'published' : 'draft'}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {jobs.length > 0 && (
-              <>
-                <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Jobs</h2>
-                <div className="mt-5 flex flex-col gap-3">
-                  {jobs.map((j) => (
-                    <Link key={j.id} href={`/hire/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
-                      <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
-                      <div className="flex shrink-0 items-center gap-3">
-                        <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>
-                        <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + statusBadge(j.status)}>{j.status}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {orders.length > 0 && (
-              <>
-                <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Orders</h2>
-                <div className="mt-5 flex flex-col gap-3">
-                  {orders.map((o) => (
-                    <Link key={o.id} href={`/orders/${o.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
-                      <p className="min-w-0 truncate font-mono text-sm text-foreground">{o.title}</p>
-                      <div className="flex shrink-0 items-center gap-3">
-                        <span className="font-pixel text-[9px] text-green-400">${o.budget}</span>
-                        <span className={'border-2 px-2 py-1 font-pixel text-[8px] uppercase ' + statusBadge(o.status)}>{o.status.replace('_', ' ')}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
+          <ProfileBody
+            userId={user.id}
+            ownerUsername={user.username}
+            stats={[
+              { label: 'repos', value: repos.length, hint: 'All repositories you own — published and unpublished drafts.' },
+              { label: 'reputation', value: user.reputation, hint: 'Points earned from sales, reviews and platform activity.' },
+              { label: 'published', value: repos.filter((r) => r.is_published).length, hint: 'Repositories that are live and visible to everyone in Explore.' },
+              { label: 'followers', value: followers, hint: 'People subscribed to your new publications.', follow: 'followers' },
+              { label: 'following', value: following, hint: 'People whose publications you follow.', follow: 'following' },
+              { label: 'postings', value: jobs.length + orders.length, hint: "Jobs and orders you've posted on the Hire and Orders boards." },
+            ] satisfies StatItem[]}
+            repos={repos.map((r) => ({
+              id: r.id, slug: r.slug, title: r.title, description: r.description,
+              type: r.type as 'free' | 'paid', price_cents: r.price_cents ?? null,
+              tags: r.tags ?? null, is_published: r.is_published,
+            }))}
+            jobs={jobs}
+            orders={orders}
+            reposEmpty={
+              <p className="font-mono text-sm text-muted-foreground">
+                No repositories yet.{' '}
+                <Link href="/upload" className="text-primary hover:underline">Publish your first project</Link>
+              </p>
+            }
+          />
         </div>
       </main>
 

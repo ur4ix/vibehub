@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Info } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { FollowButton } from '@/components/follow-button'
+import { ProfileBody, type ProfileJob, type ProfileOrder, type RepoItem, type StatItem } from '@/components/profile-body'
 import { createClient } from '@/lib/supabase/server'
 
 interface PageProps {
@@ -20,17 +20,6 @@ interface PublicProfile {
   bio: string | null
   reputation: number
   created_at: string
-}
-
-interface ProfileRepo {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  type: 'free' | 'paid'
-  price_cents: number | null
-  tags: string[]
-  category: string | null
 }
 
 function formatJoined(iso: string) {
@@ -49,22 +38,34 @@ async function getProfile(username: string) {
   const profile = profileRaw as PublicProfile | null
   if (!profile) return null
 
-  const { data: reposRaw } = await supabase
-    .from('repositories')
-    .select('id, title, slug, description, type, price_cents, tags, category')
-    .eq('owner_id', profile.id)
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-    .limit(48)
-
-  const [{ count: followers }, { count: following }] = await Promise.all([
-    supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', profile.id),
-    supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profile.id),
-  ])
+  const [{ data: reposRaw }, { data: jobsRaw }, { data: ordersRaw }, { count: followers }, { count: following }] =
+    await Promise.all([
+      supabase
+        .from('repositories')
+        .select('id, title, slug, description, type, price_cents, tags, is_published')
+        .eq('owner_id', profile.id)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(48),
+      supabase
+        .from('jobs')
+        .select('id, title, budget_type, budget_value, status')
+        .eq('owner_id', profile.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('orders')
+        .select('id, title, budget, status')
+        .eq('owner_id', profile.id)
+        .order('created_at', { ascending: false }),
+      supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', profile.id),
+      supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profile.id),
+    ])
 
   return {
     profile,
-    repos: (reposRaw as ProfileRepo[] | null) ?? [],
+    repos: (reposRaw as RepoItem[] | null) ?? [],
+    jobs: (jobsRaw as ProfileJob[] | null) ?? [],
+    orders: (ordersRaw as ProfileOrder[] | null) ?? [],
     followers: followers ?? 0,
     following: following ?? 0,
   }
@@ -85,7 +86,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const { username } = await params
   const data = await getProfile(username)
   if (!data) notFound()
-  const { profile, repos, followers, following } = data
+  const { profile, repos, jobs, orders, followers, following } = data
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -101,6 +102,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
     isFollowing = Boolean(f)
   }
 
+  const stats: StatItem[] = [
+    { label: 'repos', value: repos.length, hint: 'Published repositories on this profile.' },
+    { label: 'reputation', value: profile.reputation, hint: 'Points earned from sales, reviews and platform activity.' },
+    { label: 'published', value: repos.length, hint: 'Repositories live and visible to everyone in Explore.' },
+    { label: 'followers', value: followers, hint: 'People subscribed to this user’s new publications.', follow: 'followers' },
+    { label: 'following', value: following, hint: 'People this user follows.', follow: 'following' },
+    { label: 'postings', value: jobs.length + orders.length, hint: 'Jobs and orders this user posted.' },
+  ]
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
@@ -112,8 +122,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
           <span className="text-foreground">@{profile.username}</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-          {/* Profile card */}
+        <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+          {/* Profile card (read-only) */}
           <aside>
             <div className="border-2 border-border bg-card p-6 pixel-shadow-border">
               <div className="flex flex-col items-center text-center">
@@ -134,27 +144,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 <p className="mt-5 text-pretty text-sm leading-relaxed text-foreground">{profile.bio}</p>
               )}
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                {[
-                  { v: profile.reputation, l: 'rep',       h: 'Points earned from sales, reviews and platform activity.' },
-                  { v: repos.length,       l: 'repos',     h: 'Published repositories visible on this profile.' },
-                  { v: followers,          l: 'followers', h: 'People subscribed to this user’s new publications.' },
-                  { v: following,          l: 'following', h: 'People this user follows.' },
-                ].map((s) => (
-                  <div key={s.l} className="relative border-2 border-border bg-background px-3 py-3 text-center">
-                    <span className="group/info absolute right-1.5 top-1.5 cursor-help">
-                      <Info className="h-3 w-3 text-muted-foreground/40 transition-colors group-hover/info:text-primary" />
-                      <span
-                        role="tooltip"
-                        className="pointer-events-none absolute right-0 top-5 z-20 w-44 border-2 border-border bg-card px-2.5 py-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/info:opacity-100"
-                      >
-                        {s.h}
-                      </span>
-                    </span>
-                    <div className="font-pixel text-sm text-primary">{s.v}</div>
-                    <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
-                  </div>
-                ))}
+              <div className="mt-5 flex items-center justify-center gap-2 border-2 border-border bg-secondary px-4 py-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">reputation</span>
+                <span className="font-pixel text-xs text-primary">{profile.reputation}</span>
               </div>
 
               <FollowButton targetUserId={profile.id} currentUserId={currentUserId} initialFollowing={isFollowing} />
@@ -165,47 +157,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
             </div>
           </aside>
 
-          {/* Repos */}
-          <section>
-            <h2 className="font-pixel text-xs uppercase tracking-wider">Published projects</h2>
-
-            {repos.length === 0 ? (
-              <div className="mt-5 border-2 border-dashed border-border p-12 text-center">
-                <p className="font-mono text-sm text-muted-foreground">No published projects yet.</p>
-              </div>
-            ) : (
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                {repos.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={`/${profile.username}/${r.slug}`}
-                    className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="min-w-0 break-all font-mono text-sm text-foreground group-hover:text-primary">
-                        {profile.username}/{r.slug}
-                      </h3>
-                      <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
-                        {r.type === 'free' ? 'Free' : r.price_cents ? `$${(r.price_cents / 100).toFixed(0)}` : 'Paid'}
-                      </span>
-                    </div>
-                    {r.description && (
-                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{r.description}</p>
-                    )}
-                    {r.tags.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-1.5">
-                        {r.tags.slice(0, 4).map((t) => (
-                          <span key={t} className="border border-border bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
+          {/* Right column — shared with /profile */}
+          <ProfileBody
+            userId={profile.id}
+            ownerUsername={profile.username}
+            stats={stats}
+            repos={repos}
+            jobs={jobs}
+            orders={orders}
+            reposHeading="Published projects"
+            reposEmpty={<p className="font-mono text-sm text-muted-foreground">No published projects yet.</p>}
+          />
         </div>
       </main>
 

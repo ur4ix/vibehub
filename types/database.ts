@@ -1002,6 +1002,7 @@ export interface Profile {
   reputation: number
   github_username: string | null
   x_username: string | null
+  created_at: string
 }
 
 export type Notification = Tables<"notifications">;
