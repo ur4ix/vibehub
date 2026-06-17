@@ -49,6 +49,7 @@ export function PostEditor({ slug }: PostEditorProps) {
   const [preview, setPreview] = useState(false)
 
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Auth + role gate, plus load when editing.
@@ -129,6 +130,19 @@ export function PostEditor({ slug }: PostEditorProps) {
 
     toast.success(status === 'published' ? 'Post published!' : 'Draft saved')
     router.push(status === 'published' ? `/blog/${slugValue}` : '/blog')
+    router.refresh()
+  }
+
+  async function remove() {
+    if (!postId || deleting) return
+    if (!window.confirm('Delete this post permanently? This cannot be undone.')) return
+    setDeleting(true)
+    const supabase = createClient()
+    const { error: e } = await supabase.from('posts').delete().eq('id', postId)
+    setDeleting(false)
+    if (e) { setError(e.message); return }
+    toast.success('Post deleted')
+    router.push('/blog')
     router.refresh()
   }
 
@@ -269,6 +283,16 @@ export function PostEditor({ slug }: PostEditorProps) {
             <PixelButton type="button" variant="outline" disabled={saving} onClick={() => save('draft')}>
               Save draft
             </PixelButton>
+            {postId && (
+              <button
+                type="button"
+                onClick={remove}
+                disabled={deleting || saving}
+                className="inline-flex items-center gap-1.5 border-2 border-destructive bg-destructive/5 px-4 py-2.5 font-pixel text-[10px] uppercase leading-none tracking-wider text-destructive transition-all duration-100 [box-shadow:3px_3px_0_0_var(--destructive)] hover:bg-destructive hover:text-white active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-60"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
             <Link
               href="/blog"
               className="ml-auto inline-flex items-center font-mono text-sm text-muted-foreground hover:text-primary"
