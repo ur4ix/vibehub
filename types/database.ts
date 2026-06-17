@@ -238,6 +238,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      startup_interests: {
+        Row: {
+          id: string;
+          startup_id: string;
+          investor_id: string;
+          message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          startup_id: string;
+          investor_id: string;
+          message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          startup_id?: string;
+          investor_id?: string;
+          message?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       job_applications: {
         Row: {
           id: string;

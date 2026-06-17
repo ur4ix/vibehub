@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Rocket, Globe, Trash2, ExternalLink } from 'lucide-react'
+import { Rocket, Globe, Trash2, ExternalLink, Heart, Send } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
+import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 type Stage = 'idea' | 'mvp' | 'launched' | 'revenue' | 'scaling'
 type Funding = 'bootstrapped' | 'raising' | 'funded'
@@ -28,6 +30,21 @@ interface Startup {
   owner_id: string
   created_at: string
   owner?: { username: string | null }
+}
+
+interface Interest {
+  id: string
+  message: string | null
+  created_at: string
+  investor: { username: string; avatar_url: string | null } | null
+}
+
+function timeAgo(iso: string) {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60)    return 'just now'
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
 }
 
 const STAGE_LABELS: Record<Stage, string> = {
@@ -54,6 +71,12 @@ export default function StartupDetailPage() {
   const [loading,    setLoading]    = useState(true)
   const [deleting,   setDeleting]   = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
+  // Express interest
+  const [interested,   setInterested]   = useState(false)
+  const [showInterest, setShowInterest] = useState(false)
+  const [interestMsg,  setInterestMsg]  = useState('')
+  const [submitting,   setSubmitting]   = useState(false)
+  const [interests,    setInterests]    = useState<Interest[]>([])
 
   useEffect(() => {
     const supabase = createClient()
@@ -71,6 +94,65 @@ export default function StartupDetailPage() {
   }, [id])
 
   const isOwner = user && startup && user.id === startup.owner_id
+
+  // Has the current user already expressed interest?
+  useEffect(() => {
+    if (!id || !user) return
+    const supabase = createClient()
+    let active = true
+    supabase
+      .from('startup_interests')
+      .select('id')
+      .eq('startup_id', id)
+      .eq('investor_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setInterested(Boolean(data)) })
+    return () => { active = false }
+  }, [id, user])
+
+  // Owner: load interested investors (with profiles).
+  useEffect(() => {
+    if (!startup || !user || user.id !== startup.owner_id) return
+    const supabase = createClient()
+    let active = true
+    ;(async () => {
+      const { data } = await supabase
+        .from('startup_interests')
+        .select('id, investor_id, message, created_at')
+        .eq('startup_id', startup.id)
+        .order('created_at', { ascending: false })
+      const rows = (data as { id: string; investor_id: string; message: string | null; created_at: string }[] | null) ?? []
+      const ids = [...new Set(rows.map((r) => r.investor_id))]
+      const map = new Map<string, { username: string; avatar_url: string | null }>()
+      if (ids.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, username, avatar_url').in('id', ids)
+        for (const p of (profs as { id: string; username: string; avatar_url: string | null }[] | null) ?? []) {
+          map.set(p.id, { username: p.username, avatar_url: p.avatar_url })
+        }
+      }
+      if (!active) return
+      setInterests(rows.map((r) => ({ id: r.id, message: r.message, created_at: r.created_at, investor: map.get(r.investor_id) ?? null })))
+    })()
+    return () => { active = false }
+  }, [startup, user])
+
+  async function handleExpressInterest(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) { router.push('/auth'); return }
+    if (submitting) return
+    if (containsBanned(interestMsg)) { toast.error('Not allowed', BANNED_MESSAGE); return }
+    setSubmitting(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('startup_interests').insert({
+      startup_id: id, investor_id: user.id, message: interestMsg.trim() || null,
+    })
+    setSubmitting(false)
+    if (error) { toast.error('Could not send', error.message); return }
+    setInterested(true)
+    setShowInterest(false)
+    setInterestMsg('')
+    toast.success('Interest sent!', 'The founder has been notified.')
+  }
 
   async function handleDelete() {
     if (!confirmDel) { setConfirmDel(true); return }
@@ -186,6 +268,68 @@ export default function StartupDetailPage() {
               </Link>
             )}
           </div>
+
+          {/* Express interest (non-owners) */}
+          {!isOwner && (
+            <div className="mt-6 border-t border-border pt-6">
+              {interested ? (
+                <div className="border-2 border-green-400/40 bg-green-400/10 px-4 py-3 text-center font-mono text-xs text-green-400">
+                  ✓ You’ve expressed interest — the founder can see you
+                </div>
+              ) : showInterest ? (
+                <form onSubmit={handleExpressInterest}>
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Message to the founder (optional)</p>
+                  <textarea
+                    rows={3}
+                    value={interestMsg}
+                    onChange={(e) => setInterestMsg(e.target.value)}
+                    placeholder="Introduce yourself — who you are and why you’re interested…"
+                    className="w-full resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                    autoFocus
+                  />
+                  <div className="mt-3 flex items-center gap-3">
+                    <PixelButton type="submit" disabled={submitting} className="gap-2 py-2.5">
+                      <Send className="h-3.5 w-3.5" />
+                      {submitting ? 'Sending…' : 'Send interest'}
+                    </PixelButton>
+                    <button type="button" onClick={() => setShowInterest(false)} className="font-mono text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                <PixelButton variant="outline" className="w-full gap-2 py-3" onClick={() => user ? setShowInterest(true) : router.push('/auth')}>
+                  <Heart className="h-3.5 w-3.5" />
+                  Express interest
+                </PixelButton>
+              )}
+            </div>
+          )}
+
+          {/* Interested investors (owner) */}
+          {isOwner && (
+            <div className="mt-6 border-t border-border pt-6">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Interested{interests.length > 0 && <span className="ml-1 text-foreground">({interests.length})</span>}
+              </p>
+              {interests.length === 0 ? (
+                <p className="font-mono text-xs text-muted-foreground">No interest yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {interests.map((it) => (
+                    <div key={it.id} className="border-2 border-border bg-background p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <Link href={it.investor ? `/u/${it.investor.username}` : '#'} className="group flex items-center gap-2">
+                          <PixelAvatar username={it.investor?.username ?? '?'} avatarColor={colorFromId(it.id)} size={24} imageUrl={it.investor?.avatar_url ?? undefined} />
+                          <span className="font-mono text-xs text-foreground group-hover:text-primary">@{it.investor?.username ?? 'unknown'}</span>
+                        </Link>
+                        <span className="font-mono text-[10px] text-muted-foreground">{timeAgo(it.created_at)}</span>
+                      </div>
+                      {it.message && <p className="mt-3 whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-muted-foreground">{it.message}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Owner actions */}
           {isOwner && (
