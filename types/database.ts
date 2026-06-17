@@ -193,6 +193,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      job_applications: {
+        Row: {
+          id: string;
+          job_id: string;
+          applicant_id: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          job_id: string;
+          applicant_id: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          job_id?: string;
+          applicant_id?: string;
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      order_bids: {
+        Row: {
+          id: string;
+          order_id: string;
+          bidder_id: string;
+          amount: number;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          bidder_id: string;
+          amount: number;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          bidder_id?: string;
+          amount?: number;
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       repository_versions: {
         Row: {
           id: string;

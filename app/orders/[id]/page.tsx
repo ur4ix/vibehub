@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ShoppingBag, Clock, Trash2, X } from 'lucide-react'
+import { ShoppingBag, Clock, Trash2, X, Send } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
+import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +26,14 @@ interface Order {
   owner_id: string
   created_at: string
   owner?: { username: string | null }
+}
+
+interface Bid {
+  id: string
+  amount: number
+  message: string
+  created_at: string
+  bidder: { username: string; avatar_url: string | null } | null
 }
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -62,6 +71,13 @@ export default function OrderDetailPage() {
   const [deleting,   setDeleting]   = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
+  // Bid flow
+  const [bidPlaced,  setBidPlaced]  = useState(false)
+  const [showBid,    setShowBid]    = useState(false)
+  const [bidAmount,  setBidAmount]  = useState('')
+  const [bidMsg,     setBidMsg]     = useState('')
+  const [bidding,    setBidding]    = useState(false)
+  const [bids,       setBids]       = useState<Bid[]>([])
 
   useEffect(() => {
     const supabase = createClient()
@@ -78,6 +94,73 @@ export default function OrderDetailPage() {
     }
     load()
   }, [id])
+
+  // Has the current user already bid?
+  useEffect(() => {
+    if (!id || !user) return
+    const supabase = createClient()
+    let active = true
+    supabase
+      .from('order_bids')
+      .select('id')
+      .eq('order_id', id)
+      .eq('bidder_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setBidPlaced(Boolean(data)) })
+    return () => { active = false }
+  }, [id, user])
+
+  // Owner: load bids (with their public profiles).
+  useEffect(() => {
+    if (!order || !user || user.id !== order.owner_id) return
+    const supabase = createClient()
+    let active = true
+    ;(async () => {
+      const { data } = await supabase
+        .from('order_bids')
+        .select('id, bidder_id, amount, message, created_at')
+        .eq('order_id', order.id)
+        .order('amount', { ascending: true })
+      const rows = (data as { id: string; bidder_id: string; amount: number; message: string; created_at: string }[] | null) ?? []
+      const ids = [...new Set(rows.map((r) => r.bidder_id))]
+      const map = new Map<string, { username: string; avatar_url: string | null }>()
+      if (ids.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, username, avatar_url').in('id', ids)
+        for (const p of (profs as { id: string; username: string; avatar_url: string | null }[] | null) ?? []) {
+          map.set(p.id, { username: p.username, avatar_url: p.avatar_url })
+        }
+      }
+      if (!active) return
+      setBids(rows.map((r) => ({
+        id: r.id, amount: r.amount, message: r.message, created_at: r.created_at,
+        bidder: map.get(r.bidder_id) ?? null,
+      })))
+    })()
+    return () => { active = false }
+  }, [order, user])
+
+  async function handleBid(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) { router.push('/auth'); return }
+    const amount = Number(bidAmount)
+    if (!bidMsg.trim() || !Number.isFinite(amount) || amount <= 0 || bidding) return
+    setBidding(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('order_bids').insert({
+      order_id: id, bidder_id: user.id, amount, message: bidMsg.trim(),
+    })
+    setBidding(false)
+    if (error) {
+      toast.error('Could not place bid', error.message)
+      return
+    }
+    setBidPlaced(true)
+    setShowBid(false)
+    setBidAmount('')
+    setBidMsg('')
+    setOrder((o) => o ? { ...o, bids_count: o.bids_count + 1 } : o)
+    toast.success('Bid placed!', 'The poster has been notified.')
+  }
 
   const isOwner = user && order && user.id === order.owner_id
 
@@ -247,12 +330,94 @@ export default function OrderDetailPage() {
           {/* Bid CTA (non-owners) */}
           {!isOwner && order.status === 'open' && (
             <div className="mt-6 border-t border-border pt-6">
-              <PixelButton className="w-full py-3">
-                Place a bid
-              </PixelButton>
-              <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
-                Describe your approach and propose a price
+              {bidPlaced ? (
+                <div className="border-2 border-green-400/40 bg-green-400/10 px-4 py-3 text-center font-mono text-xs text-green-400">
+                  ✓ Your bid has been placed
+                </div>
+              ) : showBid ? (
+                <form onSubmit={handleBid}>
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Your price (USD)</p>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-muted-foreground">$</span>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder={String(order.budget)}
+                      className="w-full border-2 border-input bg-background py-2 pl-7 pr-3 font-mono text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                      autoFocus
+                    />
+                  </div>
+                  <p className="mb-2 mt-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Your approach</p>
+                  <textarea
+                    rows={4}
+                    value={bidMsg}
+                    onChange={(e) => setBidMsg(e.target.value)}
+                    placeholder="How would you tackle this? Timeline, relevant experience…"
+                    className="w-full resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                  />
+                  <div className="mt-3 flex items-center gap-3">
+                    <PixelButton type="submit" disabled={bidding || !bidMsg.trim() || !(Number(bidAmount) > 0)} className="gap-2 py-2.5">
+                      <Send className="h-3.5 w-3.5" />
+                      {bidding ? 'Placing…' : 'Place bid'}
+                    </PixelButton>
+                    <button type="button" onClick={() => setShowBid(false)} className="font-mono text-xs text-muted-foreground hover:text-foreground">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <PixelButton className="w-full py-3" onClick={() => user ? setShowBid(true) : router.push('/auth')}>
+                    Place a bid
+                  </PixelButton>
+                  <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
+                    Describe your approach and propose a price
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Bids (owner only) */}
+          {isOwner && (
+            <div className="mt-6 border-t border-border pt-6">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Bids{bids.length > 0 && <span className="ml-1 text-foreground">({bids.length})</span>}
               </p>
+              {bids.length === 0 ? (
+                <p className="font-mono text-xs text-muted-foreground">No bids yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {bids.map((b) => (
+                    <div key={b.id} className="border-2 border-border bg-background p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <Link
+                          href={b.bidder ? `/u/${b.bidder.username}` : '#'}
+                          className="group flex items-center gap-2"
+                        >
+                          <PixelAvatar
+                            username={b.bidder?.username ?? '?'}
+                            avatarColor={colorFromId(b.id)}
+                            size={24}
+                            imageUrl={b.bidder?.avatar_url ?? undefined}
+                          />
+                          <span className="font-mono text-xs text-foreground group-hover:text-primary">
+                            @{b.bidder?.username ?? 'unknown'}
+                          </span>
+                        </Link>
+                        <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
+                          ${b.amount}
+                        </span>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{b.message}</p>
+                      <p className="mt-2 font-mono text-[10px] text-muted-foreground">{timeAgo(b.created_at)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

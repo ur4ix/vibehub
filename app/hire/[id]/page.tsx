@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Briefcase, Clock, Users, Trash2, X } from 'lucide-react'
+import { Briefcase, Clock, Users, Trash2, X, Send } from 'lucide-react'
+import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
@@ -25,6 +26,13 @@ interface Job {
   owner_id: string
   created_at: string
   owner?: { username: string | null }
+}
+
+interface Applicant {
+  id: string
+  message: string
+  created_at: string
+  applicant: { username: string; avatar_url: string | null } | null
 }
 
 const BUDGET_LABELS: Record<BudgetType, (v: number) => string> = {
@@ -58,6 +66,12 @@ export default function JobDetailPage() {
   const [deleting,    setDeleting]    = useState(false)
   const [closing,     setClosing]     = useState(false)
   const [confirmDel,  setConfirmDel]  = useState(false)
+  // Apply flow
+  const [applied,     setApplied]     = useState(false)
+  const [showApply,   setShowApply]   = useState(false)
+  const [applyMsg,    setApplyMsg]    = useState('')
+  const [applying,    setApplying]    = useState(false)
+  const [applicants,  setApplicants]  = useState<Applicant[]>([])
 
   useEffect(() => {
     const supabase = createClient()
@@ -74,6 +88,71 @@ export default function JobDetailPage() {
     }
     load()
   }, [id])
+
+  // Has the current user already applied?
+  useEffect(() => {
+    if (!id || !user) return
+    const supabase = createClient()
+    let active = true
+    supabase
+      .from('job_applications')
+      .select('id')
+      .eq('job_id', id)
+      .eq('applicant_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setApplied(Boolean(data)) })
+    return () => { active = false }
+  }, [id, user])
+
+  // Owner: load applicants (with their public profiles).
+  useEffect(() => {
+    if (!job || !user || user.id !== job.owner_id) return
+    const supabase = createClient()
+    let active = true
+    ;(async () => {
+      const { data } = await supabase
+        .from('job_applications')
+        .select('id, applicant_id, message, created_at')
+        .eq('job_id', job.id)
+        .order('created_at', { ascending: false })
+      const rows = (data as { id: string; applicant_id: string; message: string; created_at: string }[] | null) ?? []
+      const ids = [...new Set(rows.map((r) => r.applicant_id))]
+      const map = new Map<string, { username: string; avatar_url: string | null }>()
+      if (ids.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, username, avatar_url').in('id', ids)
+        for (const p of (profs as { id: string; username: string; avatar_url: string | null }[] | null) ?? []) {
+          map.set(p.id, { username: p.username, avatar_url: p.avatar_url })
+        }
+      }
+      if (!active) return
+      setApplicants(rows.map((r) => ({
+        id: r.id, message: r.message, created_at: r.created_at,
+        applicant: map.get(r.applicant_id) ?? null,
+      })))
+    })()
+    return () => { active = false }
+  }, [job, user])
+
+  async function handleApply(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) { router.push('/auth'); return }
+    if (!applyMsg.trim() || applying) return
+    setApplying(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('job_applications').insert({
+      job_id: id, applicant_id: user.id, message: applyMsg.trim(),
+    })
+    setApplying(false)
+    if (error) {
+      toast.error('Could not apply', error.message)
+      return
+    }
+    setApplied(true)
+    setShowApply(false)
+    setApplyMsg('')
+    setJob((j) => j ? { ...j, applicants_count: j.applicants_count + 1 } : j)
+    toast.success('Application sent!', 'The poster has been notified.')
+  }
 
   const isOwner = user && job && user.id === job.owner_id
 
@@ -230,12 +309,78 @@ export default function JobDetailPage() {
           {/* Apply CTA (non-owners) */}
           {!isOwner && job.status === 'open' && (
             <div className="mt-6 border-t border-border pt-6">
-              <PixelButton className="w-full py-3">
-                Apply for this job
-              </PixelButton>
-              <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
-                Your profile and contact info will be shared with the poster
+              {applied ? (
+                <div className="border-2 border-green-400/40 bg-green-400/10 px-4 py-3 text-center font-mono text-xs text-green-400">
+                  ✓ You’ve applied to this job
+                </div>
+              ) : showApply ? (
+                <form onSubmit={handleApply}>
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Your pitch</p>
+                  <textarea
+                    rows={4}
+                    value={applyMsg}
+                    onChange={(e) => setApplyMsg(e.target.value)}
+                    placeholder="Introduce yourself and explain why you’re a good fit…"
+                    className="w-full resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                    autoFocus
+                  />
+                  <div className="mt-3 flex items-center gap-3">
+                    <PixelButton type="submit" disabled={applying || !applyMsg.trim()} className="gap-2 py-2.5">
+                      <Send className="h-3.5 w-3.5" />
+                      {applying ? 'Sending…' : 'Send application'}
+                    </PixelButton>
+                    <button type="button" onClick={() => setShowApply(false)} className="font-mono text-xs text-muted-foreground hover:text-foreground">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <PixelButton className="w-full py-3" onClick={() => user ? setShowApply(true) : router.push('/auth')}>
+                    Apply for this job
+                  </PixelButton>
+                  <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
+                    Your profile and contact info will be shared with the poster
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Applicants (owner only) */}
+          {isOwner && (
+            <div className="mt-6 border-t border-border pt-6">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Applicants{applicants.length > 0 && <span className="ml-1 text-foreground">({applicants.length})</span>}
               </p>
+              {applicants.length === 0 ? (
+                <p className="font-mono text-xs text-muted-foreground">No applications yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {applicants.map((a) => (
+                    <div key={a.id} className="border-2 border-border bg-background p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <Link
+                          href={a.applicant ? `/u/${a.applicant.username}` : '#'}
+                          className="group flex items-center gap-2"
+                        >
+                          <PixelAvatar
+                            username={a.applicant?.username ?? '?'}
+                            avatarColor={colorFromId(a.id)}
+                            size={24}
+                            imageUrl={a.applicant?.avatar_url ?? undefined}
+                          />
+                          <span className="font-mono text-xs text-foreground group-hover:text-primary">
+                            @{a.applicant?.username ?? 'unknown'}
+                          </span>
+                        </Link>
+                        <span className="font-mono text-[10px] text-muted-foreground">{timeAgo(a.created_at)}</span>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{a.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
