@@ -15,6 +15,7 @@ import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -318,6 +319,7 @@ export function ListingView({ id }: { id: string }) {
       return
     }
     if (!comment.trim()) return
+    if (containsBanned(comment)) { toast.error('Not allowed', BANNED_MESSAGE); return }
     setSubmitting(true)
 
     const supabase = createClient()

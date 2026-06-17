@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Shield, Camera, Check, Plus, Info } from 'lucide-react'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 import type { UserIdentity, Provider } from '@supabase/supabase-js'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
@@ -171,6 +172,12 @@ export function ProfileView() {
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
+
+    if (containsBanned(draft.username, draft.displayName, draft.bio)) {
+      setSaveError(BANNED_MESSAGE)
+      return
+    }
+
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()

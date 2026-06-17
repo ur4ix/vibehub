@@ -11,6 +11,7 @@ import { PixelAvatar, colorFromId } from '@/components/pixel-avatar'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 type OrderStatus = 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled'
 
@@ -144,6 +145,7 @@ export default function OrderDetailPage() {
     if (!user) { router.push('/auth'); return }
     const amount = Number(bidAmount)
     if (!bidMsg.trim() || !Number.isFinite(amount) || amount <= 0 || bidding) return
+    if (containsBanned(bidMsg)) { toast.error('Not allowed', BANNED_MESSAGE); return }
     setBidding(true)
     const supabase = createClient()
     const { error } = await supabase.from('order_bids').insert({

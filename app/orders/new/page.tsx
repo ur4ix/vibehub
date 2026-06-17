@@ -9,6 +9,7 @@ import { PixelButton } from '@/components/pixel-button'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 const DELIVERY_OPTIONS = [
   { value: '3',        label: '3 days' },
@@ -45,6 +46,12 @@ export default function NewOrderPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) { router.push('/auth'); return }
+
+    if (containsBanned(title, description, tags)) {
+      toast.error('Not allowed', BANNED_MESSAGE)
+      return
+    }
+
     setSubmitting(true)
 
     const supabase   = createClient()

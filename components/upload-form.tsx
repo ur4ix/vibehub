@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
+import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -194,6 +195,7 @@ export function UploadForm({ userId }: UploadFormProps) {
     if (!slug) return "Slug cannot be empty";
     if (!/^[a-z0-9-]{1,80}$/.test(slug))
       return "Slug: lowercase letters, digits and hyphens, up to 80 characters";
+    if (containsBanned(title, slug, description, tags)) return BANNED_MESSAGE;
     if (repoType === "paid") {
       const p = parseFloat(price);
       if (!price || isNaN(p) || p <= 0) return "Enter a price greater than zero";

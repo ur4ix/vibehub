@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { PixelButton } from '@/components/pixel-button'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 export function AuthCard() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -62,12 +63,18 @@ export function AuthCard() {
       router.push('/dashboard')
       router.refresh()
     } else {
+      const desiredUsername = username.trim() || email.split('@')[0]
+      if (containsBanned(desiredUsername)) {
+        setError(BANNED_MESSAGE)
+        setIsLoading(false)
+        return
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard`,
-          data: { username: username.trim() || email.split('@')[0] },
+          data: { username: desiredUsername },
         },
       })
       setIsLoading(false)

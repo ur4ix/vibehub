@@ -10,6 +10,7 @@ import { Markdown } from '@/components/markdown'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 import type { Post } from '@/types/database'
 
 function slugify(s: string) {
@@ -95,6 +96,7 @@ export function PostEditor({ slug }: PostEditorProps) {
     if (!title.trim()) return 'Title is required'
     if (!/^[a-z0-9-]{1,120}$/.test(slugValue)) return 'Slug: lowercase letters, digits and hyphens'
     if (!body.trim()) return 'Body cannot be empty'
+    if (containsBanned(title, slugValue, excerpt, body)) return BANNED_MESSAGE
     return null
   }
 

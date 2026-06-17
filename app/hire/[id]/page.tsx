@@ -11,6 +11,7 @@ import { PixelButton } from '@/components/pixel-button'
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
+import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
 type BudgetType = 'fixed' | 'equity' | 'hourly'
 
@@ -137,6 +138,7 @@ export default function JobDetailPage() {
     e.preventDefault()
     if (!user) { router.push('/auth'); return }
     if (!applyMsg.trim() || applying) return
+    if (containsBanned(applyMsg)) { toast.error('Not allowed', BANNED_MESSAGE); return }
     setApplying(true)
     const supabase = createClient()
     const { error } = await supabase.from('job_applications').insert({
