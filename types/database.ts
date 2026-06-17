@@ -809,6 +809,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      admin_set_reputation: {
+        Args: { target: string; value: number };
+        Returns: undefined;
+      };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
         Returns: number;

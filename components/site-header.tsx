@@ -148,6 +148,7 @@ export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [publishOpen, setPublishOpen] = useState(false)
   const { user, signOut } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -158,6 +159,22 @@ export function SiteHeader() {
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
   }, [])
+
+  // Is the signed-in user an admin? (decides whether to show the Admin link)
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    let active = true
+    supabase.rpc('is_admin').then(({ data }) => { if (active) setIsAdmin(Boolean(data)) })
+    return () => { active = false }
+  }, [user])
+
+  const menuItems = [
+    { label: 'Profile', href: '/profile' },
+    { label: 'Security settings', href: '/settings/security' },
+    { label: 'Dashboard', href: '/dashboard' },
+    ...(isAdmin ? [{ label: 'Admin panel', href: '/admin' }] : []),
+  ]
 
   const navLinks = user ? AUTH_NAV : UNAUTH_NAV
 
@@ -213,11 +230,7 @@ export function SiteHeader() {
                       <p className="font-pixel text-[9px] text-foreground">{user.username}</p>
                       <p className="mt-1 font-mono text-[10px] text-muted-foreground truncate">{user.email}</p>
                     </div>
-                    {[
-                      { label: 'Profile', href: '/profile' },
-                      { label: 'Security settings', href: '/settings/security' },
-                      { label: 'Dashboard', href: '/dashboard' },
-                    ].map((item) => (
+                    {menuItems.map((item) => (
                       <Link
                         key={item.href}
                         role="menuitem"
@@ -308,6 +321,15 @@ export function SiteHeader() {
                   >
                     Security settings
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="border-2 border-primary bg-primary/10 px-4 py-2.5 text-center font-mono text-xs text-primary hover:bg-primary/20"
+                    >
+                      Admin panel
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="flex gap-3 py-3">
