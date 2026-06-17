@@ -19,13 +19,15 @@ interface PublicProfile {
   bio: string | null
   reputation: number
   created_at: string
+  github_username: string | null
+  x_username: string | null
 }
 
 async function getProfileRow(username: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url, bio, reputation, created_at')
+    .select('id, username, display_name, avatar_url, bio, reputation, created_at, github_username, x_username')
     .eq('username', username)
     .maybeSingle()
   return data as PublicProfile | null
@@ -113,6 +115,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
               initialBio={profile.bio}
               reputation={profile.reputation}
               createdAt={profile.created_at}
+              githubUsername={profile.github_username}
+              xUsername={profile.x_username}
               isOwner={isOwner}
               currentUserId={currentUserId}
               isFollowing={isFollowing}
