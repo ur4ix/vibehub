@@ -181,14 +181,14 @@ export function RepoFiles({
         )}
       </h2>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,280px)_1fr]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
         {/* Tree */}
         <div className="max-h-[420px] overflow-auto border-2 border-border bg-card py-2">
           {renderNode(tree, 0)}
         </div>
 
         {/* Viewer */}
-        <div className="min-h-[200px] border-2 border-border bg-card">
+        <div className="min-w-0 min-h-[200px] border-2 border-border bg-card">
           {!openFile ? (
             <p className="grid h-full place-items-center p-6 text-center font-mono text-xs text-muted-foreground">
               {canView ? 'Select a file to preview its contents.' : lockedLabel}
