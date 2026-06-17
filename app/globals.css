@@ -162,14 +162,15 @@
     .animate-pop, .animate-fade-in, .animate-modal { animation: none; }
   }
 
-  /* Page enter — soft fade on each route change. Opacity only, so it doesn't
-     create a containing block that would break the sticky header. */
+  /* Page enter — soft fade + gentle rise on each route change. `backwards` fill
+     applies the start state before the run and drops the transform afterwards,
+     so the sticky header isn't left with a containing block. */
   .page-enter {
-    animation: page-enter 0.26s ease-out both;
+    animation: page-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   @keyframes page-enter {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
     .page-enter { animation: none; }
