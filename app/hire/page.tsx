@@ -147,11 +147,11 @@ export default function HirePage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((job) => (
-                <Link
+                <div
                   key={job.id}
-                  href={`/hire/${job.id}`}
-                  className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
+                  className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
                 >
+                  <Link href={`/hire/${job.id}`} aria-label={job.title} className="absolute inset-0 z-[1]" />
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="truncate font-mono text-sm text-foreground group-hover:text-primary">{job.title}</h2>
                     <span className={`shrink-0 whitespace-nowrap border-2 px-2 py-0.5 font-pixel text-[9px] ${BUDGET_COLORS[job.budget_type]}`}>
@@ -167,9 +167,13 @@ export default function HirePage() {
                   <div className="mt-4 flex items-center gap-3 border-t border-border pt-4 font-mono text-[10px] text-muted-foreground">
                     <span className="flex items-center gap-1"><Users className="h-3 w-3" />{job.applicants_count}</span>
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(job.created_at)}</span>
-                    {job.owner?.username && <span className="ml-auto truncate">@{job.owner.username}</span>}
+                    {job.owner?.username && (
+                      <Link href={`/u/${job.owner.username}`} className="relative z-[2] ml-auto truncate transition-colors hover:text-primary">
+                        @{job.owner.username}
+                      </Link>
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </>

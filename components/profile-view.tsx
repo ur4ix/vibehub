@@ -75,6 +75,8 @@ export function ProfileView() {
   const [repos, setRepos] = useState<Repository[]>([])
   const [jobs, setJobs] = useState<ProfileJob[]>([])
   const [orders, setOrders] = useState<ProfileOrder[]>([])
+  const [followers, setFollowers] = useState(0)
+  const [following, setFollowing] = useState(0)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<ProfileDraft>({
     username: '',
@@ -111,11 +113,13 @@ export function ProfileView() {
       // Ignored if the migration hasn't been applied yet.
       await supabase.rpc('sync_verified_socials')
 
-      const [{ data: p }, { data: r }, { data: jb }, { data: od }, identRes] = await Promise.all([
+      const [{ data: p }, { data: r }, { data: jb }, { data: od }, { count: flw }, { count: flg }, identRes] = await Promise.all([
         supabase.from('users').select('*').eq('id', user.id).single(),
         supabase.from('repositories').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
         supabase.from('jobs').select('id, title, budget_type, budget_value, status').eq('owner_id', user.id).order('created_at', { ascending: false }),
         supabase.from('orders').select('id, title, budget, status').eq('owner_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', user.id),
+        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', user.id),
         supabase.auth.getUserIdentities(),
       ])
 
@@ -124,6 +128,8 @@ export function ProfileView() {
       setRepos((r as Repository[] | null) ?? [])
       setJobs((jb as ProfileJob[] | null) ?? [])
       setOrders((od as ProfileOrder[] | null) ?? [])
+      setFollowers(flw ?? 0)
+      setFollowing(flg ?? 0)
       setIdentities(identRes.data?.identities ?? [])
     })()
 
@@ -400,6 +406,9 @@ export function ProfileView() {
                     </h1>
                     <p className="mt-1 font-mono text-[10px] text-muted-foreground">@{user.username}</p>
                     <p className="mt-2 font-mono text-xs text-muted-foreground">{user.email}</p>
+                    <Link href={`/u/${user.username}`} className="mt-2 font-mono text-[10px] text-primary hover:underline">
+                      View public profile →
+                    </Link>
                   </div>
 
                   {profile?.bio && (
@@ -457,6 +466,9 @@ export function ProfileView() {
               <Stat value={repos.length} label="repos" />
               <Stat value={user.reputation} label="reputation" />
               <Stat value={repos.filter((r) => r.is_published).length} label="published" />
+              <Stat value={followers} label="followers" />
+              <Stat value={following} label="following" />
+              <Stat value={jobs.length + orders.length} label="postings" />
             </div>
 
             <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Repositories</h2>

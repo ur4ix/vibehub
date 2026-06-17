@@ -151,11 +151,11 @@ export default function OrdersPage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((order) => (
-                <Link
+                <div
                   key={order.id}
-                  href={`/orders/${order.id}`}
-                  className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
+                  className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
                 >
+                  <Link href={`/orders/${order.id}`} aria-label={order.title} className="absolute inset-0 z-[1]" />
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h2 className="truncate font-mono text-sm text-foreground group-hover:text-primary">{order.title}</h2>
@@ -176,9 +176,13 @@ export default function OrdersPage() {
                   <div className="mt-4 flex items-center gap-3 border-t border-border pt-4 font-mono text-[10px] text-muted-foreground">
                     <span>{order.bids_count} bids</span>
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(order.created_at)}</span>
-                    {order.owner?.username && <span className="ml-auto truncate">@{order.owner.username}</span>}
+                    {order.owner?.username && (
+                      <Link href={`/u/${order.owner.username}`} className="relative z-[2] ml-auto truncate transition-colors hover:text-primary">
+                        @{order.owner.username}
+                      </Link>
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </>

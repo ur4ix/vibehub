@@ -38,10 +38,9 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
   const avatarColor = colorFromId(repo.owner_id)
 
   return (
-    <Link
-      href={`/listing/${repo.id}`}
-      className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
-    >
+    <div className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border">
+      {/* whole-card link to the listing (overlay); the author link sits above it */}
+      <Link href={`/listing/${repo.id}`} aria-label={repo.title} className="absolute inset-0 z-[1]" />
       <div className="flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-border bg-secondary font-pixel text-base text-primary" aria-hidden="true">
           {icon}
@@ -73,15 +72,18 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
       </div>
 
       <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-        <PixelAvatar username={repo.owner_username} avatarColor={avatarColor} size={20} imageUrl={repo.owner_avatar_url ?? undefined} />
-        <span className="font-mono text-[10px] text-muted-foreground">
+        <Link
+          href={`/u/${repo.owner_username}`}
+          className="relative z-[2] flex items-center gap-2 font-mono text-[10px] text-muted-foreground transition-colors hover:text-primary"
+        >
+          <PixelAvatar username={repo.owner_username} avatarColor={avatarColor} size={20} imageUrl={repo.owner_avatar_url ?? undefined} />
           @{repo.owner_username}
-        </span>
+        </Link>
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">
           {new Date(repo.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
-    </Link>
+    </div>
   )
 }
 
