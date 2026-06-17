@@ -178,7 +178,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {repos.map((r) => (
                   <Link
                     key={r.id}
-                    href={`/listing/${r.id}`}
+                    href={`/${profile.username}/${r.slug}`}
                     className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
                   >
                     <div className="flex items-start justify-between gap-3">

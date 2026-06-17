@@ -509,7 +509,7 @@ export function ProfileView() {
                 {repos.map((r) => (
                   <Link
                     key={r.id}
-                    href={`/listing/${r.id}`}
+                    href={`/${user.username}/${r.slug}`}
                     className="group block border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
                   >
                     <div className="flex items-start justify-between gap-4">

@@ -40,7 +40,7 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
   return (
     <div className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border">
       {/* whole-card link to the listing (overlay); the author link sits above it */}
-      <Link href={`/listing/${repo.id}`} aria-label={repo.title} className="absolute inset-0 z-[1]" />
+      <Link href={`/${repo.owner_username}/${repo.slug}`} aria-label={repo.title} className="absolute inset-0 z-[1]" />
       <div className="flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center border-2 border-border bg-secondary font-pixel text-base text-primary" aria-hidden="true">
           {icon}
