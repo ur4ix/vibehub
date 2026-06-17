@@ -33,7 +33,24 @@ export function ScrollReveal() {
       )
 
       const fold = window.innerHeight * 0.88
+      const big = window.innerHeight * 1.2
+
+      // Pick the blocks to reveal. If a top-level child is taller than the
+      // viewport (a big wrapper/section/grid), descend one level so we animate
+      // its inner blocks instead of the whole thing at once.
+      const targets: Element[] = []
       main.querySelectorAll(':scope > *').forEach((el) => {
+        if ((el as HTMLElement).offsetHeight > big) {
+          const children = el.querySelectorAll(':scope > *')
+          if (children.length > 1) {
+            children.forEach((child) => targets.push(child))
+            return
+          }
+        }
+        targets.push(el)
+      })
+
+      targets.forEach((el) => {
         if (el.getBoundingClientRect().top > fold) {
           el.classList.add('reveal-pending')
           observer!.observe(el)
