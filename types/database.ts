@@ -946,6 +946,7 @@ export interface BlogPost {
   id: string
   slug: string
   title: string
+  author_id: string
   excerpt: string | null
   body: string
   cover_url: string | null

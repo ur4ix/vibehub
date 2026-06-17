@@ -47,6 +47,19 @@ export default async function BlogPostPage({ params }: PageProps) {
   const post = await getPost(slug)
   if (!post) notFound()
 
+  // Can the current user edit this post? (author or admin)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let canEdit = false
+  if (user) {
+    if (user.id === post.author_id) {
+      canEdit = true
+    } else {
+      const { data: isAdmin } = await supabase.rpc('is_admin')
+      canEdit = Boolean(isAdmin)
+    }
+  }
+
   const authorName = post.author?.display_name ?? post.author?.username ?? 'Vydex'
 
   return (
@@ -54,14 +67,24 @@ export default async function BlogPostPage({ params }: PageProps) {
       <SiteHeader />
 
       <main className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
-        {/* Breadcrumb */}
-        <nav className="mb-8 font-mono text-xs text-muted-foreground" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-primary">~</Link>
-          {' / '}
-          <Link href="/blog" className="hover:text-primary">blog</Link>
-          {' / '}
-          <span className="text-foreground">{slug}</span>
-        </nav>
+        {/* Breadcrumb + edit */}
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <nav className="font-mono text-xs text-muted-foreground" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-primary">~</Link>
+            {' / '}
+            <Link href="/blog" className="hover:text-primary">blog</Link>
+            {' / '}
+            <span className="text-foreground">{slug}</span>
+          </nav>
+          {canEdit && (
+            <Link
+              href={`/blog/${slug}/edit`}
+              className="shrink-0 border-2 border-border bg-card px-3 py-1.5 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              Edit post
+            </Link>
+          )}
+        </div>
 
         {post.status !== 'published' && (
           <p className="mb-6 inline-block border border-border px-2 py-1 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">
