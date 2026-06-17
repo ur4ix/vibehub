@@ -357,6 +357,14 @@ end; $$;
 
 grant execute on function public.admin_set_reputation(uuid, integer) to authenticated;
 
+-- Ensure the platform owner is an admin (safe to re-run).
+insert into public.user_roles (user_id, role)
+select u.id, 'admin'::public.app_role
+from public.users u
+join auth.users au on au.id = u.id
+where au.email = 'admin@vydex.dev'
+on conflict (user_id, role) do nothing;
+
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- Done. Verify the feature tables exist:
