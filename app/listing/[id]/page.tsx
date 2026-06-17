@@ -124,49 +124,108 @@ export default function ListingPage() {
   useEffect(() => {
     if (!id) return
     const supabase = createClient()
+    let active = true
 
-    // Main repo + owner
-    supabase
-      .from('repositories')
-      .select('*, owner:owner_id(id, username, display_name, avatar_url, reputation)')
-      .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) { setLoading(false); return }
-        const r = data as RepoDetail
-        setRepo(r)
-        setLikeCount(r.reaction_count)
-        setLoading(false)
+    // NOTE: public.users is RLS-restricted to the owner's own row, so we cannot
+    // embed owner/reviewer profiles via a FK join (they'd come back null for
+    // everyone except the row's owner — e.g. a buyer couldn't see the author).
+    // The anon-readable `profiles` view exposes the safe public columns instead.
+    async function load() {
+      // Main repo
+      const { data, error } = await supabase
+        .from('repositories')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (!active) return
+      if (error || !data) { setLoading(false); return }
+      const r = data as Omit<RepoDetail, 'owner'>
 
-        // Reviews
-        supabase
-          .from('reviews')
-          .select('id, rating, comment, created_at, reviewer:reviewer_id(username, avatar_url)')
-          .eq('repository_id', id)
-          .order('created_at', { ascending: false })
-          .limit(20)
-          .then(({ data: rv }) => setReviews((rv as ReviewRow[] | null) ?? []))
+      // Owner (from the public profiles view)
+      const { data: ownerRaw } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, reputation')
+        .eq('id', r.owner_id)
+        .maybeSingle()
+      if (!active) return
+      setRepo({ ...r, owner: (ownerRaw as RepoDetail['owner']) ?? null })
+      setLikeCount(r.reaction_count)
+      setLoading(false)
 
-        // Version history
-        supabase
-          .from('repository_versions')
-          .select('*')
-          .eq('repository_id', id)
-          .order('created_at', { ascending: false })
-          .then(({ data: vs }) => setVersions((vs as RepositoryVersion[] | null) ?? []))
-
-        // Similar (same tags, exclude self)
-        if (r.tags.length > 0) {
-          supabase
-            .from('repositories')
-            .select('id, title, slug, type, price_cents, category, tags, owner:owner_id(username)')
-            .eq('is_published', true)
-            .neq('id', id)
-            .overlaps('tags', r.tags)
-            .limit(3)
-            .then(({ data: sim }) => setSimilar((sim as SimilarRepo[] | null) ?? []))
+      // Reviews (+ reviewer profiles, fetched separately for the same RLS reason)
+      const { data: rvRaw } = await supabase
+        .from('reviews')
+        .select('id, rating, comment, created_at, reviewer_id')
+        .eq('repository_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      const reviewRows = (rvRaw as (Omit<ReviewRow, 'reviewer'> & { reviewer_id: string })[] | null) ?? []
+      const reviewerIds = [...new Set(reviewRows.map((x) => x.reviewer_id))]
+      const reviewerMap = new Map<string, { username: string; avatar_url: string | null }>()
+      if (reviewerIds.length > 0) {
+        const { data: rp } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', reviewerIds)
+        for (const p of (rp as { id: string; username: string; avatar_url: string | null }[] | null) ?? []) {
+          reviewerMap.set(p.id, { username: p.username, avatar_url: p.avatar_url })
         }
-      })
+      }
+      if (!active) return
+      setReviews(reviewRows.map((x) => ({
+        id: x.id,
+        rating: x.rating,
+        comment: x.comment,
+        created_at: x.created_at,
+        reviewer: reviewerMap.get(x.reviewer_id) ?? null,
+      })))
+
+      // Version history
+      const { data: vs } = await supabase
+        .from('repository_versions')
+        .select('*')
+        .eq('repository_id', id)
+        .order('created_at', { ascending: false })
+      if (!active) return
+      setVersions((vs as RepositoryVersion[] | null) ?? [])
+
+      // Similar (same tags, exclude self) + owner usernames
+      if (r.tags.length > 0) {
+        const { data: simRaw } = await supabase
+          .from('repositories')
+          .select('id, title, slug, type, price_cents, category, tags, owner_id')
+          .eq('is_published', true)
+          .neq('id', id)
+          .overlaps('tags', r.tags)
+          .limit(3)
+        const simRows = (simRaw as (Omit<SimilarRepo, 'owner'> & { owner_id: string })[] | null) ?? []
+        const simOwnerIds = [...new Set(simRows.map((x) => x.owner_id))]
+        const simOwnerMap = new Map<string, string>()
+        if (simOwnerIds.length > 0) {
+          const { data: sp } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', simOwnerIds)
+          for (const p of (sp as { id: string; username: string }[] | null) ?? []) {
+            simOwnerMap.set(p.id, p.username)
+          }
+        }
+        if (!active) return
+        setSimilar(simRows.map((x) => ({
+          id: x.id,
+          title: x.title,
+          slug: x.slug,
+          type: x.type,
+          price_cents: x.price_cents,
+          category: x.category,
+          tags: x.tags,
+          owner: simOwnerMap.has(x.owner_id) ? { username: simOwnerMap.get(x.owner_id)! } : null,
+        })))
+      }
+    }
+
+    load()
+    return () => { active = false }
   }, [id])
 
   // Check whether the current user may review (has a completed purchase, no prior review).
