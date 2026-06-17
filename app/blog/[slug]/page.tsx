@@ -63,10 +63,10 @@ export default async function BlogPostPage({ params }: PageProps) {
   const authorName = post.author?.display_name ?? post.author?.username ?? 'Vydex'
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-14 sm:px-6">
         {/* Breadcrumb + edit */}
         <div className="mb-8 flex items-center justify-between gap-3">
           <nav className="font-mono text-xs text-muted-foreground" aria-label="Breadcrumb">

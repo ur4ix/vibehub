@@ -22,10 +22,10 @@ export default async function UploadPage({
   const editing = Boolean((await searchParams).edit)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6">
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
