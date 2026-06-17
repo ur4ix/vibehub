@@ -12,10 +12,14 @@ alter type public.app_role add value if not exists 'investor';
 alter type public.app_role add value if not exists 'partner';
 
 -- Partner / investor roles are public (badge); admin remains private.
+-- NOTE: compare role::text (not 'investor'::app_role) so this can run in the
+-- same transaction that just added the enum values — Postgres forbids *using*
+-- a freshly added enum value before its tx commits, but a text comparison
+-- against a string literal doesn't count as using the enum value.
 drop policy if exists "public can read partner roles" on public.user_roles;
 create policy "public can read partner roles"
   on public.user_roles for select
-  using (role in ('investor'::public.app_role, 'partner'::public.app_role));
+  using (role::text in ('investor', 'partner'));
 
 grant select on public.user_roles to anon;
 
