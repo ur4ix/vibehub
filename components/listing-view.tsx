@@ -458,7 +458,7 @@ export function ListingView({ id }: { id: string }) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
           <div className="mb-6 h-4 w-48 animate-pulse bg-secondary" />
           <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
             <div className="flex flex-col gap-4">
@@ -497,7 +497,7 @@ export function ListingView({ id }: { id: string }) {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
 
         {/* Breadcrumb */}
         <nav className="mb-8 font-mono text-xs text-muted-foreground">

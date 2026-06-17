@@ -105,7 +105,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <nav className="mb-8 font-mono text-xs text-muted-foreground" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
