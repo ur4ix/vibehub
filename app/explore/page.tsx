@@ -245,7 +245,7 @@ function ExploreContent() {
             </div>
 
             {/* Pricing + sort */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="flex gap-1">
                 {PRICING.map((p) => (

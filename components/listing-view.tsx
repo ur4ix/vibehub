@@ -530,7 +530,7 @@ export function ListingView({ id }: { id: string }) {
                     <span className="border border-border px-2 py-0.5 font-pixel text-[9px] text-muted-foreground">draft</span>
                   )}
                 </div>
-                <h1 className="mt-1 font-pixel text-sm leading-relaxed">{repo.title}</h1>
+                <h1 className="mt-1 break-words font-pixel text-sm leading-relaxed">{repo.title}</h1>
                 <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
                   {repo.average_rating > 0 && (
                     <span className="flex items-center gap-1">
@@ -565,7 +565,7 @@ export function ListingView({ id }: { id: string }) {
             {repo.readme && (
               <div className="mt-4 border-2 border-border bg-card p-5">
                 <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">README</p>
-                <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/80">{repo.readme}</pre>
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/80">{repo.readme}</pre>
               </div>
             )}
 

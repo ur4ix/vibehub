@@ -94,6 +94,15 @@
   }
   html {
     @apply font-sans;
+    /* Guard against accidental horizontal scroll / sideways swipe on mobile.
+       `clip` (not `hidden`) never establishes a scroll container, so the
+       sticky header keeps working. */
+    overflow-x: clip;
+  }
+  /* Long unbreakable tokens (urls, username/slug, code) shouldn't widen the
+     page on small screens. */
+  h1, h2, h3, p, a, span, li {
+    overflow-wrap: break-word;
   }
 }
 

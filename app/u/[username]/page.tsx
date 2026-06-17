@@ -182,7 +182,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     className="group flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:border-primary hover:pixel-shadow-border"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-mono text-sm text-foreground group-hover:text-primary">
+                      <h3 className="min-w-0 break-all font-mono text-sm text-foreground group-hover:text-primary">
                         {profile.username}/{r.slug}
                       </h3>
                       <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
