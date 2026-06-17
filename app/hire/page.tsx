@@ -53,16 +53,26 @@ export default function HirePage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
-      .from('jobs')
-      .select('*, owner:owner_id(username)')
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        setJobs((data as Job[] | null) ?? [])
-        setLoading(false)
-      })
+    async function load() {
+      const { data } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const rows = (data as Job[] | null) ?? []
+      // Owner usernames come from the public `profiles` view — public.users is
+      // RLS-restricted to the owner's own row, so a FK join returns null for others.
+      const ownerIds = [...new Set(rows.map((j) => j.owner_id))]
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', ownerIds)
+        const map = new Map((profiles as { id: string; username: string }[] | null)?.map((p) => [p.id, p.username]) ?? [])
+        for (const j of rows) j.owner = { username: map.get(j.owner_id) ?? null }
+      }
+      setJobs(rows)
+      setLoading(false)
+    }
+    load()
   }, [])
 
   const filtered = jobs.filter((j) => {

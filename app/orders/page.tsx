@@ -59,15 +59,25 @@ export default function OrdersPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
-      .from('orders')
-      .select('*, owner:owner_id(username)')
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        setOrders((data as Order[] | null) ?? [])
-        setLoading(false)
-      })
+    async function load() {
+      const { data } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      const rows = (data as Order[] | null) ?? []
+      // Owner usernames come from the public `profiles` view — public.users is
+      // RLS-restricted to the owner's own row, so a FK join returns null for others.
+      const ownerIds = [...new Set(rows.map((o) => o.owner_id))]
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', ownerIds)
+        const map = new Map((profiles as { id: string; username: string }[] | null)?.map((p) => [p.id, p.username]) ?? [])
+        for (const o of rows) o.owner = { username: map.get(o.owner_id) ?? null }
+      }
+      setOrders(rows)
+      setLoading(false)
+    }
+    load()
   }, [])
 
   const filtered = orders.filter((o) => {

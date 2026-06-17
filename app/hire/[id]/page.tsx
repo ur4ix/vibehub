@@ -61,15 +61,18 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
-      .from('jobs')
-      .select('*, owner:owner_id(username)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        setJob(data as Job | null)
-        setLoading(false)
-      })
+    async function load() {
+      const { data } = await supabase.from('jobs').select('*').eq('id', id).single()
+      const j = data as Job | null
+      if (j) {
+        // Owner from the public `profiles` view (users is RLS-restricted to self).
+        const { data: prof } = await supabase.from('profiles').select('username').eq('id', j.owner_id).maybeSingle()
+        j.owner = { username: (prof as { username: string } | null)?.username ?? null }
+      }
+      setJob(j)
+      setLoading(false)
+    }
+    load()
   }, [id])
 
   const isOwner = user && job && user.id === job.owner_id
@@ -168,7 +171,9 @@ export default function JobDetailPage() {
 
           {/* Meta */}
           <div className="mt-4 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
-            {job.owner?.username && <span>posted by @{job.owner.username}</span>}
+            {job.owner?.username && (
+              <span>posted by <Link href={`/u/${job.owner.username}`} className="transition-colors hover:text-primary">@{job.owner.username}</Link></span>
+            )}
             <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(job.created_at)}</span>
             <span className="flex items-center gap-1"><Users className="h-3 w-3" />{job.applicants_count} applicants</span>
           </div>

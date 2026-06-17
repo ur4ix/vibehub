@@ -65,15 +65,18 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
-      .from('orders')
-      .select('*, owner:owner_id(username)')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        setOrder(data as Order | null)
-        setLoading(false)
-      })
+    async function load() {
+      const { data } = await supabase.from('orders').select('*').eq('id', id).single()
+      const o = data as Order | null
+      if (o) {
+        // Owner from the public `profiles` view (users is RLS-restricted to self).
+        const { data: prof } = await supabase.from('profiles').select('username').eq('id', o.owner_id).maybeSingle()
+        o.owner = { username: (prof as { username: string } | null)?.username ?? null }
+      }
+      setOrder(o)
+      setLoading(false)
+    }
+    load()
   }, [id])
 
   const isOwner = user && order && user.id === order.owner_id
@@ -172,7 +175,9 @@ export default function OrderDetailPage() {
 
           {/* Meta */}
           <div className="mt-4 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
-            {order.owner?.username && <span>posted by @{order.owner.username}</span>}
+            {order.owner?.username && (
+              <span>posted by <Link href={`/u/${order.owner.username}`} className="transition-colors hover:text-primary">@{order.owner.username}</Link></span>
+            )}
             <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(order.created_at)}</span>
             {order.delivery_days && (
               <span>delivery: {order.delivery_days < 7 ? `${order.delivery_days}d` : order.delivery_days < 30 ? `${Math.round(order.delivery_days / 7)}w` : `${Math.round(order.delivery_days / 30)}mo`}</span>
