@@ -10,6 +10,7 @@ import { PixelAvatar, colorFromId } from './pixel-avatar'
 import { FollowButton } from './follow-button'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 import type { BadgeDef } from '@/lib/badges'
+import { openChat } from '@/lib/chat-bus'
 import { createClient } from '@/lib/supabase/client'
 
 type ProviderKey = 'github' | 'x'
@@ -323,13 +324,14 @@ export function ProfileCard(props: ProfileCardProps) {
       ) : (
         <>
           <FollowButton targetUserId={props.userId} currentUserId={props.currentUserId} initialFollowing={props.isFollowing} />
-          <Link
-            href={`/messages/${username}`}
+          <button
+            type="button"
+            onClick={() => openChat(username)}
             className="mt-3 flex w-full items-center justify-center gap-2 border-2 border-border bg-transparent px-5 py-3 font-pixel text-[10px] uppercase leading-none tracking-wider text-foreground pixel-shadow-border transition-all duration-100 hover:border-primary hover:text-primary active:translate-x-1 active:translate-y-1 active:shadow-none"
           >
             <MessageSquare className="h-3 w-3" />
             Message
-          </Link>
+          </button>
         </>
       )}
 

@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/auth-provider'
 import { ToastProvider } from '@/components/pixel-toast'
 import { PageTransition } from '@/components/page-transition'
 import { ScrollReveal } from '@/components/scroll-reveal'
+import { ChatWidget } from '@/components/chat-widget'
 import './globals.css'
 
 const geistMono = Geist_Mono({
@@ -43,6 +44,7 @@ export default function RootLayout({
           <ToastProvider>
             <PageTransition>{children}</PageTransition>
             <ScrollReveal />
+            <ChatWidget />
           </ToastProvider>
         </AuthProvider>
       </body>

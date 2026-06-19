@@ -9,6 +9,7 @@ import { PixelAvatar } from './pixel-avatar'
 import { PublishModal } from './publish-modal'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
+import { openChat } from '@/lib/chat-bus'
 import type { Notification } from '@/types/database'
 
 const UNAUTH_NAV = [
@@ -181,8 +182,9 @@ function MessagesLink() {
   }, [user])
 
   return (
-    <Link
-      href="/messages"
+    <button
+      type="button"
+      onClick={() => openChat()}
       aria-label={`Messages${unread ? ` — ${unread} unread` : ''}`}
       className="relative grid h-9 w-9 place-items-center border-2 border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
     >
@@ -192,7 +194,7 @@ function MessagesLink() {
           {unread}
         </span>
       )}
-    </Link>
+    </button>
   )
 }
 

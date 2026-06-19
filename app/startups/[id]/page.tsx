@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
+import { openChat } from '@/lib/chat-bus'
 
 type Stage = 'idea' | 'mvp' | 'launched' | 'revenue' | 'scaling'
 type Funding = 'bootstrapped' | 'raising' | 'funded'
@@ -332,9 +333,9 @@ export default function StartupDetailPage() {
                         </Link>
                         <div className="flex items-center gap-3">
                           {it.investor && (
-                            <Link href={`/messages/${it.investor.username}`} className="inline-flex items-center gap-1 border border-primary bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-primary/20">
+                            <button type="button" onClick={() => openChat(it.investor!.username)} className="inline-flex items-center gap-1 border border-primary bg-primary/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-primary/20">
                               <MessageSquare className="h-3 w-3" />Reply
-                            </Link>
+                            </button>
                           )}
                           <span className="font-mono text-[10px] text-muted-foreground">{timeAgo(it.created_at)}</span>
                         </div>
