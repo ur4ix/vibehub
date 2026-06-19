@@ -98,6 +98,28 @@ function StarRating({ value, max = 5 }: { value: number; max?: number }) {
   )
 }
 
+// Interactive star picker. Isolated component so hover state only re-renders
+// these 5 stars — not the whole (large) listing page.
+function ReviewStars({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [hover, setHover] = useState(0)
+  return (
+    <div className="mb-3 flex items-center gap-1" onMouseLeave={() => setHover(0)}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          onMouseEnter={() => setHover(s)}
+          onClick={() => onChange(s)}
+          aria-label={`Rate ${s} stars`}
+        >
+          <Star className={'h-4 w-4 transition-colors ' + (s <= (hover || value) ? 'fill-primary text-primary' : 'text-muted-foreground/30')} />
+        </button>
+      ))}
+      <span className="ml-2 font-mono text-[10px] text-muted-foreground">{value}/5</span>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function ListingView({ id }: { id: string }) {
@@ -112,7 +134,6 @@ export function ListingView({ id }: { id: string }) {
   const [loading,   setLoading]   = useState(true)
   const [comment,   setComment]   = useState('')
   const [rating,    setRating]    = useState(5)
-  const [hoveredStar, setHoveredStar] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   // Review eligibility: reviews are gated to buyers with a completed purchase
   // (enforced by the validate_review trigger + RLS). null = not yet checked.
@@ -768,21 +789,8 @@ export function ListingView({ id }: { id: string }) {
                 <form onSubmit={handleReview} className="mt-4 border-2 border-border bg-card p-4">
                   <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Leave a review</p>
 
-                  {/* Star picker */}
-                  <div className="mb-3 flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <button
-                        key={s} type="button"
-                        onMouseEnter={() => setHoveredStar(s)}
-                        onMouseLeave={() => setHoveredStar(0)}
-                        onClick={() => setRating(s)}
-                        aria-label={`Rate ${s} stars`}
-                      >
-                        <Star className={'h-4 w-4 transition-colors ' + (s <= (hoveredStar || rating) ? 'fill-primary text-primary' : 'text-muted-foreground/30')} />
-                      </button>
-                    ))}
-                    <span className="ml-2 font-mono text-[10px] text-muted-foreground">{rating}/5</span>
-                  </div>
+                  {/* Star picker (isolated so hover doesn't re-render the page) */}
+                  <ReviewStars value={rating} onChange={setRating} />
 
                   <div className="flex gap-2">
                     <textarea
