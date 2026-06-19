@@ -1,13 +1,15 @@
-const AVATAR_COLORS = [
-  'oklch(0.78 0.18 65)',
-  'oklch(0.7 0.15 200)',
-  'oklch(0.75 0.16 90)',
-  'oklch(0.78 0.15 75)',
-]
-
+// Deterministic, well-spread avatar background colour per user id.
+// Same pixel style (initials), but every account gets its own hue across the
+// full spectrum. Fixed lightness/chroma keep the dark initials readable.
 export function colorFromId(id: string) {
-  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+  // FNV-1a hash → far better spread than a char-sum (avoids look-alikes).
+  let h = 2166136261
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  const hue = Math.abs(h) % 360
+  return `oklch(0.74 0.15 ${hue})`
 }
 
 interface PixelAvatarProps {
