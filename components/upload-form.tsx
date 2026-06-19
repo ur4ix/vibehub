@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
 import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
-import { scanAiSignals } from "@/lib/ai-signals";
+import { scanAiSignals, SIGNAL_TEXT_FILES } from "@/lib/ai-signals";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -197,7 +197,17 @@ export function UploadForm({ userId }: UploadFormProps) {
       zip.forEach((relativePath, entry) => { if (!entry.dir) paths.push(relativePath); });
       paths.sort();
       setFileManifest(paths);
-      setAiSignals(scanAiSignals(paths));
+
+      // Read a few key files for content-based AI signals (e.g. v0 keeps its
+      // sandbox files gitignored, so the only trace is inside .gitignore).
+      const texts: string[] = [];
+      for (const p of paths) {
+        const base = p.split("/").pop()?.toLowerCase();
+        if (base && SIGNAL_TEXT_FILES.includes(base)) {
+          try { texts.push(await zip.file(p)!.async("string")); } catch { /* ignore */ }
+        }
+      }
+      setAiSignals(scanAiSignals(paths, texts));
     } catch {
       setFileManifest([]);
       setAiSignals([]);
