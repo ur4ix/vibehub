@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
-  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History,
+  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info,
 } from 'lucide-react'
 import type { RepositoryVersion } from '@/types/database'
 import { SiteHeader } from '@/components/site-header'
@@ -538,11 +538,23 @@ export function ListingView({ id }: { id: string }) {
                 <h1 className="mt-1 break-words font-pixel text-sm leading-relaxed">{repo.title}</h1>
 
                 {(repo.ai_signals?.length ?? 0) > 0 && (
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">{'// ai-built'}</span>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-2 border-primary/40 bg-primary/5 px-3 py-2">
+                    <span className="flex items-center gap-1.5 font-pixel text-[9px] uppercase tracking-wider text-primary">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      AI-built
+                    </span>
                     {repo.ai_signals!.map((s) => (
-                      <span key={s} className="border border-primary/40 bg-primary/5 px-2 py-0.5 font-mono text-[10px] text-primary">{s}</span>
+                      <span key={s} className="border border-primary/40 bg-background px-2 py-0.5 font-mono text-[10px] text-primary">{s}</span>
                     ))}
+                    <span className="group/info relative ml-auto cursor-help">
+                      <Info className="h-3.5 w-3.5 text-muted-foreground/50 transition-colors group-hover/info:text-primary" />
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute right-0 top-6 z-20 w-64 border-2 border-border bg-card px-3 py-2 text-left font-mono text-[10px] normal-case leading-relaxed tracking-normal text-muted-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/info:opacity-100"
+                      >
+                        Detected from AI-tool footprints found in the uploaded archive (config / sandbox files). Heuristic clues — not proof of authorship.
+                      </span>
+                    </span>
                   </div>
                 )}
 
