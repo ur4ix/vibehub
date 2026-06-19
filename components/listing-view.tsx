@@ -318,21 +318,37 @@ export function ListingView({ id }: { id: string }) {
 
   async function handleReview(e: React.FormEvent) {
     e.preventDefault()
-    if (!user) { router.push('/auth'); return }
-    if (!purchaseId) {
-      toast.info('Reviews require a purchase', 'You can review this project after buying it.')
-      return
-    }
+    if (!user || !repo) { router.push('/auth'); return }
     if (!comment.trim()) return
     if (containsBanned(comment)) { toast.error('Not allowed', BANNED_MESSAGE); return }
     setSubmitting(true)
 
     const supabase = createClient()
+
+    // Need a "purchase" to review. Paid → must be bought. Free → mint a $0
+    // access record server-side (RPC validates the repo is actually free).
+    let pid = purchaseId
+    if (!pid) {
+      if (repo.type !== 'free') {
+        setSubmitting(false)
+        toast.info('Reviews require a purchase', 'You can review this project after buying it.')
+        return
+      }
+      const { data: claimed, error: claimErr } = await supabase.rpc('claim_free_repo', { p_repository_id: repo.id })
+      if (claimErr || !claimed) {
+        setSubmitting(false)
+        toast.error('Could not post review', claimErr?.message ?? 'Please try again.')
+        return
+      }
+      pid = claimed as string
+      setPurchaseId(pid)
+    }
+
     const { data, error } = await supabase
       .from('reviews')
       .insert({
-        purchase_id: purchaseId,
-        repository_id: repo!.id,
+        purchase_id: pid,
+        repository_id: repo.id,
         reviewer_id: user.id,
         rating,
         comment: comment.trim(),
@@ -747,8 +763,8 @@ export function ListingView({ id }: { id: string }) {
                 </div>
               )}
 
-              {/* Review form — only for buyers with a completed purchase who haven't reviewed yet */}
-              {user && !isOwner && purchaseId && !hasReviewed && (
+              {/* Review form — buyers (paid) or any signed-in user (free), once each */}
+              {user && !isOwner && !hasReviewed && (purchaseId || repo.type === 'free') && (
                 <form onSubmit={handleReview} className="mt-4 border-2 border-border bg-card p-4">
                   <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">Leave a review</p>
 

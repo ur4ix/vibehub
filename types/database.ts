@@ -921,6 +921,10 @@ export type Database = {
         Args: { target: string; value: number };
         Returns: undefined;
       };
+      claim_free_repo: {
+        Args: { p_repository_id: string };
+        Returns: string;
+      };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
         Returns: number;
