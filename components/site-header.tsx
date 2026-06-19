@@ -48,9 +48,19 @@ function NotificationBell() {
     if (rawNotifs) setNotifications(rawNotifs as Notification[])
   }, [user])
 
+  // Live updates: subscribe to new notifications (RLS-filtered to me) + a slow
+  // poll as a fallback in case realtime isn't enabled.
   useEffect(() => {
+    if (!user) return
     loadNotifications()
-  }, [loadNotifications])
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`notif:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => loadNotifications())
+      .subscribe()
+    const interval = setInterval(loadNotifications, 30000)
+    return () => { supabase.removeChannel(channel); clearInterval(interval) }
+  }, [user, loadNotifications])
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -161,8 +171,13 @@ function MessagesLink() {
       if (active) setUnread(count ?? 0)
     }
     load()
+    // Realtime on incoming messages (RLS-filtered) + slow poll fallback.
+    const channel = supabase
+      .channel(`msg-unread:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` }, () => load())
+      .subscribe()
     const interval = setInterval(load, 20000)
-    return () => { active = false; clearInterval(interval) }
+    return () => { active = false; supabase.removeChannel(channel); clearInterval(interval) }
   }, [user])
 
   return (

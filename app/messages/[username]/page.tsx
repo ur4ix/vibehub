@@ -83,12 +83,17 @@ export default function ConversationPage() {
     await supabase.from('messages').update({ is_read: true }).eq('sender_id', them).eq('recipient_id', me).eq('is_read', false)
   }, [])
 
-  // Load + poll while the conversation is open.
+  // Load + realtime (instant incoming) + slow poll fallback.
   useEffect(() => {
     if (!user || !other) return
     loadMessages(user.id, other.id)
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`dm:${user.id}:${other.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` }, () => loadMessages(user.id, other.id))
+      .subscribe()
     const interval = setInterval(() => loadMessages(user.id, other.id), 5000)
-    return () => clearInterval(interval)
+    return () => { supabase.removeChannel(channel); clearInterval(interval) }
   }, [user, other, loadMessages])
 
   useEffect(() => {
