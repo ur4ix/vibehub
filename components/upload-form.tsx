@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
 import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
+import { scanAiSignals } from "@/lib/ai-signals";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -73,6 +74,7 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewUploading, setPreviewUploading] = useState(false);
   const [fileManifest, setFileManifest] = useState<string[]>([]);
+  const [aiSignals, setAiSignals] = useState<string[]>([]);
 
   // edit-mode state
   const [editLoading, setEditLoading] = useState(isEdit);
@@ -107,6 +109,7 @@ export function UploadForm({ userId }: UploadFormProps) {
         setDemoUrl(r.demo_url ?? "");
         setPreviewImages(r.preview_images ?? []);
         setFileManifest(r.file_manifest ?? []);
+        setAiSignals(r.ai_signals ?? []);
         setExistingStoragePath(r.storage_path);
         setExistingPublishedAt(r.published_at);
         setEditLoading(false);
@@ -192,9 +195,12 @@ export function UploadForm({ userId }: UploadFormProps) {
       const zip = await JSZip.loadAsync(f);
       const paths: string[] = [];
       zip.forEach((relativePath, entry) => { if (!entry.dir) paths.push(relativePath); });
-      setFileManifest(paths.sort());
+      paths.sort();
+      setFileManifest(paths);
+      setAiSignals(scanAiSignals(paths));
     } catch {
       setFileManifest([]);
+      setAiSignals([]);
     }
   }
 
@@ -341,6 +347,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             demo_url: demoUrl.trim() || null,
             preview_images: previewImages,
             file_manifest: fileManifest,
+            ai_signals: aiSignals,
             is_published: publish,
             published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
           })
@@ -394,6 +401,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           demo_url: demoUrl.trim() || null,
           preview_images: previewImages,
           file_manifest: fileManifest,
+          ai_signals: aiSignals,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
         });
@@ -614,6 +622,21 @@ export function UploadForm({ userId }: UploadFormProps) {
             Show the UI or output so buyers see exactly what they&apos;re getting.
           </p>
         </div>
+
+        {/* Detected AI tools (from the archive) */}
+        {aiSignals.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <Label>Detected AI tools</Label>
+            <div className="flex flex-wrap gap-2">
+              {aiSignals.map((s) => (
+                <span key={s} className="border-2 border-primary/40 bg-primary/5 px-2.5 py-1 font-mono text-[10px] text-primary">{s}</span>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Found in your archive — shown as a badge on the listing.
+            </p>
+          </div>
+        )}
 
         {/* Tags */}
         <div className="flex flex-col gap-2">

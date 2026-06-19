@@ -35,6 +35,7 @@ interface RepoDetail {
   demo_url: string | null
   preview_images: string[] | null
   file_manifest: string[] | null
+  ai_signals: string[] | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -535,6 +536,16 @@ export function ListingView({ id }: { id: string }) {
                   )}
                 </div>
                 <h1 className="mt-1 break-words font-pixel text-sm leading-relaxed">{repo.title}</h1>
+
+                {(repo.ai_signals?.length ?? 0) > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">{'// ai-built'}</span>
+                    {repo.ai_signals!.map((s) => (
+                      <span key={s} className="border border-primary/40 bg-primary/5 px-2 py-0.5 font-mono text-[10px] text-primary">{s}</span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
                   {repo.average_rating > 0 && (
                     <span className="flex items-center gap-1">
