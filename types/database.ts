@@ -238,6 +238,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      account_badges: {
+        Row: {
+          user_id: string;
+          badge: string;
+          granted_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          badge: string;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          badge?: string;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       messages: {
         Row: {
           id: string;

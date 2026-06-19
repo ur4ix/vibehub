@@ -9,6 +9,7 @@ import { PixelButton } from './pixel-button'
 import { PixelAvatar, colorFromId } from './pixel-avatar'
 import { FollowButton } from './follow-button'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
+import type { BadgeDef } from '@/lib/badges'
 import { createClient } from '@/lib/supabase/client'
 
 type ProviderKey = 'github' | 'x'
@@ -47,6 +48,7 @@ export interface ProfileCardProps {
   githubUsername: string | null
   xUsername: string | null
   roles: string[]
+  badges: BadgeDef[]
   isOwner: boolean
   currentUserId: string | null
   isFollowing: boolean
@@ -272,6 +274,23 @@ export function ProfileCard(props: ProfileCardProps) {
         <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">reputation</span>
         <span className="font-pixel text-xs text-primary">{props.reputation}</span>
       </div>
+
+      {props.badges.length > 0 && (
+        <div className="mt-5">
+          <p className="mb-2 font-pixel text-[8px] uppercase tracking-wider text-muted-foreground">{'// badges'}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {props.badges.map((b) => (
+              <span
+                key={b.key}
+                title={b.description}
+                className={`cursor-help border px-2 py-0.5 font-pixel text-[8px] uppercase tracking-wider ${b.className}`}
+              >
+                {b.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {socialLinks.length > 0 && (
         <ul className="mt-5 flex flex-col gap-2">

@@ -5,6 +5,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProfileCard } from '@/components/profile-card'
 import { ProfileBody, type ProfileJob, type ProfileOrder, type RepoItem, type StatItem } from '@/components/profile-body'
+import { earnedBadges, manualBadges } from '@/lib/badges'
 import { createClient } from '@/lib/supabase/server'
 
 interface PageProps {
@@ -64,7 +65,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     ? repoQuery.order('created_at', { ascending: false })
     : repoQuery.eq('is_published', true).order('published_at', { ascending: false })
 
-  const [{ data: reposRaw }, { data: jobsRaw }, { data: ordersRaw }, { count: followers }, { count: following }, { data: rolesRaw }] =
+  const [{ data: reposRaw }, { data: jobsRaw }, { data: ordersRaw }, { count: followers }, { count: following }, { data: rolesRaw }, { count: reviewsWritten }, { data: badgeRows }] =
     await Promise.all([
       repoQuery.limit(48),
       supabase.from('jobs').select('id, title, budget_type, budget_value, status').eq('owner_id', profile.id).order('created_at', { ascending: false }),
@@ -73,6 +74,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
       supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profile.id),
       // RLS exposes partner/investor publicly; admin only to self/admins.
       supabase.from('user_roles').select('role').eq('user_id', profile.id),
+      supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('reviewer_id', profile.id),
+      supabase.from('account_badges').select('badge').eq('user_id', profile.id),
     ])
 
   const repos = (reposRaw as RepoItem[] | null) ?? []
@@ -80,6 +83,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const orders = (ordersRaw as ProfileOrder[] | null) ?? []
   const roles = ((rolesRaw as { role: string }[] | null) ?? []).map((r) => r.role)
   const publishedCount = repos.filter((r) => r.is_published).length
+
+  // Badges: earned (derived) + manual (admin-assigned).
+  const earned = earnedBadges({
+    createdAt: profile.created_at,
+    reputation: profile.reputation,
+    publishedRepos: publishedCount,
+    followers: followers ?? 0,
+    reviewsWritten: reviewsWritten ?? 0,
+  })
+  const manual = manualBadges(((badgeRows as { badge: string }[] | null) ?? []).map((b) => b.badge))
+  const badges = [...manual, ...earned]
 
   let isFollowing = false
   if (user && !isOwner) {
@@ -121,6 +135,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
               githubUsername={profile.github_username}
               xUsername={profile.x_username}
               roles={roles}
+              badges={badges}
               isOwner={isOwner}
               currentUserId={currentUserId}
               isFollowing={isFollowing}
