@@ -77,6 +77,15 @@ export default function StartupDetailPage() {
   const [interestMsg,  setInterestMsg]  = useState('')
   const [submitting,   setSubmitting]   = useState(false)
   const [interests,    setInterests]    = useState<Interest[]>([])
+  const [isStaff,      setIsStaff]      = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    let active = true
+    supabase.rpc('is_staff').then(({ data }) => { if (active) setIsStaff(Boolean(data)) })
+    return () => { active = false }
+  }, [user])
 
   useEffect(() => {
     const supabase = createClient()
@@ -339,9 +348,9 @@ export default function StartupDetailPage() {
           )}
 
           {/* Owner actions */}
-          {isOwner && (
+          {(isOwner || isStaff) && (
             <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-6">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Manage</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{isOwner ? 'Manage' : 'Moderate'}</p>
               <PixelButton variant="outline" disabled={deleting} onClick={handleDelete}
                 className={'gap-2 ' + (confirmDel ? 'border-destructive text-destructive hover:bg-destructive/10' : '')}>
                 <Trash2 className="h-3.5 w-3.5" />

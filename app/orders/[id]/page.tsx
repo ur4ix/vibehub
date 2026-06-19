@@ -79,6 +79,15 @@ export default function OrderDetailPage() {
   const [bidMsg,     setBidMsg]     = useState('')
   const [bidding,    setBidding]    = useState(false)
   const [bids,       setBids]       = useState<Bid[]>([])
+  const [isStaff,    setIsStaff]    = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    let active = true
+    supabase.rpc('is_staff').then(({ data }) => { if (active) setIsStaff(Boolean(data)) })
+    return () => { active = false }
+  }, [user])
 
   useEffect(() => {
     const supabase = createClient()
@@ -300,12 +309,12 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Owner actions */}
-          {isOwner && (
+          {/* Owner / moderator actions */}
+          {(isOwner || isStaff) && (
             <div className="mt-6 border-t border-border pt-6">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Manage</p>
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{isOwner ? 'Manage' : 'Moderate'}</p>
               <div className="flex flex-wrap gap-3">
-                {order.status === 'open' && (
+                {isOwner && order.status === 'open' && (
                   <PixelButton variant="outline" disabled={cancelling} onClick={handleCancel} className="gap-2">
                     <X className="h-3.5 w-3.5" />
                     {cancelling ? 'Cancelling…' : 'Cancel order'}

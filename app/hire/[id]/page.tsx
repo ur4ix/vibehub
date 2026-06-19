@@ -73,6 +73,15 @@ export default function JobDetailPage() {
   const [applyMsg,    setApplyMsg]    = useState('')
   const [applying,    setApplying]    = useState(false)
   const [applicants,  setApplicants]  = useState<Applicant[]>([])
+  const [isStaff,     setIsStaff]     = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    let active = true
+    supabase.rpc('is_staff').then(({ data }) => { if (active) setIsStaff(Boolean(data)) })
+    return () => { active = false }
+  }, [user])
 
   useEffect(() => {
     const supabase = createClient()
@@ -280,11 +289,11 @@ export default function JobDetailPage() {
           )}
 
           {/* Owner actions */}
-          {isOwner && (
+          {(isOwner || isStaff) && (
             <div className="mt-6 border-t border-border pt-6">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Manage</p>
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{isOwner ? 'Manage' : 'Moderate'}</p>
               <div className="flex flex-wrap gap-3">
-                {job.status === 'open' && (
+                {isOwner && job.status === 'open' && (
                   <PixelButton variant="outline" disabled={closing} onClick={handleClose} className="gap-2">
                     <X className="h-3.5 w-3.5" />
                     {closing ? 'Closing…' : 'Mark as filled'}

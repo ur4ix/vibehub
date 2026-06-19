@@ -917,6 +917,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      is_staff: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       admin_set_reputation: {
         Args: { target: string; value: number };
         Returns: undefined;
@@ -937,7 +941,7 @@ export type Database = {
       };
     };
     Enums: {
-      app_role: "admin" | "author" | "investor" | "partner";
+      app_role: "admin" | "author" | "investor" | "partner" | "team" | "moderator";
       chat_status: "locked" | "active" | "closed" | "expired";
       listing_status:
         | "draft"

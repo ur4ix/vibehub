@@ -19,13 +19,17 @@ interface Row {
   roles: AppRole[]
 }
 
-const ALL_ROLES: AppRole[] = ['admin', 'author', 'investor', 'partner']
+// Grantable roles — 'admin' is intentionally excluded (hardcoded, set only via
+// a direct DB seed; the RLS policy also rejects granting it through the API).
+const ALL_ROLES: AppRole[] = ['team', 'moderator', 'author', 'investor', 'partner']
 
 const ROLE_STYLE: Record<AppRole, string> = {
-  admin:    'border-primary bg-primary/10 text-primary',
-  author:   'border-blue-400/50 bg-blue-400/10 text-blue-400',
-  investor: 'border-green-400/50 bg-green-400/10 text-green-400',
-  partner:  'border-amber-400/50 bg-amber-400/10 text-amber-400',
+  admin:     'border-primary bg-primary/10 text-primary',
+  team:      'border-primary bg-primary/10 text-primary',
+  moderator: 'border-red-400/50 bg-red-400/10 text-red-400',
+  author:    'border-blue-400/50 bg-blue-400/10 text-blue-400',
+  investor:  'border-green-400/50 bg-green-400/10 text-green-400',
+  partner:   'border-amber-400/50 bg-amber-400/10 text-amber-400',
 }
 
 function joined(iso: string) {
@@ -172,6 +176,11 @@ export default function AdminUsersPage() {
                 {/* Roles */}
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
                   <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">roles</span>
+                  {row.roles.includes('admin') && (
+                    <span className={'inline-flex items-center gap-1.5 border-2 px-2.5 py-1 font-pixel text-[9px] uppercase tracking-wider ' + ROLE_STYLE.admin} title="Hardcoded — can't be changed">
+                      <Check className="h-3 w-3" />admin 🔒
+                    </span>
+                  )}
                   {ALL_ROLES.map((role) => {
                     const active = row.roles.includes(role)
                     const isBusy = busy === row.id + role

@@ -22,10 +22,13 @@ function formatJoined(iso: string) {
 }
 
 // Roles worth showing as a badge, in display priority. 'author' is internal.
+// 'admin' is only visible to the user themselves / other admins (not public).
 const ROLE_BADGES: { role: string; label: string; className: string }[] = [
-  { role: 'partner',  label: 'Partner',  className: 'border-amber-400/50 bg-amber-400/10 text-amber-400' },
-  { role: 'investor', label: 'Investor', className: 'border-green-400/50 bg-green-400/10 text-green-400' },
-  { role: 'admin',    label: 'Team',     className: 'border-primary bg-primary/10 text-primary' },
+  { role: 'admin',     label: 'Admin',     className: 'border-primary bg-primary/10 text-primary' },
+  { role: 'team',      label: 'Team',      className: 'border-primary bg-primary/10 text-primary' },
+  { role: 'moderator', label: 'Mod',       className: 'border-red-400/50 bg-red-400/10 text-red-400' },
+  { role: 'partner',   label: 'Partner',   className: 'border-amber-400/50 bg-amber-400/10 text-amber-400' },
+  { role: 'investor',  label: 'Investor',  className: 'border-green-400/50 bg-green-400/10 text-green-400' },
 ]
 
 function handleOf(identity: UserIdentity): string | null {

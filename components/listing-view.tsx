@@ -139,6 +139,8 @@ export function ListingView({ id }: { id: string }) {
   // (enforced by the validate_review trigger + RLS). null = not yet checked.
   const [purchaseId, setPurchaseId] = useState<string | null>(null)
   const [hasReviewed, setHasReviewed] = useState(false)
+  // Staff (admin/moderator) — can delete repos and reviews
+  const [isStaff, setIsStaff] = useState(false)
   // Likes (reactions)
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
@@ -284,6 +286,8 @@ export function ListingView({ id }: { id: string }) {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => { if (active) setHasReviewed(Boolean(data)) })
+
+    supabase.rpc('is_staff').then(({ data }) => { if (active) setIsStaff(Boolean(data)) })
 
     supabase
       .from('reactions')
@@ -473,7 +477,7 @@ export function ListingView({ id }: { id: string }) {
   }
 
   async function handleDelete() {
-    if (!user || !repo || user.id !== repo.owner_id || deleting) return
+    if (!user || !repo || (user.id !== repo.owner_id && !isStaff) || deleting) return
     if (!window.confirm('Delete this repository permanently? This cannot be undone.')) return
     setDeleting(true)
 
@@ -492,6 +496,16 @@ export function ListingView({ id }: { id: string }) {
     toast.success('Repository deleted')
     router.push('/dashboard')
     router.refresh()
+  }
+
+  // Moderator/admin: remove a review (RLS allows staff delete).
+  async function deleteReview(reviewId: string) {
+    if (!window.confirm('Delete this review?')) return
+    const supabase = createClient()
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+    if (error) { toast.error('Could not delete', error.message); return }
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId))
+    toast.success('Review removed')
   }
 
   // ─── Loading skeleton ─────────────────────────────────────────────────────
@@ -774,6 +788,16 @@ export function ListingView({ id }: { id: string }) {
                           <span className="font-mono text-[10px] text-muted-foreground">
                             {formatDate(rv.created_at)}
                           </span>
+                          {isStaff && (
+                            <button
+                              type="button"
+                              onClick={() => deleteReview(rv.id)}
+                              aria-label="Delete review (moderator)"
+                              className="text-muted-foreground transition-colors hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       {rv.comment && (
@@ -855,20 +879,20 @@ export function ListingView({ id }: { id: string }) {
                 )}
 
                 {isOwner && (
-                  <>
-                    <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
-                      Edit listing
-                    </PixelButton>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="inline-flex w-full items-center justify-center gap-1.5 border-2 border-destructive bg-destructive/5 px-5 py-2.5 font-pixel text-[10px] uppercase leading-none tracking-wider text-destructive transition-all duration-100 [box-shadow:3px_3px_0_0_var(--destructive)] hover:bg-destructive hover:text-white active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-60"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {deleting ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </>
+                  <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
+                    Edit listing
+                  </PixelButton>
+                )}
+                {(isOwner || isStaff) && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="inline-flex w-full items-center justify-center gap-1.5 border-2 border-destructive bg-destructive/5 px-5 py-2.5 font-pixel text-[10px] uppercase leading-none tracking-wider text-destructive transition-all duration-100 [box-shadow:3px_3px_0_0_var(--destructive)] hover:bg-destructive hover:text-white active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-60"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {deleting ? 'Deleting…' : (isOwner ? 'Delete' : 'Delete (mod)')}
+                  </button>
                 )}
               </div>
 
