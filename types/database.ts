@@ -603,6 +603,8 @@ export type Database = {
           provider_ref: string | null;
           status: Database["public"]["Enums"]["purchase_status"];
           completed_at: string | null;
+          escrow_status: string | null;
+          release_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -620,6 +622,8 @@ export type Database = {
           provider_ref?: string | null;
           status?: Database["public"]["Enums"]["purchase_status"];
           completed_at?: string | null;
+          escrow_status?: string | null;
+          release_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -637,6 +641,8 @@ export type Database = {
           provider_ref?: string | null;
           status?: Database["public"]["Enums"]["purchase_status"];
           completed_at?: string | null;
+          escrow_status?: string | null;
+          release_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
   const done = status === 'finished' || status === 'confirmed'
 
   if (done && orderId) {
+    const ESCROW_DAYS = 3
+    const releaseAt = new Date(Date.now() + ESCROW_DAYS * 86400_000).toISOString()
     const admin = createAdminClient()
     await admin
       .from('purchases')
@@ -45,6 +47,8 @@ export async function POST(req: NextRequest) {
         status: 'completed',
         completed_at: new Date().toISOString(),
         provider_ref: String(body.payment_id ?? body.invoice_id ?? ''),
+        escrow_status: 'held',
+        release_at: releaseAt,
       })
       .eq('id', orderId)
       .eq('status', 'pending')

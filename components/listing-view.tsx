@@ -142,6 +142,9 @@ export function ListingView({ id }: { id: string }) {
   // Review eligibility: reviews are gated to buyers with a completed purchase
   // (enforced by the validate_review trigger + RLS). null = not yet checked.
   const [purchaseId, setPurchaseId] = useState<string | null>(null)
+  const [escrowStatus, setEscrowStatus] = useState<string | null>(null)
+  const [releaseAt, setReleaseAt] = useState<string | null>(null)
+  const [escrowBusy, setEscrowBusy] = useState(false)
   const [hasReviewed, setHasReviewed] = useState(false)
   // Staff (admin/moderator) — can delete repos and reviews
   const [isStaff, setIsStaff] = useState(false)
@@ -271,7 +274,7 @@ export function ListingView({ id }: { id: string }) {
 
     supabase
       .from('purchases')
-      .select('id')
+      .select('id, escrow_status, release_at')
       .eq('repository_id', id)
       .eq('buyer_id', user.id)
       .eq('status', 'completed')
@@ -279,8 +282,10 @@ export function ListingView({ id }: { id: string }) {
       .maybeSingle()
       .then(({ data }) => {
         if (!active) return
-        const purchase = data as { id: string } | null
+        const purchase = data as { id: string; escrow_status: string | null; release_at: string | null } | null
         setPurchaseId(purchase?.id ?? null)
+        setEscrowStatus(purchase?.escrow_status ?? null)
+        setReleaseAt(purchase?.release_at ?? null)
       })
 
     supabase
@@ -305,6 +310,19 @@ export function ListingView({ id }: { id: string }) {
 
     return () => { active = false }
   }, [id, user])
+
+  async function setEscrow(next: 'released' | 'disputed') {
+    if (!purchaseId || escrowBusy) return
+    if (next === 'released' && !window.confirm('Release the payment to the seller? Do this once you have what you paid for.')) return
+    setEscrowBusy(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('purchases').update({ escrow_status: next }).eq('id', purchaseId)
+    setEscrowBusy(false)
+    if (error) { toast.error('Could not update', error.message); return }
+    setEscrowStatus(next)
+    if (next === 'released') toast.success('Released to the seller', 'Thanks for confirming.')
+    else toast.info('Dispute opened', 'A moderator will review it.')
+  }
 
   async function handleBuy() {
     if (!user) { router.push('/auth'); return }
@@ -432,7 +450,8 @@ export function ListingView({ id }: { id: string }) {
   async function handleFork() {
     if (!user) { router.push('/auth'); return }
     if (!repo || forking) return
-    if (repo.type !== 'free') {
+    // Forkable when you actually have the source: free, owner, or purchased.
+    if (repo.type !== 'free' && !isOwner && !purchaseId) {
       toast.info('Fork after purchase', 'Paid repositories can be forked once purchased.')
       return
     }
@@ -952,6 +971,39 @@ export function ListingView({ id }: { id: string }) {
                   </button>
                 )}
               </div>
+
+              {/* Escrow (buyer of a paid repo) */}
+              {!isOwner && purchaseId && escrowStatus && (
+                <div className="mt-5 border-t border-border pt-4">
+                  {escrowStatus === 'held' ? (
+                    <>
+                      <p className="font-pixel text-[9px] uppercase tracking-wider text-amber-400">🔒 Payment in escrow</p>
+                      <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                        The seller is paid only after you confirm{releaseAt ? `, or automatically on ${formatDate(releaseAt)}` : ''}.
+                      </p>
+                      <div className="mt-3 flex flex-col gap-2">
+                        <PixelButton className="w-full py-2.5 text-xs" disabled={escrowBusy} onClick={() => setEscrow('released')}>
+                          Confirm & release
+                        </PixelButton>
+                        <button
+                          type="button"
+                          onClick={() => setEscrow('disputed')}
+                          disabled={escrowBusy}
+                          className="w-full border-2 border-border px-4 py-2 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-destructive hover:text-destructive disabled:opacity-60"
+                        >
+                          Open a dispute
+                        </button>
+                      </div>
+                    </>
+                  ) : escrowStatus === 'released' ? (
+                    <p className="font-pixel text-[9px] uppercase tracking-wider text-green-400">✓ Released to the seller</p>
+                  ) : escrowStatus === 'disputed' ? (
+                    <p className="font-pixel text-[9px] uppercase tracking-wider text-amber-400">⚖ Under review by a moderator</p>
+                  ) : (
+                    <p className="font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">↩ Refunded</p>
+                  )}
+                </div>
+              )}
 
               {/* Stats row */}
               <div className="mt-5 grid grid-cols-3 gap-0 border-t border-border pt-4 text-center">
