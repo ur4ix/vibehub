@@ -98,6 +98,10 @@
        `clip` (not `hidden`) never establishes a scroll container, so the
        sticky header keeps working. */
     overflow-x: clip;
+    /* Always reserve the scrollbar gutter so the page doesn't shift sideways
+       when a scrollbar appears as content finishes loading — which the page
+       crossfade otherwise turns into a visible "slip". */
+    scrollbar-gutter: stable;
   }
   /* Long unbreakable tokens (urls, username/slug, code) shouldn't widen the
      page on small screens. */
