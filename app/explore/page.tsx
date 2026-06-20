@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
@@ -46,8 +47,7 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
       {/* Cover: screenshot, or a generated banner when none */}
       <div className="relative mb-4 aspect-[16/9] overflow-hidden border-2 border-border">
         {repo.preview_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={repo.preview_image} alt="" loading="lazy" className="h-full w-full object-cover" />
+          <Image src={repo.preview_image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
         ) : (
           <div
             className="grid h-full w-full place-items-center"

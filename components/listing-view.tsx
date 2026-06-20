@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
   Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info,
@@ -688,10 +689,9 @@ export function ListingView({ id }: { id: string }) {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block overflow-hidden border-2 border-border bg-secondary transition-colors hover:border-primary"
+                        className="relative block aspect-video overflow-hidden border-2 border-border bg-secondary transition-colors hover:border-primary"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`${repo.title} preview ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                        <Image src={url} alt={`${repo.title} preview ${i + 1}`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" />
                       </a>
                     ))}
                   </div>
