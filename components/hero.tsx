@@ -25,7 +25,7 @@ export function Hero() {
 
           <p className="mx-auto mt-8 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             Buy and sell ready-made apps, components, prompts and templates.
-            Everything you built on vibes — now earns money.
+            Pay in crypto, private by default — every project scanned & community-reviewed.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -45,11 +45,11 @@ export function Hero() {
             </span>
             <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
             <span>
-              <span className="text-primary">Minutes</span> to publish
+              <span className="text-primary">Crypto</span>-native
             </span>
             <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
             <span>
-              <span className="text-primary">Community</span>-reviewed
+              <span className="text-primary">Scanned</span> &amp; reviewed
             </span>
           </div>
         </div>

@@ -53,10 +53,10 @@ const SECTIONS = [
     icon: '▢',
     title: 'Payments',
     articles: [
-      { title: 'Supported payment methods', slug: 'payment-methods' },
-      { title: 'Payout schedule', slug: 'payouts' },
+      { title: 'Paying with crypto', slug: 'paying-with-crypto' },
+      { title: 'Supported coins & networks', slug: 'supported-coins' },
+      { title: 'Seller payouts', slug: 'payouts' },
       { title: 'Platform fees', slug: 'fees' },
-      { title: 'Stripe Connect setup', slug: 'stripe-connect' },
     ],
   },
   {

@@ -12,7 +12,7 @@ const STEPS = [
   {
     n: '03',
     title: 'Get paid',
-    desc: 'You set the price — free or paid. Buyers pay, and payouts go to your card or crypto.',
+    desc: 'You set the price — free or paid. Buyers pay in crypto (stablecoins), settled globally with no card middlemen.',
   },
 ]
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 
-const PLATFORM_FEE = 0.10 // 10% — recorded for accounting; payout is manual for crypto.
+const PLATFORM_FEE = 0.10 // 10% — recorded for accounting; crypto payout is manual.
 
+// Crypto checkout via NOWPayments (non-custodial; funds settle to your wallet).
 export async function POST(req: NextRequest) {
   let repositoryId: string
   try {
@@ -20,15 +20,14 @@ export async function POST(req: NextRequest) {
 
   const { data: repoRaw } = await supabase
     .from('repositories')
-    .select('id, owner_id, type, price_cents')
+    .select('id, title, owner_id, type, price_cents')
     .eq('id', repositoryId)
     .maybeSingle()
-  const repo = repoRaw as { id: string; owner_id: string; type: string; price_cents: number | null } | null
+  const repo = repoRaw as { id: string; title: string; owner_id: string; type: string; price_cents: number | null } | null
   if (!repo) return NextResponse.json({ error: 'Repository not found' }, { status: 404 })
   if (repo.type !== 'paid' || !repo.price_cents) return NextResponse.json({ error: 'Not a paid repository' }, { status: 400 })
   if (repo.owner_id === user.id) return NextResponse.json({ error: 'You own this repository' }, { status: 400 })
 
-  // Already purchased?
   const { data: existing } = await supabase
     .from('purchases')
     .select('id, status')
@@ -38,11 +37,8 @@ export async function POST(req: NextRequest) {
   const ex = existing as { id: string; status: string } | null
   if (ex?.status === 'completed') return NextResponse.json({ alreadyOwned: true })
 
-  const MERCHANT = process.env.CRYPTOMUS_MERCHANT_ID
-  const KEY = process.env.CRYPTOMUS_API_KEY
-  if (!MERCHANT || !KEY) {
-    return NextResponse.json({ error: 'Payments are not configured yet.' }, { status: 503 })
-  }
+  const API_KEY = process.env.NOWPAYMENTS_API_KEY
+  if (!API_KEY) return NextResponse.json({ error: 'Payments are not configured yet.' }, { status: 503 })
 
   // Reuse a pending purchase or create one.
   let purchaseId = ex?.id ?? null
@@ -56,7 +52,7 @@ export async function POST(req: NextRequest) {
         amount_cents: repo.price_cents,
         platform_fee_cents: Math.round(repo.price_cents * PLATFORM_FEE),
         status: 'pending',
-        provider: 'cryptomus',
+        provider: 'nowpayments',
       })
       .select('id')
       .single()
@@ -65,24 +61,22 @@ export async function POST(req: NextRequest) {
   }
 
   const origin = req.nextUrl.origin
-  const payload = JSON.stringify({
-    amount: (repo.price_cents / 100).toFixed(2),
-    currency: 'USD',
-    order_id: purchaseId,
-    url_callback: `${origin}/api/webhooks/cryptomus`,
-    url_return: `${origin}/listing/${repo.id}`,
-    url_success: `${origin}/listing/${repo.id}`,
-  })
-  const sign = createHash('md5').update(Buffer.from(payload).toString('base64') + KEY).digest('hex')
-
   try {
-    const res = await fetch('https://api.cryptomus.com/v1/payment', {
+    const res = await fetch('https://api.nowpayments.io/v1/invoice', {
       method: 'POST',
-      headers: { merchant: MERCHANT, sign, 'content-type': 'application/json' },
-      body: payload,
+      headers: { 'x-api-key': API_KEY, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        price_amount: repo.price_cents / 100,
+        price_currency: 'usd',
+        order_id: purchaseId,
+        order_description: `VYDEX — ${repo.title}`.slice(0, 200),
+        ipn_callback_url: `${origin}/api/webhooks/nowpayments`,
+        success_url: `${origin}/listing/${repo.id}`,
+        cancel_url: `${origin}/listing/${repo.id}`,
+      }),
     })
     const json = await res.json()
-    const url = json?.result?.url
+    const url = json?.invoice_url
     if (!url) return NextResponse.json({ error: 'Could not create invoice' }, { status: 502 })
     return NextResponse.json({ url })
   } catch {

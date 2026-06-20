@@ -48,7 +48,7 @@ export function CtaSection() {
             </form>
 
             <p className="mt-5 font-mono text-xs text-muted-foreground">
-              Free to start. No credit card, no spam.
+              Free to start. No card needed, no spam, no tracking.
             </p>
           </div>
         </div>
