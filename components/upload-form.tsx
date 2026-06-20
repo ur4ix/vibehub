@@ -14,6 +14,7 @@ import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
 import { scanAiSignals, SIGNAL_TEXT_FILES } from "@/lib/ai-signals";
 import { scanCode, shouldScan, SECURITY_CATALOG, SEVERITY_STYLE } from "@/lib/security-scan";
 import { extractDeps, MANIFEST_FILES } from "@/lib/deps";
+import { VulnFinding } from "@/components/vuln-finding";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -752,7 +753,7 @@ export function UploadForm({ userId }: UploadFormProps) {
               <>
                 <div className="flex flex-col gap-1.5">
                   {vulnFindings.map((v) => (
-                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400">{v}</div>
+                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400"><VulnFinding text={v} /></div>
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">

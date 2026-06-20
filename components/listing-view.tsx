@@ -18,6 +18,7 @@ import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 import { SECURITY_CATALOG, SEVERITY_STYLE } from '@/lib/security-scan'
+import { VulnFinding } from '@/components/vuln-finding'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -723,7 +724,7 @@ export function ListingView({ id }: { id: string }) {
                 </p>
                 <div className="mt-4 flex flex-col gap-1.5">
                   {repo.vuln_findings!.map((v) => (
-                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400">{v}</div>
+                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400"><VulnFinding text={v} /></div>
                   ))}
                 </div>
               </div>
