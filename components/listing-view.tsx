@@ -508,17 +508,18 @@ export function ListingView({ id }: { id: string }) {
     setDeleting(true)
 
     const supabase = createClient()
-    if (repo.storage_path) {
-      await supabase.storage.from('repositories').remove([repo.storage_path])
-    }
+    // Delete the row FIRST — a trigger blocks deletion of repos with paid buyers.
+    // Only remove the file once the row is actually gone.
     const { error } = await supabase.from('repositories').delete().eq('id', repo.id)
-    setDeleting(false)
-
     if (error) {
-      // e.g. FK restrict if the repo has purchases
+      setDeleting(false)
       toast.error('Could not delete', error.message)
       return
     }
+    if (repo.storage_path) {
+      await supabase.storage.from('repositories').remove([repo.storage_path])
+    }
+    setDeleting(false)
     toast.success('Repository deleted')
     router.push('/dashboard')
     router.refresh()
