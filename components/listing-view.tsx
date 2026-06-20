@@ -150,6 +150,7 @@ export function ListingView({ id }: { id: string }) {
   const [likeBusy, setLikeBusy] = useState(false)
   const [forking, setForking] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [buying, setBuying] = useState(false)
 
   // Fetch all data
   useEffect(() => {
@@ -306,7 +307,25 @@ export function ListingView({ id }: { id: string }) {
 
   async function handleBuy() {
     if (!user) { router.push('/auth'); return }
-    toast.info('Checkout coming soon', 'Stripe integration is on the way.')
+    if (!repo || buying) return
+    setBuying(true)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ repositoryId: repo.id }),
+      })
+      const json = await res.json()
+      if (json.alreadyOwned) {
+        toast.info('Already purchased', 'You already own this project.')
+        setPurchaseId('owned'); router.refresh(); setBuying(false); return
+      }
+      if (json.url) { window.location.href = json.url; return } // → Cryptomus
+      toast.error('Checkout unavailable', json.error ?? 'Please try again later.')
+    } catch {
+      toast.error('Checkout failed', 'Please try again later.')
+    }
+    setBuying(false)
   }
 
   // Downloads go through our branded route (vydex.dev/api/download/…), which
@@ -875,10 +894,17 @@ export function ListingView({ id }: { id: string }) {
 
               <div className="mt-5 flex flex-col gap-2">
                 {isPaid ? (
-                  <PixelButton className="w-full py-3 gap-2" onClick={handleBuy}>
-                    <ShoppingCart className="h-4 w-4" />
-                    Buy now
-                  </PixelButton>
+                  purchaseId ? (
+                    <PixelButton className="w-full py-3 gap-2" onClick={handleDownload}>
+                      <Download className="h-4 w-4" />
+                      Download
+                    </PixelButton>
+                  ) : (
+                    <PixelButton className="w-full py-3 gap-2" onClick={handleBuy} disabled={buying}>
+                      <ShoppingCart className="h-4 w-4" />
+                      {buying ? 'Redirecting…' : 'Buy now'}
+                    </PixelButton>
+                  )
                 ) : (
                   <PixelButton className="w-full py-3 gap-2" onClick={handleDownload}>
                     <Download className="h-4 w-4" />

@@ -599,6 +599,8 @@ export type Database = {
           currency: string;
           platform_fee_cents: number;
           stripe_payment_intent_id: string | null;
+          provider: string | null;
+          provider_ref: string | null;
           status: Database["public"]["Enums"]["purchase_status"];
           completed_at: string | null;
           created_at: string;
@@ -614,6 +616,8 @@ export type Database = {
           currency?: string;
           platform_fee_cents?: number;
           stripe_payment_intent_id?: string | null;
+          provider?: string | null;
+          provider_ref?: string | null;
           status?: Database["public"]["Enums"]["purchase_status"];
           completed_at?: string | null;
           created_at?: string;
@@ -629,6 +633,8 @@ export type Database = {
           currency?: string;
           platform_fee_cents?: number;
           stripe_payment_intent_id?: string | null;
+          provider?: string | null;
+          provider_ref?: string | null;
           status?: Database["public"]["Enums"]["purchase_status"];
           completed_at?: string | null;
           created_at?: string;
