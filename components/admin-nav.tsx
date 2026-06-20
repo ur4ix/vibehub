@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Activity, Award, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, Users, Activity, Award, ShieldCheck, Wallet } from 'lucide-react'
 
 const ITEMS = [
   { label: 'Overview',  href: '/admin',           icon: LayoutDashboard, exact: true },
@@ -10,6 +10,7 @@ const ITEMS = [
   { label: 'Activity',  href: '/admin/activity',  icon: Activity },
   { label: 'Badges',    href: '/admin/badges',    icon: Award },
   { label: 'Approvals', href: '/admin/approvals', icon: ShieldCheck },
+  { label: 'Payouts',   href: '/admin/payouts',   icon: Wallet },
 ]
 
 export function AdminNav() {
