@@ -16,6 +16,7 @@ interface ResolvedRepo {
   price_cents: number | null
   average_rating: number
   review_count: number
+  preview_images: string[] | null
 }
 
 // Resolve a repository from its GitHub-style /<username>/<slug> URL.
@@ -31,7 +32,7 @@ async function resolveRepo(username: string, slug: string): Promise<ResolvedRepo
 
   const { data: repo } = await supabase
     .from('repositories')
-    .select('id, title, description, type, price_cents, average_rating, review_count')
+    .select('id, title, description, type, price_cents, average_rating, review_count, preview_images')
     .eq('owner_id', (profile as { id: string }).id)
     .eq('slug', slug)
     .maybeSingle()
@@ -56,12 +57,17 @@ export default async function RepoBySlugPage({ params }: PageProps) {
   const repo = await resolveRepo(username, slug)
   if (!repo) notFound()
 
+  // Google requires an image for Product rich results — use the repo's own
+  // preview if it has one, otherwise the generated OG card.
+  const image = repo.preview_images?.[0] ?? `${SITE_URL}/${username}/${slug}/opengraph-image`
+
   // Product structured data → rich results (price, rating) in search.
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: repo.title,
     description: repo.description ?? undefined,
+    image,
     url: `${SITE_URL}/${username}/${slug}`,
     brand: { '@type': 'Brand', name: SITE_NAME },
     offers: {
