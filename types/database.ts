@@ -605,6 +605,9 @@ export type Database = {
           completed_at: string | null;
           escrow_status: string | null;
           release_at: string | null;
+          payout_status: string | null;
+          payout_ref: string | null;
+          paid_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -624,6 +627,9 @@ export type Database = {
           completed_at?: string | null;
           escrow_status?: string | null;
           release_at?: string | null;
+          payout_status?: string | null;
+          payout_ref?: string | null;
+          paid_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -643,6 +649,9 @@ export type Database = {
           completed_at?: string | null;
           escrow_status?: string | null;
           release_at?: string | null;
+          payout_status?: string | null;
+          payout_ref?: string | null;
+          paid_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -891,6 +900,8 @@ export type Database = {
           stripe_connect_account_id: string | null;
           github_username: string | null;
           x_username: string | null;
+          payout_address: string | null;
+          payout_currency: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -906,6 +917,8 @@ export type Database = {
           stripe_connect_account_id?: string | null;
           github_username?: string | null;
           x_username?: string | null;
+          payout_address?: string | null;
+          payout_currency?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -921,6 +934,8 @@ export type Database = {
           stripe_connect_account_id?: string | null;
           github_username?: string | null;
           x_username?: string | null;
+          payout_address?: string | null;
+          payout_currency?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1170,6 +1185,8 @@ export interface Profile {
   reputation: number
   github_username: string | null
   x_username: string | null
+  payout_address: string | null
+  payout_currency: string | null
   created_at: string
 }
 

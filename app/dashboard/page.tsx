@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
+import { PayoutSettings } from '@/components/payout-settings'
 import type { Profile, DashboardRepo } from '@/types/database'
 
 export const metadata: Metadata = {
@@ -98,6 +99,34 @@ export default async function DashboardPage() {
     .map((p) => ({ ...p, repo: purchasedRepoMap.get(p.repository_id) }))
     .filter((p) => p.repo)
 
+  // Earnings (seller side) — paid sales of your repos, with escrow + payout state.
+  const { data: saleRaw } = await supabase
+    .from('purchases')
+    .select('id, repository_id, amount_cents, platform_fee_cents, escrow_status, payout_status, created_at')
+    .eq('seller_id', user.id)
+    .eq('status', 'completed')
+    .gt('amount_cents', 0)
+    .order('created_at', { ascending: false })
+  type SaleRow = {
+    id: string; repository_id: string; amount_cents: number; platform_fee_cents: number
+    escrow_status: string | null; payout_status: string | null; created_at: string
+  }
+  const saleRows = (saleRaw as SaleRow[] | null) ?? []
+  // Resolve titles for the sold repos (owner is you, so they're readable).
+  const saleRepoTitle = new Map<string, string>()
+  if (saleRows.length > 0) {
+    const ids = [...new Set(saleRows.map((s) => s.repository_id))]
+    const { data: tr } = await supabase.from('repositories').select('id, title').in('id', ids)
+    for (const r of (tr as { id: string; title: string }[] | null) ?? []) saleRepoTitle.set(r.id, r.title)
+  }
+  const net = (s: SaleRow) => s.amount_cents - s.platform_fee_cents
+  const heldTotal = saleRows.filter((s) => s.escrow_status === 'held').reduce((a, s) => a + net(s), 0)
+  const owed = saleRows.filter((s) => s.escrow_status === 'released' && s.payout_status !== 'paid')
+  const owedTotal = owed.reduce((a, s) => a + net(s), 0)
+  const paidTotal = saleRows.filter((s) => s.payout_status === 'paid').reduce((a, s) => a + net(s), 0)
+  const hasSales = saleRows.length > 0
+  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
@@ -138,6 +167,55 @@ export default async function DashboardPage() {
             <div className="font-pixel text-sm text-primary">{profile?.reputation ?? 0}</div>
             <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">reputation</div>
           </div>
+        </div>
+
+        {/* Earnings (seller payouts) */}
+        <div className="mb-12">
+          <h2 className="mb-5 font-pixel text-xs uppercase tracking-wider">Earnings</h2>
+
+          {hasSales && (
+            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="border-2 border-border bg-card px-4 py-3">
+                <div className="font-pixel text-sm text-amber-400">{money(heldTotal)}</div>
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">in escrow</div>
+              </div>
+              <div className="border-2 border-primary bg-card px-4 py-3">
+                <div className="font-pixel text-sm text-primary">{money(owedTotal)}</div>
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">ready to pay out</div>
+              </div>
+              <div className="border-2 border-border bg-card px-4 py-3">
+                <div className="font-pixel text-sm text-green-400">{money(paidTotal)}</div>
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">paid out</div>
+              </div>
+            </div>
+          )}
+
+          <PayoutSettings
+            userId={user.id}
+            address={profile?.payout_address ?? null}
+            currency={profile?.payout_currency ?? null}
+          />
+
+          {owed.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">
+                Ready to pay out
+              </p>
+              <div className="flex flex-col gap-2">
+                {owed.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-3">
+                    <p className="min-w-0 truncate font-mono text-sm text-foreground">
+                      {saleRepoTitle.get(s.repository_id) ?? 'Repository'}
+                    </p>
+                    <span className="shrink-0 font-pixel text-[9px] text-primary">{money(net(s))}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 font-mono text-[10px] text-muted-foreground">
+                Net of the platform fee. Payouts are sent to your wallet above.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Purchased (your library) */}
