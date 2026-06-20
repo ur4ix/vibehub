@@ -1,15 +1,19 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import * as React from 'react'
 import type { ReactNode } from 'react'
 
-// Re-keys on pathname so each navigation replays the enter animation.
-// Opacity-only (no transform) to avoid breaking the sticky header's positioning.
+// React's experimental <ViewTransition>, enabled via next.config
+// `experimental.viewTransition`. Next aliases `react` to the experimental
+// channel that provides it. Route navigations are React Transitions, so wrapping
+// the page in <ViewTransition> makes the browser crossfade old → new
+// automatically. Falls back to a plain wrapper if it's unavailable (e.g. a
+// browser without the View Transitions API), where navigation is just instant.
+const ReactViewTransition = (React as unknown as {
+  ViewTransition?: React.ComponentType<{ children?: ReactNode }>
+}).ViewTransition
+
 export function PageTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname()
-  return (
-    <div key={pathname} className="page-enter">
-      {children}
-    </div>
-  )
+  if (!ReactViewTransition) return <>{children}</>
+  return <ReactViewTransition>{children}</ReactViewTransition>
 }

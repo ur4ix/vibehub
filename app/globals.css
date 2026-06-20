@@ -186,19 +186,20 @@
     .animate-pop, .animate-fade-in, .animate-modal { animation: none; }
   }
 
-  /* Page enter — even, gradual fade on each route change. Opacity-only (no
-     transform) so there's no jump and the sticky header keeps working; the
-     standard easing ramps evenly instead of snapping in. `backwards` fill
-     applies opacity:0 before the run to avoid a flash. */
-  .page-enter {
-    animation: page-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-  }
-  @keyframes page-enter {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+  /* Page transitions — native browser View Transitions (React <ViewTransition>
+     in PageTransition). A gentle crossfade between the old and new route. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
   @media (prefers-reduced-motion: reduce) {
-    .page-enter { animation: none; }
+    ::view-transition-old(*),
+    ::view-transition-new(*),
+    ::view-transition-group(*) {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+    }
   }
 
   /* Shimmering gradient text — a metallic sheen sweeps across the word.
