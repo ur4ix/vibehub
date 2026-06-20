@@ -116,7 +116,12 @@ export default async function AdminPayoutsPage() {
                           {money(it.amount_cents - it.platform_fee_cents)} net · {new Date(it.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
                         </p>
                       </div>
-                      <PayoutActions purchaseId={it.id} canAuto={stable} />
+                      <div className="flex items-center gap-3">
+                        {it.payout_status === 'pending' && (
+                          <span className="font-pixel text-[8px] uppercase text-amber-400">awaiting code</span>
+                        )}
+                        <PayoutActions purchaseId={it.id} canAuto={stable} pending={it.payout_status === 'pending'} />
+                      </div>
                     </div>
                   ))}
                 </div>
