@@ -17,6 +17,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
+import { SECURITY_CATALOG, SEVERITY_STYLE } from '@/lib/security-scan'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ interface RepoDetail {
   preview_images: string[] | null
   file_manifest: string[] | null
   ai_signals: string[] | null
+  security_flags: string[] | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -677,6 +679,31 @@ export function ListingView({ id }: { id: string }) {
               <div className="mt-4 border-2 border-border bg-card p-5">
                 <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">README</p>
                 <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/80">{repo.readme}</pre>
+              </div>
+            )}
+
+            {/* Heuristic security scan flags */}
+            {(repo.security_flags?.length ?? 0) > 0 && (
+              <div className="mt-10">
+                <h2 className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider">
+                  Security scan
+                  <span className="font-mono normal-case text-muted-foreground">({repo.security_flags!.length})</span>
+                </h2>
+                <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  Heuristic flags from a static scan of the code — not a virus scan and not proof of anything. Review before buying.
+                </p>
+                <div className="mt-4 flex flex-col gap-2">
+                  {repo.security_flags!.map((id) => {
+                    const rule = SECURITY_CATALOG[id]
+                    if (!rule) return null
+                    return (
+                      <div key={id} className={'border-2 px-3 py-2 ' + SEVERITY_STYLE[rule.severity]}>
+                        <p className="font-pixel text-[9px] uppercase tracking-wider">{rule.severity} · {rule.label}</p>
+                        <p className="mt-1 font-mono text-[10px] leading-relaxed opacity-90">{rule.description}</p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
 

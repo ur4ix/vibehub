@@ -12,6 +12,7 @@ import { useToast } from "@/components/pixel-toast";
 import { cn } from "@/lib/utils";
 import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
 import { scanAiSignals, SIGNAL_TEXT_FILES } from "@/lib/ai-signals";
+import { scanCode, shouldScan, SECURITY_CATALOG, SEVERITY_STYLE } from "@/lib/security-scan";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -74,6 +75,8 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewUploading, setPreviewUploading] = useState(false);
   const [fileManifest, setFileManifest] = useState<string[]>([]);
+  const [securityFlags, setSecurityFlags] = useState<string[]>([]);
+  const [scanning, setScanning] = useState(false);
   const [aiSignals, setAiSignals] = useState<string[]>([]);
 
   // edit-mode state
@@ -109,6 +112,7 @@ export function UploadForm({ userId }: UploadFormProps) {
         setDemoUrl(r.demo_url ?? "");
         setPreviewImages(r.preview_images ?? []);
         setFileManifest(r.file_manifest ?? []);
+        setSecurityFlags(r.security_flags ?? []);
         setAiSignals(r.ai_signals ?? []);
         setExistingStoragePath(r.storage_path);
         setExistingPublishedAt(r.published_at);
@@ -208,9 +212,28 @@ export function UploadForm({ userId }: UploadFormProps) {
         }
       }
       setAiSignals(scanAiSignals(paths, texts));
+
+      // Heuristic security scan: read code files (bounded) and flag patterns.
+      setScanning(true);
+      const codeFiles: { path: string; content: string }[] = [];
+      let budget = 3_000_000;
+      for (const p of paths) {
+        if (codeFiles.length >= 400 || budget <= 0) break;
+        if (!shouldScan(p)) continue;
+        try {
+          const content = await zip.file(p)!.async("string");
+          if (content.length > 200_000) continue;
+          budget -= content.length;
+          codeFiles.push({ path: p, content });
+        } catch { /* ignore */ }
+      }
+      setSecurityFlags(scanCode(codeFiles).map((flag) => flag.id));
+      setScanning(false);
     } catch {
       setFileManifest([]);
       setAiSignals([]);
+      setSecurityFlags([]);
+      setScanning(false);
     }
   }
 
@@ -357,6 +380,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             demo_url: demoUrl.trim() || null,
             preview_images: previewImages,
             file_manifest: fileManifest,
+            security_flags: securityFlags,
             ai_signals: aiSignals,
             is_published: publish,
             published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
@@ -411,6 +435,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           demo_url: demoUrl.trim() || null,
           preview_images: previewImages,
           file_manifest: fileManifest,
+          security_flags: securityFlags,
           ai_signals: aiSignals,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
@@ -646,6 +671,37 @@ export function UploadForm({ userId }: UploadFormProps) {
               Found in your archive — shown as a badge on the listing.
             </p>
           </div>
+        )}
+
+        {/* Security scan (heuristic) */}
+        {file && (scanning || securityFlags.length > 0) && (
+          <div className="flex flex-col gap-2">
+            <Label>Security scan</Label>
+            {scanning ? (
+              <p className="font-mono text-xs text-muted-foreground">Scanning archive…</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  {securityFlags.map((id) => {
+                    const rule = SECURITY_CATALOG[id];
+                    if (!rule) return null;
+                    return (
+                      <div key={id} className={"border-2 px-3 py-2 " + SEVERITY_STYLE[rule.severity]}>
+                        <p className="font-pixel text-[9px] uppercase tracking-wider">{rule.severity} · {rule.label}</p>
+                        <p className="mt-1 font-mono text-[10px] leading-relaxed opacity-90">{rule.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Heuristic flags — not a virus scan and not proof of anything. They&apos;re shown to buyers; if a flag is expected (e.g. a CLI that runs commands), that&apos;s fine.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+        {file && !scanning && securityFlags.length === 0 && fileManifest.length > 0 && (
+          <p className="font-mono text-xs text-green-400">✓ Security scan: no suspicious patterns flagged.</p>
         )}
 
         {/* Tags */}

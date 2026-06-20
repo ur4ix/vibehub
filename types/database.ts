@@ -728,6 +728,7 @@ export type Database = {
           preview_images: string[];
           file_manifest: string[];
           ai_signals: string[];
+          security_flags: string[];
           created_at: string;
           updated_at: string;
         };
@@ -744,6 +745,7 @@ export type Database = {
           preview_images?: string[];
           file_manifest?: string[];
           ai_signals?: string[];
+          security_flags?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -773,6 +775,7 @@ export type Database = {
           preview_images?: string[];
           file_manifest?: string[];
           ai_signals?: string[];
+          security_flags?: string[];
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -1120,6 +1123,7 @@ export interface Repository {
   preview_images: string[]
   file_manifest: string[]
   ai_signals: string[]
+  security_flags: string[]
   created_at: string
   updated_at: string
 }
