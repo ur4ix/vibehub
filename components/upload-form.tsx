@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { containsBanned, BANNED_MESSAGE } from "@/lib/banned-words";
 import { scanAiSignals, SIGNAL_TEXT_FILES } from "@/lib/ai-signals";
 import { scanCode, shouldScan, SECURITY_CATALOG, SEVERITY_STYLE } from "@/lib/security-scan";
+import { extractDeps, MANIFEST_FILES } from "@/lib/deps";
 import type { Repository } from "@/types/database";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -26,50 +27,6 @@ function toSlug(str: string) {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 80);
-}
-
-// Extract npm dependencies (with exact versions) from a lockfile, falling back
-// to package.json ranges. Returns a de-duplicated, capped list for OSV.
-function extractNpmDeps(lock?: string, pkg?: string): { name: string; version: string; ecosystem: "npm" }[] {
-  const seen = new Set<string>();
-  const out: { name: string; version: string; ecosystem: "npm" }[] = [];
-  const add = (name: string, version: string) => {
-    const key = `${name}@${version}`;
-    if (name && version && /^\d/.test(version) && !seen.has(key)) { seen.add(key); out.push({ name, version, ecosystem: "npm" }); }
-  };
-  if (lock) {
-    try {
-      const j = JSON.parse(lock);
-      if (j.packages) {
-        for (const [key, val] of Object.entries(j.packages as Record<string, { version?: string }>)) {
-          if (!key) continue;
-          const name = key.split("node_modules/").pop();
-          if (name && val?.version) add(name, val.version);
-        }
-      } else if (j.dependencies) {
-        const walk = (deps: Record<string, { version?: string; dependencies?: Record<string, unknown> }>) => {
-          for (const [name, info] of Object.entries(deps)) {
-            if (info?.version) add(name, info.version);
-            if (info?.dependencies) walk(info.dependencies as never);
-          }
-        };
-        walk(j.dependencies);
-      }
-    } catch { /* ignore */ }
-  }
-  if (out.length === 0 && pkg) {
-    try {
-      const j = JSON.parse(pkg);
-      for (const grp of [j.dependencies, j.devDependencies]) {
-        if (!grp) continue;
-        for (const [name, range] of Object.entries(grp as Record<string, string>)) {
-          const version = String(range).replace(/[\^~>=<*\s|]/g, "").split(" ")[0];
-          add(name, version);
-        }
-      }
-    } catch { /* ignore */ }
-  }
-  return out.slice(0, 400);
 }
 
 function formatBytes(bytes: number) {
@@ -277,15 +234,21 @@ export function UploadForm({ userId }: UploadFormProps) {
       setSecurityFlags(scanCode(codeFiles).map((flag) => flag.id));
       setScanning(false);
 
-      // Dependency vulnerabilities via OSV.dev (lockfile preferred for exact
-      // versions). Best-effort — never blocks the upload.
+      // Dependency vulnerabilities via OSV.dev across ecosystems (npm, PyPI, Go,
+      // crates.io, RubyGems, Packagist). Best-effort — never blocks the upload.
       try {
-        const findEntry = (name: string) => paths.find((p) => p.split("/").pop()?.toLowerCase() === name);
-        const lockPath = findEntry("package-lock.json");
-        const pkgPath = findEntry("package.json");
-        const lock = lockPath ? await zip.file(lockPath)!.async("string") : undefined;
-        const pkg = pkgPath ? await zip.file(pkgPath)!.async("string") : undefined;
-        const deps = extractNpmDeps(lock, pkg);
+        const manifests: { name: string; content: string }[] = [];
+        for (const p of paths) {
+          if (manifests.length >= 16) break;
+          const base = p.split("/").pop()?.toLowerCase();
+          if (base && MANIFEST_FILES.includes(base)) {
+            try {
+              const content = await zip.file(p)!.async("string");
+              if (content.length <= 4_000_000) manifests.push({ name: base, content });
+            } catch { /* ignore */ }
+          }
+        }
+        const deps = extractDeps(manifests);
         if (deps.length > 0) {
           setScanningVuln(true);
           const res = await fetch("/api/osv-scan", {
