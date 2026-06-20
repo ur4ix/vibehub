@@ -733,6 +733,7 @@ export type Database = {
           fork_count: number;
           average_rating: number;
           review_count: number;
+          purchase_count: number;
           is_published: boolean;
           published_at: string | null;
           tags: string[];
@@ -770,6 +771,7 @@ export type Database = {
           fork_count?: number;
           average_rating?: number;
           review_count?: number;
+          purchase_count?: number;
           is_published?: boolean;
           published_at?: string | null;
           tags?: string[];
@@ -801,6 +803,7 @@ export type Database = {
           fork_count?: number;
           average_rating?: number;
           review_count?: number;
+          purchase_count?: number;
           is_published?: boolean;
           published_at?: string | null;
           tags?: string[];
@@ -1131,6 +1134,7 @@ export interface Repository {
   fork_count: number
   average_rating: number
   review_count: number
+  purchase_count: number
   is_published: boolean
   published_at: string | null
   tags: string[]
@@ -1226,6 +1230,7 @@ export interface ExploreRepo {
   owner_display_name: string | null
   owner_avatar_url: string | null
   preview_image: string | null
+  purchase_count: number
 }
 
 /** Dashboard / profile repo row — lean shape returned by Supabase query */

@@ -90,7 +90,12 @@ function RepoCard({ repo }: { repo: ExploreRepo }) {
           <PixelAvatar username={repo.owner_username} avatarColor={avatarColor} size={20} imageUrl={repo.owner_avatar_url ?? undefined} />
           @{repo.owner_username}
         </Link>
-        <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+        {repo.type === 'paid' && repo.purchase_count > 0 && (
+          <span className="ml-auto font-mono text-[10px] text-green-400">
+            {repo.purchase_count} sold
+          </span>
+        )}
+        <span className={`font-mono text-[10px] text-muted-foreground ${repo.type === 'paid' && repo.purchase_count > 0 ? '' : 'ml-auto'}`}>
           {new Date(repo.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
@@ -157,7 +162,7 @@ function ExploreContent() {
 
       let query = supabase
         .from('repositories')
-        .select('id, title, slug, description, type, price_cents, tags, category, created_at, owner_id, reaction_count, preview_images')
+        .select('id, title, slug, description, type, price_cents, tags, category, created_at, owner_id, reaction_count, purchase_count, preview_images')
         .eq('is_published', true)
 
       if (category !== 'all') query = query.eq('category', category)
@@ -203,6 +208,7 @@ function ExploreContent() {
           owner_display_name: profileMap.get(r.owner_id)?.display_name ?? null,
           owner_avatar_url: profileMap.get(r.owner_id)?.avatar_url ?? null,
           preview_image: r.preview_images?.[0] ?? null,
+          purchase_count: r.purchase_count ?? 0,
         })),
       )
       setLoading(false)

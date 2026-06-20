@@ -44,6 +44,7 @@ interface RepoDetail {
   fork_count: number
   average_rating: number
   review_count: number
+  purchase_count: number
   is_published: boolean
   published_at: string | null
   created_at: string
@@ -650,6 +651,12 @@ export function ListingView({ id }: { id: string }) {
                   <span className="flex items-center gap-1">
                     <GitFork className="h-3 w-3" />{repo.fork_count} forks
                   </span>
+                  {repo.purchase_count > 0 && (
+                    <span className="flex items-center gap-1 text-green-400">
+                      <ShoppingCart className="h-3 w-3" />
+                      {repo.purchase_count} {repo.type === 'free' ? 'downloads' : 'sold'}
+                    </span>
+                  )}
                   {repo.published_at && (
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />{formatDate(repo.published_at)}
@@ -1007,18 +1014,22 @@ export function ListingView({ id }: { id: string }) {
               )}
 
               {/* Stats row */}
-              <div className="mt-5 grid grid-cols-3 gap-0 border-t border-border pt-4 text-center">
+              <div className="mt-5 grid grid-cols-4 gap-0 border-t border-border pt-4 text-center">
                 <div>
                   <p className="font-pixel text-[10px] text-primary">{likeCount}</p>
                   <p className="mt-1 font-mono text-[9px] text-muted-foreground">likes</p>
                 </div>
-                <div className="border-x border-border">
+                <div className="border-l border-border">
                   <p className="font-pixel text-[10px] text-primary">{repo.fork_count}</p>
                   <p className="mt-1 font-mono text-[9px] text-muted-foreground">forks</p>
                 </div>
-                <div>
+                <div className="border-l border-border">
                   <p className="font-pixel text-[10px] text-primary">{repo.review_count}</p>
                   <p className="mt-1 font-mono text-[9px] text-muted-foreground">reviews</p>
+                </div>
+                <div className="border-l border-border">
+                  <p className="font-pixel text-[10px] text-green-400">{repo.purchase_count}</p>
+                  <p className="mt-1 font-mono text-[9px] text-muted-foreground">{repo.type === 'free' ? 'gets' : 'sold'}</p>
                 </div>
               </div>
             </div>
