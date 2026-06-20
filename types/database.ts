@@ -406,6 +406,7 @@ export type Database = {
           type: string;
           title: string;
           body: string | null;
+          actor_username: string | null;
           is_read: boolean;
           created_at: string;
         };
@@ -415,6 +416,7 @@ export type Database = {
           type?: string;
           title: string;
           body?: string | null;
+          actor_username?: string | null;
           is_read?: boolean;
           created_at?: string;
         };
@@ -424,6 +426,7 @@ export type Database = {
           type?: string;
           title?: string;
           body?: string | null;
+          actor_username?: string | null;
           is_read?: boolean;
           created_at?: string;
         };

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, ChevronDown, X, MessageSquare } from 'lucide-react'
+import { Bell, ChevronDown, X } from 'lucide-react'
 import { PixelButton } from './pixel-button'
 import { PixelAvatar } from './pixel-avatar'
 import { PublishModal } from './publish-modal'
@@ -42,7 +42,7 @@ function NotificationBell() {
     const supabase = createClient()
     const { data: rawNotifs } = await supabase
       .from('notifications')
-      .select('id, type, title, body, is_read, created_at')
+      .select('id, type, title, body, actor_username, is_read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -79,6 +79,18 @@ function NotificationBell() {
       .update({ is_read: true })
       .eq('user_id', user.id)
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+  }
+
+  // Click a notification → open a chat with whoever triggered it (bid, interest,
+  // follow, like, review…); mark it read and close the panel.
+  async function handleNotificationClick(n: Notification) {
+    setOpen(false)
+    if (!n.is_read) {
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)))
+      const supabase = createClient()
+      await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+    }
+    if (n.actor_username) openChat(n.actor_username)
   }
 
   function timeAgo(iso: string) {
@@ -131,18 +143,26 @@ function NotificationBell() {
           ) : (
             <ul className="max-h-80 overflow-y-auto">
               {notifications.map((n) => (
-                <li
-                  key={n.id}
-                  className={'border-b border-border px-4 py-3.5 last:border-0 ' + (!n.is_read ? 'bg-primary/5' : '')}
-                >
-                  <div className="flex items-start gap-3">
-                    {!n.is_read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-primary" />}
-                    <div className={!n.is_read ? '' : 'pl-[18px]'}>
-                      <p className="font-pixel text-[9px] uppercase tracking-wider text-foreground">{n.title}</p>
-                      {n.body && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{n.body}</p>}
-                      <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
+                <li key={n.id} className="border-b border-border last:border-0">
+                  <button
+                    type="button"
+                    onClick={() => handleNotificationClick(n)}
+                    className={'block w-full px-4 py-3.5 text-left transition-colors hover:bg-secondary ' + (!n.is_read ? 'bg-primary/5' : '')}
+                  >
+                    <div className="flex items-start gap-3">
+                      {!n.is_read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-primary" />}
+                      <div className={'min-w-0 ' + (!n.is_read ? '' : 'pl-[18px]')}>
+                        <p className="font-pixel text-[9px] uppercase tracking-wider text-foreground">{n.title}</p>
+                        {n.body && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{n.body}</p>}
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <p className="font-mono text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
+                          {n.actor_username && (
+                            <span className="font-mono text-[10px] text-primary">· reply →</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -153,50 +173,6 @@ function NotificationBell() {
   )
 }
 
-// ─── Messages link ────────────────────────────────────────────────────────────
-
-function MessagesLink() {
-  const { user } = useAuth()
-  const [unread, setUnread] = useState(0)
-
-  useEffect(() => {
-    if (!user) return
-    const supabase = createClient()
-    let active = true
-    async function load() {
-      const { count } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('recipient_id', user!.id)
-        .eq('is_read', false)
-      if (active) setUnread(count ?? 0)
-    }
-    load()
-    // Realtime on incoming messages (RLS-filtered) + slow poll fallback.
-    const channel = supabase
-      .channel(`msg-unread:${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` }, () => load())
-      .subscribe()
-    const interval = setInterval(load, 20000)
-    return () => { active = false; supabase.removeChannel(channel); clearInterval(interval) }
-  }, [user])
-
-  return (
-    <button
-      type="button"
-      onClick={() => openChat()}
-      aria-label={`Messages${unread ? ` — ${unread} unread` : ''}`}
-      className="relative grid h-9 w-9 place-items-center border-2 border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-    >
-      <MessageSquare className="h-4 w-4" />
-      {unread > 0 && (
-        <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center border border-background bg-primary font-pixel text-[8px] text-primary-foreground">
-          {unread}
-        </span>
-      )}
-    </button>
-  )
-}
 
 // ─── SiteHeader ───────────────────────────────────────────────────────────────
 
@@ -262,7 +238,6 @@ export function SiteHeader() {
           {/* Desktop right — authenticated */}
           {user ? (
             <div className="hidden items-center gap-3 md:flex">
-              <MessagesLink />
               <NotificationBell />
 
               <PixelButton className="px-4 py-2.5" onClick={() => setPublishOpen(true)}>
