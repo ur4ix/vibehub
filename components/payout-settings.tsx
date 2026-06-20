@@ -7,6 +7,7 @@ import { useToast } from '@/components/pixel-toast'
 // NOWPayments payout currencies. Ticker is what the Payout API expects.
 const CURRENCIES: { ticker: string; label: string; hint?: string }[] = [
   { ticker: 'usdttrc20', label: 'USDT · Tron (TRC-20)', hint: 'lowest fees' },
+  { ticker: 'usdtbsc', label: 'USDT · BNB Smart Chain (BEP-20)' },
   { ticker: 'usdtsol', label: 'USDT · Solana' },
   { ticker: 'usdtmatic', label: 'USDT · Polygon' },
   { ticker: 'usdcsol', label: 'USDC · Solana' },
