@@ -38,6 +38,7 @@ interface RepoDetail {
   file_manifest: string[] | null
   ai_signals: string[] | null
   security_flags: string[] | null
+  vuln_findings: string[] | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -308,38 +309,22 @@ export function ListingView({ id }: { id: string }) {
     toast.info('Checkout coming soon', 'Stripe integration is on the way.')
   }
 
-  async function handleDownload() {
+  // Downloads go through our branded route (vydex.dev/api/download/…), which
+  // redirects to a short-lived signed URL. Storage RLS still enforces access.
+  function handleDownload() {
     if (!repo?.storage_path) {
       toast.error('File not available', 'The author has not uploaded a file yet.')
       return
     }
     if (!user) { router.push('/auth'); return }
-
-    // The `repositories` bucket is private — a public URL would 401.
-    // Mint a short-lived signed URL; Storage RLS still enforces access.
-    const supabase = createClient()
-    const { data, error } = await supabase.storage
-      .from('repositories')
-      .createSignedUrl(repo.storage_path, 60)
-
-    if (error || !data) {
-      toast.error('Download failed', error?.message ?? 'Could not generate a download link.')
-      return
-    }
-
-    window.open(data.signedUrl, '_blank')
+    window.open(`/api/download/${repo.id}`, '_blank')
     toast.success('Download started!')
   }
 
-  async function downloadVersion(path: string) {
+  function downloadVersion(versionId: string) {
     if (!user) { router.push('/auth'); return }
-    const supabase = createClient()
-    const { data, error } = await supabase.storage.from('repositories').createSignedUrl(path, 60)
-    if (error || !data) {
-      toast.error('Download failed', error?.message ?? 'You may not have access to this version.')
-      return
-    }
-    window.open(data.signedUrl, '_blank')
+    if (!repo) return
+    window.open(`/api/download/${repo.id}?v=${versionId}`, '_blank')
     toast.success('Download started!')
   }
 
@@ -707,6 +692,24 @@ export function ListingView({ id }: { id: string }) {
               </div>
             )}
 
+            {/* Dependency vulnerabilities (OSV.dev) */}
+            {(repo.vuln_findings?.length ?? 0) > 0 && (
+              <div className="mt-10">
+                <h2 className="flex items-center gap-2 font-pixel text-[10px] uppercase tracking-wider">
+                  Dependency vulnerabilities
+                  <span className="font-mono normal-case text-muted-foreground">({repo.vuln_findings!.length})</span>
+                </h2>
+                <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  Known advisories in the project&apos;s dependencies (source: OSV.dev).
+                </p>
+                <div className="mt-4 flex flex-col gap-1.5">
+                  {repo.vuln_findings!.map((v) => (
+                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400">{v}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Files — tree for everyone; contents for free/owner/purchased */}
             <RepoFiles
               manifest={repo.file_manifest ?? []}
@@ -766,7 +769,7 @@ export function ListingView({ id }: { id: string }) {
                           <span className="font-mono text-[10px] text-muted-foreground">{formatDate(v.created_at)}</span>
                           <button
                             type="button"
-                            onClick={() => downloadVersion(v.storage_path)}
+                            onClick={() => downloadVersion(v.id)}
                             className="text-muted-foreground transition-colors hover:text-primary"
                             aria-label={`Download ${v.version}`}
                           >

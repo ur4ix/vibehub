@@ -28,6 +28,50 @@ function toSlug(str: string) {
     .slice(0, 80);
 }
 
+// Extract npm dependencies (with exact versions) from a lockfile, falling back
+// to package.json ranges. Returns a de-duplicated, capped list for OSV.
+function extractNpmDeps(lock?: string, pkg?: string): { name: string; version: string; ecosystem: "npm" }[] {
+  const seen = new Set<string>();
+  const out: { name: string; version: string; ecosystem: "npm" }[] = [];
+  const add = (name: string, version: string) => {
+    const key = `${name}@${version}`;
+    if (name && version && /^\d/.test(version) && !seen.has(key)) { seen.add(key); out.push({ name, version, ecosystem: "npm" }); }
+  };
+  if (lock) {
+    try {
+      const j = JSON.parse(lock);
+      if (j.packages) {
+        for (const [key, val] of Object.entries(j.packages as Record<string, { version?: string }>)) {
+          if (!key) continue;
+          const name = key.split("node_modules/").pop();
+          if (name && val?.version) add(name, val.version);
+        }
+      } else if (j.dependencies) {
+        const walk = (deps: Record<string, { version?: string; dependencies?: Record<string, unknown> }>) => {
+          for (const [name, info] of Object.entries(deps)) {
+            if (info?.version) add(name, info.version);
+            if (info?.dependencies) walk(info.dependencies as never);
+          }
+        };
+        walk(j.dependencies);
+      }
+    } catch { /* ignore */ }
+  }
+  if (out.length === 0 && pkg) {
+    try {
+      const j = JSON.parse(pkg);
+      for (const grp of [j.dependencies, j.devDependencies]) {
+        if (!grp) continue;
+        for (const [name, range] of Object.entries(grp as Record<string, string>)) {
+          const version = String(range).replace(/[\^~>=<*\s|]/g, "").split(" ")[0];
+          add(name, version);
+        }
+      }
+    } catch { /* ignore */ }
+  }
+  return out.slice(0, 400);
+}
+
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -77,6 +121,8 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [fileManifest, setFileManifest] = useState<string[]>([]);
   const [securityFlags, setSecurityFlags] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [vulnFindings, setVulnFindings] = useState<string[]>([]);
+  const [scanningVuln, setScanningVuln] = useState(false);
   const [aiSignals, setAiSignals] = useState<string[]>([]);
 
   // edit-mode state
@@ -113,6 +159,7 @@ export function UploadForm({ userId }: UploadFormProps) {
         setPreviewImages(r.preview_images ?? []);
         setFileManifest(r.file_manifest ?? []);
         setSecurityFlags(r.security_flags ?? []);
+        setVulnFindings(r.vuln_findings ?? []);
         setAiSignals(r.ai_signals ?? []);
         setExistingStoragePath(r.storage_path);
         setExistingPublishedAt(r.published_at);
@@ -229,11 +276,37 @@ export function UploadForm({ userId }: UploadFormProps) {
       }
       setSecurityFlags(scanCode(codeFiles).map((flag) => flag.id));
       setScanning(false);
+
+      // Dependency vulnerabilities via OSV.dev (lockfile preferred for exact
+      // versions). Best-effort — never blocks the upload.
+      try {
+        const findEntry = (name: string) => paths.find((p) => p.split("/").pop()?.toLowerCase() === name);
+        const lockPath = findEntry("package-lock.json");
+        const pkgPath = findEntry("package.json");
+        const lock = lockPath ? await zip.file(lockPath)!.async("string") : undefined;
+        const pkg = pkgPath ? await zip.file(pkgPath)!.async("string") : undefined;
+        const deps = extractNpmDeps(lock, pkg);
+        if (deps.length > 0) {
+          setScanningVuln(true);
+          const res = await fetch("/api/osv-scan", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ deps }),
+          });
+          const json = await res.json();
+          setVulnFindings(Array.isArray(json?.findings) ? json.findings : []);
+          setScanningVuln(false);
+        } else {
+          setVulnFindings([]);
+        }
+      } catch { setVulnFindings([]); setScanningVuln(false); }
     } catch {
       setFileManifest([]);
       setAiSignals([]);
       setSecurityFlags([]);
+      setVulnFindings([]);
       setScanning(false);
+      setScanningVuln(false);
     }
   }
 
@@ -381,6 +454,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             preview_images: previewImages,
             file_manifest: fileManifest,
             security_flags: securityFlags,
+            vuln_findings: vulnFindings,
             ai_signals: aiSignals,
             is_published: publish,
             published_at: publish ? (existingPublishedAt ?? new Date().toISOString()) : existingPublishedAt,
@@ -436,6 +510,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           preview_images: previewImages,
           file_manifest: fileManifest,
           security_flags: securityFlags,
+          vuln_findings: vulnFindings,
           ai_signals: aiSignals,
           is_published: publish,
           published_at: publish ? new Date().toISOString() : null,
@@ -702,6 +777,27 @@ export function UploadForm({ userId }: UploadFormProps) {
         )}
         {file && !scanning && securityFlags.length === 0 && fileManifest.length > 0 && (
           <p className="font-mono text-xs text-green-400">✓ Security scan: no suspicious patterns flagged.</p>
+        )}
+
+        {/* Dependency vulnerabilities (OSV.dev) */}
+        {file && (scanningVuln || vulnFindings.length > 0) && (
+          <div className="flex flex-col gap-2">
+            <Label>Dependency vulnerabilities</Label>
+            {scanningVuln ? (
+              <p className="font-mono text-xs text-muted-foreground">Checking dependencies against OSV.dev…</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  {vulnFindings.map((v) => (
+                    <div key={v} className="border-2 border-amber-400/50 bg-amber-400/10 px-3 py-1.5 font-mono text-[10px] text-amber-400">{v}</div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Known advisories in your dependencies (source: OSV.dev). Update the affected packages if possible.
+                </p>
+              </>
+            )}
+          </div>
         )}
 
         {/* Tags */}
