@@ -5,13 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/pixel-toast'
 
 // NOWPayments payout currencies. Ticker is what the Payout API expects.
-const CURRENCIES: { ticker: string; label: string; hint?: string }[] = [
-  { ticker: 'usdttrc20', label: 'USDT · Tron (TRC-20)', hint: 'lowest fees' },
+const CURRENCIES: { ticker: string; label: string }[] = [
+  { ticker: 'usdttrc20', label: 'USDT · Tron (TRC-20)' },
   { ticker: 'usdtbsc', label: 'USDT · BNB Smart Chain (BEP-20)' },
   { ticker: 'usdtsol', label: 'USDT · Solana' },
   { ticker: 'usdtmatic', label: 'USDT · Polygon' },
   { ticker: 'usdcsol', label: 'USDC · Solana' },
-  { ticker: 'usdterc20', label: 'USDT · Ethereum (ERC-20)', hint: 'high gas' },
+  { ticker: 'usdterc20', label: 'USDT · Ethereum (ERC-20)' },
   { ticker: 'btc', label: 'Bitcoin' },
   { ticker: 'eth', label: 'Ethereum' },
   { ticker: 'sol', label: 'Solana' },
@@ -72,7 +72,7 @@ export function PayoutSettings({
         >
           {CURRENCIES.map((c) => (
             <option key={c.ticker} value={c.ticker}>
-              {c.label}{c.hint ? ` — ${c.hint}` : ''}
+              {c.label}
             </option>
           ))}
         </select>
