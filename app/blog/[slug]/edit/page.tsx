@@ -1,7 +1,7 @@
 import { PostEditor } from '@/components/post-editor'
 
 export const metadata = {
-  title: 'Edit post — Vydex Blog',
+  title: 'Edit post · Blog',
 }
 
 interface PageProps {

@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { UploadForm } from '@/components/upload-form'
 
 export const metadata: Metadata = {
-  title: 'Publish repository — Vydex',
+  title: 'Publish repository',
 }
 
 export default async function UploadPage({

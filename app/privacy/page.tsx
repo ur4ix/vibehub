@@ -4,7 +4,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { LegalDoc, type LegalSection } from '@/components/legal-doc'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Vydex',
+  title: 'Privacy Policy',
   description:
     'How Vydex collects, uses, shares, and protects your personal information when you use the Services.',
 }

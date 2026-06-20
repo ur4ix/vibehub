@@ -2,7 +2,7 @@
 import { ContactPageClient } from './contact-client'
 
 export const metadata: Metadata = {
-  title: 'Contact — Vydex',
+  title: 'Contact',
   description: 'Get in touch with the Vydex team.',
 }
 

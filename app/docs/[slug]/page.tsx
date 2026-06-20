@@ -16,7 +16,7 @@ function humanize(slug: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  return { title: `${humanize(slug)} — Vydex Docs` }
+  return { title: `${humanize(slug)} · Docs` }
 }
 
 export default async function DocArticlePage({ params }: PageProps) {

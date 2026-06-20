@@ -37,10 +37,10 @@ async function getProfileRow(username: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params
   const profile = await getProfileRow(username)
-  if (!profile) return { title: 'Profile not found — Vydex' }
+  if (!profile) return { title: 'Profile not found' }
   const name = profile.display_name ?? profile.username
   return {
-    title: `${name} (@${profile.username}) — Vydex`,
+    title: `${name} (@${profile.username})`,
     description: profile.bio ?? `Projects published by @${profile.username} on Vydex.`,
   }
 }

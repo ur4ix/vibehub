@@ -8,7 +8,7 @@ import { PayoutSettings } from '@/components/payout-settings'
 import type { Profile, DashboardRepo } from '@/types/database'
 
 export const metadata: Metadata = {
-  title: 'Dashboard — Vydex',
+  title: 'Dashboard',
 }
 
 interface DashJob {

@@ -1,7 +1,7 @@
 import { PostEditor } from '@/components/post-editor'
 
 export const metadata = {
-  title: 'New post — Vydex Blog',
+  title: 'New post · Blog',
 }
 
 export default function NewPostPage() {

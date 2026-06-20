@@ -35,9 +35,9 @@ async function getPost(slug: string): Promise<BlogPost | null> {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const post = await getPost(slug)
-  if (!post) return { title: 'Post not found — Vydex' }
+  if (!post) return { title: 'Post not found' }
   return {
-    title: `${post.title} — Vydex Blog`,
+    title: `${post.title} · Blog`,
     description: post.excerpt ?? undefined,
   }
 }

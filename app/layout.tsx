@@ -5,6 +5,7 @@ import { ToastProvider } from '@/components/pixel-toast'
 import { PageTransition } from '@/components/page-transition'
 import { ScrollReveal } from '@/components/scroll-reveal'
 import { ChatWidget } from '@/components/chat-widget'
+import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, TWITTER_HANDLE } from '@/lib/site'
 import './globals.css'
 
 const geistMono = Geist_Mono({
@@ -18,10 +19,30 @@ const pressStart = Press_Start_2P({
   subsets: ['latin'],
 })
 
+const TITLE_DEFAULT = `${SITE_NAME} — ${SITE_TAGLINE}`
+
 export const metadata: Metadata = {
-  title: 'Vydex — marketplace for vibe coders',
-  description:
-    'Buy and sell apps, components, prompts and templates. Everything you built on vibes — now earns money.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE_DEFAULT,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: TITLE_DEFAULT,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE_DEFAULT,
+    description: SITE_DESCRIPTION,
+    creator: TWITTER_HANDLE,
+  },
 }
 
 export const viewport: Viewport = {

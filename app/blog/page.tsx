@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { BlogPost } from '@/types/database'
 
 export const metadata: Metadata = {
-  title: 'Blog — Vydex',
+  title: 'Blog',
   description: 'Thoughts on vibe coding, marketplace updates and builder stories.',
 }
 

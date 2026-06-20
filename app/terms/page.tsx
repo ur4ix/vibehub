@@ -4,7 +4,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { LegalDoc, type LegalSection } from '@/components/legal-doc'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Vydex',
+  title: 'Terms of Service',
   description: 'The terms that govern your use of Vydex — the marketplace for vibe coders.',
 }
 

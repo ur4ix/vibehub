@@ -32,9 +32,9 @@ async function resolveRepo(username: string, slug: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username, slug } = await params
   const repo = await resolveRepo(username, slug)
-  if (!repo) return { title: 'Not found — Vydex' }
+  if (!repo) return { title: 'Not found' }
   return {
-    title: `${repo.title} — Vydex`,
+    title: `${repo.title}`,
     description: repo.description ?? `${username}/${slug} on Vydex.`,
   }
 }

@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
 export const metadata: Metadata = {
-  title: 'About — Vydex',
+  title: 'About',
   description: 'The marketplace built by vibe coders, for vibe coders.',
 }
 

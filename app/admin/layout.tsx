@@ -5,7 +5,7 @@ import { SiteFooter } from '@/components/site-footer'
 import { AdminNav } from '@/components/admin-nav'
 
 export const metadata: Metadata = {
-  title: 'Admin — Vydex',
+  title: 'Admin',
   robots: { index: false, follow: false },
 }
 

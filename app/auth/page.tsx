@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AuthCard } from '@/components/auth-card'
 
 export const metadata = {
-  title: 'Sign in — Vydex',
+  title: 'Sign in',
 }
 
 export default async function AuthPage() {
