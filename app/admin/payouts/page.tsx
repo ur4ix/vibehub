@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isStableCurrency } from '@/lib/nowpayments-payout'
 import { PayoutActions } from '@/components/payout-actions'
 import { PayoutCsvButton } from '@/components/payout-csv-button'
+import { PayoutRunButton } from '@/components/payout-run-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,7 @@ export default async function AdminPayoutsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <PayoutRunButton />
           <PayoutCsvButton rows={csvRows} />
           <div className="border-2 border-primary bg-card px-4 py-2 text-center">
             <div className="font-pixel text-sm text-primary">{money(owedTotal)}</div>

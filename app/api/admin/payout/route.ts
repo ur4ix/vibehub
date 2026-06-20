@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { payoutAuth, createPayout, verifyPayout, isStableCurrency } from '@/lib/nowpayments-payout'
+import { totp } from '@/lib/totp'
 
 // Pay a released escrow out to the seller. Admin only.
 //
@@ -95,6 +96,18 @@ export async function POST(req: NextRequest) {
         .from('purchases')
         .update({ payout_status: 'pending', payout_ref: batch.id })
         .eq('id', p.id)
+
+      // If a TOTP secret is configured, auto-generate the 2FA code and verify
+      // right away → one-click payout. Otherwise fall back to manual entry.
+      const secret = process.env.NOWPAYMENTS_TOTP_SECRET
+      if (secret) {
+        try {
+          await verifyPayout(token, batch.id, totp(secret))
+          return finalizePaid(admin, { ...p, payout_ref: batch.id }, batch.id, netCents)
+        } catch (e) {
+          return NextResponse.json({ stage: 'created', batchId: batch.id, autoError: e instanceof Error ? e.message : 'verify failed' })
+        }
+      }
       return NextResponse.json({ stage: 'created', batchId: batch.id })
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : 'Payout failed' }, { status: 502 })

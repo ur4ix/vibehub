@@ -11,11 +11,32 @@
 // 1 token ≈ 1 USD (good enough for USDT/USDC). Non-stable currencies should be
 // paid manually since they need a live FX rate.
 
+import { ProxyAgent } from 'undici'
+
 const BASE = 'https://api.nowpayments.io/v1'
 
 export function isStableCurrency(currency: string): boolean {
   const c = currency.toLowerCase()
   return ['usdt', 'usdc', 'dai', 'busd'].some((p) => c.startsWith(p))
+}
+
+// NOWPayments requires the Payout API caller's IP to be whitelisted. Vercel's
+// egress IPs are dynamic, so we route payout calls through a static-IP proxy
+// (PAYOUT_PROXY_URL, e.g. QuotaGuard/Fixie) and whitelist that one IP.
+let cachedAgent: { url: string; agent: ProxyAgent } | null = null
+function dispatcher(): ProxyAgent | undefined {
+  const url = process.env.PAYOUT_PROXY_URL
+  if (!url) return undefined
+  if (cachedAgent?.url !== url) cachedAgent = { url, agent: new ProxyAgent(url) }
+  return cachedAgent.agent
+}
+
+// fetch that egresses through the static-IP proxy when configured.
+function pfetch(url: string, init: RequestInit): Promise<Response> {
+  const agent = dispatcher()
+  const opts = { ...init } as RequestInit & { dispatcher?: ProxyAgent }
+  if (agent) opts.dispatcher = agent
+  return fetch(url, opts as RequestInit)
 }
 
 export interface Withdrawal {
@@ -30,7 +51,7 @@ export async function payoutAuth(): Promise<string> {
   const password = process.env.NOWPAYMENTS_PASSWORD
   if (!email || !password) throw new Error('NOWPayments payout credentials are not configured')
 
-  const res = await fetch(`${BASE}/auth`, {
+  const res = await pfetch(`${BASE}/auth`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -49,7 +70,7 @@ export async function createPayout(
   const key = process.env.NOWPAYMENTS_API_KEY
   if (!key) throw new Error('NOWPAYMENTS_API_KEY is not configured')
 
-  const res = await fetch(`${BASE}/payout`, {
+  const res = await pfetch(`${BASE}/payout`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'x-api-key': key, 'content-type': 'application/json' },
     body: JSON.stringify({ ipn_callback_url: ipnCallbackUrl, withdrawals }),
@@ -64,7 +85,7 @@ export async function verifyPayout(token: string, batchId: string, code: string)
   const key = process.env.NOWPAYMENTS_API_KEY
   if (!key) throw new Error('NOWPAYMENTS_API_KEY is not configured')
 
-  const res = await fetch(`${BASE}/payout/${batchId}/verify`, {
+  const res = await pfetch(`${BASE}/payout/${batchId}/verify`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'x-api-key': key, 'content-type': 'application/json' },
     body: JSON.stringify({ verification_code: code }),

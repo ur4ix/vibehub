@@ -45,14 +45,20 @@ export function PayoutActions({
     reset(); router.refresh()
   }
 
-  // Step 1: create the batch → NOWPayments emails the code.
+  // Step 1: create the batch. If a TOTP secret is configured server-side, the
+  // API auto-verifies and returns paid in one click; otherwise we collect the
+  // emailed 2FA code in step 2.
   async function createBatch() {
     if (busy) return
     setBusy(true)
     const { ok, json } = await call({ mode: 'nowpayments', action: 'create' })
     setBusy(false)
     if (!ok) return toast.error('Failed', String(json.error ?? 'Try again.'))
-    toast.success('Batch created', 'NOWPayments emailed a 2FA code — enter it.')
+    if (json.ok) {
+      toast.success('Paid', json.ref ? `Batch ${json.ref}` : undefined)
+      reset(); router.refresh(); return
+    }
+    toast.success('Batch created', json.autoError ? 'Auto 2FA failed — enter code manually.' : 'Enter the 2FA code from email.')
     setOpen('verify')
     router.refresh()
   }
