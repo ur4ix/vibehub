@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isStableCurrency } from '@/lib/nowpayments-payout'
 import { PayoutActions } from '@/components/payout-actions'
+import { PayoutCsvButton } from '@/components/payout-csv-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +62,11 @@ export default async function AdminPayoutsPage() {
   })
   const owedTotal = groups.reduce((a, g) => a + g.total, 0)
 
+  // One CSV row per seller that has a wallet (net USD; NOWPayments converts).
+  const csvRows = groups
+    .filter((g) => g.seller?.address && g.seller?.currency)
+    .map((g) => ({ ticker: g.seller!.currency!, address: g.seller!.address!, amount: g.total / 100 }))
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -69,8 +75,12 @@ export default async function AdminPayoutsPage() {
           <p className="mt-2 font-mono text-xs text-muted-foreground">
             Released sales owed to sellers. Net of the platform fee.
           </p>
+          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+            Export the CSV, upload it in NOWPayments from your whitelisted IP, then mark rows paid.
+          </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <PayoutCsvButton rows={csvRows} />
           <div className="border-2 border-primary bg-card px-4 py-2 text-center">
             <div className="font-pixel text-sm text-primary">{money(owedTotal)}</div>
             <div className="mt-1 font-mono text-[9px] uppercase text-muted-foreground">owed</div>
