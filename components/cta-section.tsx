@@ -14,8 +14,9 @@ export function CtaSection() {
   }
 
   return (
-    <section className="border-b-2 border-border">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <section className="relative border-b-2 border-border">
+      <div className="pixel-grid absolute inset-0 opacity-30" aria-hidden="true" />
+      <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="scanlines relative overflow-hidden border-2 border-primary bg-card p-8 text-center pixel-shadow sm:p-14">
           <div className="relative">
             <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
