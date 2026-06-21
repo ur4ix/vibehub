@@ -3,6 +3,7 @@ import { Hero } from '@/components/hero'
 import { BuiltWith } from '@/components/built-with'
 import { Catalog } from '@/components/catalog'
 import { HowItWorks } from '@/components/how-it-works'
+import { ForSellers } from '@/components/for-sellers'
 import { CtaSection } from '@/components/cta-section'
 import { SiteFooter } from '@/components/site-footer'
 
@@ -15,6 +16,7 @@ export default function HomePage() {
         <BuiltWith />
         <Catalog />
         <HowItWorks />
+        <ForSellers />
         <CtaSection />
       </main>
       <SiteFooter />
