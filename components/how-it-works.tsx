@@ -18,7 +18,8 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how">
+    <section id="how" className="relative border-b-2 border-border">
+      <div className="pixel-grid absolute inset-0 opacity-30" aria-hidden="true" />
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">

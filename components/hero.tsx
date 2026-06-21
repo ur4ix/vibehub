@@ -7,7 +7,8 @@ export function Hero() {
   const router = useRouter()
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden border-b-2 border-border">
+      <div className="pixel-grid absolute inset-0 opacity-60" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">

@@ -45,7 +45,8 @@ const PERKS = [
 
 export function ForSellers() {
   return (
-    <section id="sellers">
+    <section id="sellers" className="relative border-b-2 border-border">
+      <div className="pixel-grid absolute inset-0 opacity-20" aria-hidden="true" />
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">

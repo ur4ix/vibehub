@@ -94,7 +94,7 @@ function BrandRow({ ariaHidden }: { ariaHidden?: boolean }) {
 
 export function BuiltWith() {
   return (
-    <section className="py-10" aria-label="Built with">
+    <section className="border-y-2 border-border bg-card/30 py-10" aria-label="Built with">
       <p className="mb-7 text-center font-pixel text-[8px] uppercase tracking-wider text-primary">
         {'// Built with'}
       </p>
