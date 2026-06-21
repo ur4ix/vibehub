@@ -1,11 +1,16 @@
 ﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { PixelButton } from '@/components/pixel-button'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
+
+// Public hCaptcha site key (safe in the client). When unset (e.g. local dev with
+// captcha disabled in Supabase), the widget is skipped and auth still works.
+const HCAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY
 
 export function AuthCard() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -15,9 +20,17 @@ export function AuthCard() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const captchaRef = useRef<HCaptcha>(null)
 
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // hCaptcha tokens are single-use — clear after every auth attempt.
+  function resetCaptcha() {
+    setCaptchaToken(null)
+    captchaRef.current?.resetCaptcha()
+  }
 
   // Pre-fill email from CTA form
   useEffect(() => {
@@ -47,10 +60,20 @@ export function AuthCard() {
     setError(null)
     setMessage(null)
 
+    if (HCAPTCHA_SITEKEY && !captchaToken) {
+      setError('Please complete the captcha.')
+      setIsLoading(false)
+      return
+    }
+
     const supabase = createClient()
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken: captchaToken ?? undefined },
+      })
       if (error) {
         setError(
           error.message === 'Invalid login credentials'
@@ -58,6 +81,7 @@ export function AuthCard() {
             : error.message
         )
         setIsLoading(false)
+        resetCaptcha()
         return
       }
       router.push('/dashboard')
@@ -67,6 +91,7 @@ export function AuthCard() {
       if (containsBanned(desiredUsername)) {
         setError(BANNED_MESSAGE)
         setIsLoading(false)
+        resetCaptcha()
         return
       }
       const { error } = await supabase.auth.signUp({
@@ -75,9 +100,11 @@ export function AuthCard() {
         options: {
           emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard`,
           data: { username: desiredUsername },
+          captchaToken: captchaToken ?? undefined,
         },
       })
       setIsLoading(false)
+      resetCaptcha()
       if (error) { setError(error.message); return }
       setMessage('Confirmation email sent. Check your inbox.')
     }
@@ -201,6 +228,19 @@ export function AuthCard() {
               className="border-2 border-input bg-background px-4 py-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
             />
           </div>
+
+          {HCAPTCHA_SITEKEY && (
+            <div className="flex justify-center">
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={HCAPTCHA_SITEKEY}
+                theme="dark"
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                onError={() => setCaptchaToken(null)}
+              />
+            </div>
+          )}
 
           {error && (
             <p role="alert" className="font-mono text-xs text-destructive">
