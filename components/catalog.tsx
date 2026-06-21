@@ -1,29 +1,29 @@
 import Link from 'next/link'
 
-const CATEGORIES = [
+const SECTIONS = [
   {
     icon: '▢',
-    title: 'Apps',
-    cat: 'apps',
-    desc: 'Ready-made SaaS, bots and microservices. Deploy in minutes.',
+    title: 'Explore',
+    href: '/explore',
+    desc: 'Buy and sell apps, components, prompts and templates.',
   },
   {
     icon: '◧',
-    title: 'UI Components',
-    cat: 'ui-components',
-    desc: 'Buttons, dashboards, forms. Copy — paste — ship.',
+    title: 'Startups',
+    href: '/startups',
+    desc: 'Discover startups and meet founders and investors.',
   },
   {
     icon: '☰',
-    title: 'Prompts',
-    cat: 'prompts',
-    desc: 'Tested system prompts and agent chains that actually work.',
+    title: 'Hiring',
+    href: '/hire',
+    desc: 'Find vibe coders for your project, or post a job.',
   },
   {
     icon: '▦',
-    title: 'Templates',
-    cat: 'templates',
-    desc: 'Starters for Next.js, Vite and more. Backend included.',
+    title: 'Orders',
+    href: '/orders',
+    desc: 'Commission a custom build from the community.',
   },
 ]
 
@@ -36,19 +36,19 @@ export function Catalog() {
             {'// catalog'}
           </span>
           <h2 className="mt-5 text-balance font-pixel text-xl leading-[1.5] sm:text-2xl sm:leading-[1.5]">
-            Everything you need to build on vibes
+            Everything Vydex does, in one place
           </h2>
           <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
-            Four categories, one bar for quality. Every item passes community
-            review — no junk.
+            Browse the marketplace, find startups, hire builders or order a custom
+            build. Looking around is free — you only sign in to act.
           </p>
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CATEGORIES.map((c) => (
+          {SECTIONS.map((c) => (
             <Link
               key={c.title}
-              href={`/explore?cat=${c.cat}`}
+              href={c.href}
               className="group block border-2 border-border bg-card p-6 transition-all duration-100 hover:-translate-x-1 hover:-translate-y-1 hover:border-primary pixel-shadow-border"
             >
               <span
@@ -60,7 +60,7 @@ export function Catalog() {
               <h3 className="mt-5 font-pixel text-xs leading-relaxed">{c.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{c.desc}</p>
               <p className="mt-5 font-mono text-xs text-primary transition-transform group-hover:translate-x-1">
-                Explore →
+                Open →
               </p>
             </Link>
           ))}

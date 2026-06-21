@@ -12,9 +12,10 @@ import { createClient } from '@/lib/supabase/client'
 import { openChat } from '@/lib/chat-bus'
 import type { Notification } from '@/types/database'
 
+// Guests get an all-anchor landing nav (consistent scroll behaviour); the
+// actual sections (Explore, Startups, Hiring, Orders) live in the #catalog hub.
 const UNAUTH_NAV = [
-  { label: 'Explore', href: '/explore' },
-  { label: 'Startups', href: '/startups' },
+  { label: 'Catalog', href: '/#catalog' },
   { label: 'How it works', href: '/#how' },
   { label: 'For sellers', href: '/#sellers' },
 ]
