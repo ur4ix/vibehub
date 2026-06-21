@@ -214,7 +214,10 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b-2 border-border bg-background/90 backdrop-blur">
+      <header
+        className="sticky top-0 z-50 border-b-2 border-border bg-background/90 backdrop-blur"
+        style={{ viewTransitionName: 'site-header' }}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3" aria-label="Vydex — home">

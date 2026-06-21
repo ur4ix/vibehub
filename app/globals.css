@@ -197,6 +197,18 @@
     animation-duration: 0.4s;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* Anchor the sticky header: keep it out of the root crossfade so it doesn't
+     flicker/disappear during navigation (incl. anchor jumps from other pages). */
+  ::view-transition-group(site-header) {
+    animation: none;
+    z-index: 100;
+  }
+  ::view-transition-old(site-header) {
+    display: none;
+  }
+  ::view-transition-new(site-header) {
+    animation: none;
+  }
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(*),
     ::view-transition-new(*),
