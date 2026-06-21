@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Recursively sort object keys — NOWPayments signs the key-sorted JSON.
@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
   }
 
   const expected = createHmac('sha512', IPN).update(JSON.stringify(sortKeys(body))).digest('hex')
-  if (!sig || sig !== expected) {
+  const sigBuf = Buffer.from(sig ?? '', 'hex')
+  const expBuf = Buffer.from(expected, 'hex')
+  if (!sig || sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 403 })
   }
 

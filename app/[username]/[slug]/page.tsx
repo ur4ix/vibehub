@@ -90,7 +90,11 @@ export default async function RepoBySlugPage({ params }: PageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script
+        type="application/ld+json"
+        // Escape `<` so a title/description containing `</script>` can't break out.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <ListingView id={repo.id} />
     </>
   )

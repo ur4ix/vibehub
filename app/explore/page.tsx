@@ -169,7 +169,10 @@ function ExploreContent() {
       if (pricing === 'free') query = query.eq('type', 'free')
       if (pricing === 'paid') query = query.eq('type', 'paid')
       if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+        // Neutralize PostgREST filter syntax so search text can't inject extra
+        // conditions into the .or() string.
+        const q = searchQuery.replace(/[,()*:%\\]/g, ' ').trim()
+        if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
       }
       if (sort === 'popular') {
         query = query.order('reaction_count', { ascending: false })
