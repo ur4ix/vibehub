@@ -25,6 +25,9 @@ export function PixelAvatar({ username, avatarColor, size = 32, className, image
 
   if (imageUrl) {
     return (
+      // Avatar URLs are arbitrary (uploads or OAuth providers) and tiny, so
+      // next/image (domain allow-list) isn't worth the breakage risk here.
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageUrl}
         alt={username}

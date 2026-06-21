@@ -28,6 +28,16 @@ const AUTH_NAV = [
   { label: 'Dashboard', href: '/dashboard' },
 ]
 
+// Relative timestamp for notifications. Module-level (pure helper, not recreated
+// per render). Reads the clock when called — fine for a transient dropdown.
+function timeAgo(iso: string) {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
+}
+
 // ─── Notification Bell ────────────────────────────────────────────────────────
 
 function NotificationBell() {
@@ -94,13 +104,6 @@ function NotificationBell() {
     if (n.actor_username) openChat(n.actor_username)
   }
 
-  function timeAgo(iso: string) {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-    if (diff < 60) return 'just now'
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-    return `${Math.floor(diff / 86400)}d ago`
-  }
 
   return (
     <div className="relative" ref={ref}>

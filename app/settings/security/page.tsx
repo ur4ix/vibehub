@@ -278,7 +278,9 @@ function TwoFactorSection() {
           </p>
           <div className="flex justify-center border-2 border-border bg-white p-4">
             {/* Supabase may return qr_code already as a data: URL, or as raw SVG
-                markup — handle both instead of double-wrapping (which broke it). */}
+                markup — handle both instead of double-wrapping (which broke it).
+                It's a data-URL QR code, so next/image can't optimize it anyway. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={
                 enrollData.qr_code.startsWith('data:')
