@@ -29,7 +29,7 @@ const SECTIONS = [
 
 export function Catalog() {
   return (
-    <section id="catalog" className="border-b-2 border-border">
+    <section id="catalog">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">
