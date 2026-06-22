@@ -8,9 +8,11 @@ import { PixelButton } from '@/components/pixel-button'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
 
-// Public hCaptcha site key (safe in the client). When unset (e.g. local dev with
-// captcha disabled in Supabase), the widget is skipped and auth still works.
-const HCAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY
+// Public hCaptcha site key (safe in the client — it's visible to everyone in the
+// page anyway). Env override wins; otherwise fall back to the configured key so
+// the widget always renders without depending on a build-time env var.
+const HCAPTCHA_SITEKEY =
+  process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY ?? 'a84aec58-7ca4-458c-b722-a74edf9088e4'
 
 export function AuthCard() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
