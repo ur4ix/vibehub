@@ -120,7 +120,11 @@ export default async function DashboardPage() {
     for (const r of (tr as { id: string; title: string }[] | null) ?? []) saleRepoTitle.set(r.id, r.title)
   }
   const net = (s: SaleRow) => s.amount_cents - s.platform_fee_cents
+  // Funds still in escrow = held OR disputed (a dispute doesn't make them vanish,
+  // it just freezes them pending a moderator decision).
   const heldTotal = saleRows.filter((s) => s.escrow_status === 'held').reduce((a, s) => a + net(s), 0)
+  const disputedTotal = saleRows.filter((s) => s.escrow_status === 'disputed').reduce((a, s) => a + net(s), 0)
+  const inEscrowTotal = heldTotal + disputedTotal
   const owed = saleRows.filter((s) => s.escrow_status === 'released' && s.payout_status !== 'paid')
   const owedTotal = owed.reduce((a, s) => a + net(s), 0)
   const paidTotal = saleRows.filter((s) => s.payout_status === 'paid').reduce((a, s) => a + net(s), 0)
@@ -176,8 +180,11 @@ export default async function DashboardPage() {
           {hasSales && (
             <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="border-2 border-border bg-card px-4 py-3">
-                <div className="font-pixel text-sm text-amber-400">{money(heldTotal)}</div>
+                <div className="font-pixel text-sm text-amber-400">{money(inEscrowTotal)}</div>
                 <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">in escrow</div>
+                {disputedTotal > 0 && (
+                  <div className="mt-1 font-mono text-[9px] text-amber-400/80">incl. {money(disputedTotal)} in dispute</div>
+                )}
               </div>
               <div className="border-2 border-primary bg-card px-4 py-3">
                 <div className="font-pixel text-sm text-primary">{money(owedTotal)}</div>
