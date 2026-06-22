@@ -78,9 +78,9 @@ export function SiteFooter() {
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               A marketplace built by vibe coders, for vibe coders.
             </p>
-            {SOCIALS.length > 0 && (
+            {SOCIALS.some((s) => s.href) && (
               <div className="mt-6 flex items-center gap-3">
-                {SOCIALS.map((s) => (
+                {SOCIALS.filter((s) => s.href).map((s) => (
                   <a
                     key={s.label}
                     href={s.href}
