@@ -5,4 +5,4 @@ export const SITE_NAME = 'Vydex'
 export const SITE_TAGLINE = 'marketplace for vibe coders'
 export const SITE_DESCRIPTION =
   'Buy and sell apps, components, prompts and templates. Everything you built on vibes — now earns money.'
-export const TWITTER_HANDLE = '@ur4ix'
+export const TWITTER_HANDLE = '@VydeXdev'

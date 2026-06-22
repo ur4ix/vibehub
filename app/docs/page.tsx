@@ -37,6 +37,7 @@ const SECTIONS = [
       { title: 'Purchasing a repository', slug: 'purchasing' },
       { title: 'Downloading source code', slug: 'downloading' },
       { title: 'Refund policy', slug: 'refunds' },
+      { title: 'Review rules', slug: 'review-rules' },
     ],
   },
   {

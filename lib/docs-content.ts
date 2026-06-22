@@ -214,6 +214,22 @@ A **moderator** reviews it and decides: release the funds to the seller, or refu
 Digital goods can't be "returned" once downloaded, so be honest in disputes — and sellers, describe your work accurately to avoid them. See our full [Terms](/terms).`,
   },
 
+  'review-rules': {
+    title: 'Review rules',
+    body: `Reviews are what make the marketplace trustworthy — so they're gated to keep them honest.
+
+## Who can review
+Only **verified buyers**. You can review a repository once you've **purchased** it (free repos count once you've claimed them). It's **one review per purchase** — no spam, no brigading. This is enforced at the database level, not just the UI.
+
+## What's expected
+- Rate honestly, 1–5 stars, based on what you actually received.
+- Keep it civil and on-topic — a content filter blocks abusive language.
+- Reviews feed a seller's **reputation**, so they carry real weight.
+
+## For sellers
+You can't edit or delete a buyer's review. The way to earn great ones is an accurate listing, a working demo and a clear README. If a review genuinely breaks the rules, [contact a moderator](/contact).`,
+  },
+
   // ─── Account & security ──────────────────────────────────────────────────────
   '2fa': {
     title: 'Two-factor authentication',
