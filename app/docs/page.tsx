@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
+import { DocsSearch } from '@/components/docs-search'
 
 export const metadata: Metadata = {
   title: 'Docs',
@@ -94,14 +95,6 @@ export default function DocsPage() {
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
               Everything you need to publish, buy and manage repositories on the platform.
             </p>
-            {/* Search (decorative for now) */}
-            <div className="relative mt-8 max-w-lg">
-              <input
-                type="search"
-                placeholder="Search docs…"
-                className="w-full border-2 border-border bg-card py-3 pl-4 pr-4 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
           </div>
         </section>
 
@@ -130,33 +123,9 @@ export default function DocsPage() {
         {/* Article grid */}
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// all topics'}</span>
-          <h2 className="mt-5 font-pixel text-xl leading-[1.5]">Browse by topic</h2>
+          <h2 className="mt-5 mb-8 font-pixel text-xl leading-[1.5]">Browse by topic</h2>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {SECTIONS.map((s) => (
-              <div key={s.title} className="border-2 border-border bg-card p-6 pixel-shadow-border">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center border-2 border-border bg-secondary font-pixel text-base text-primary" aria-hidden="true">
-                    {s.icon}
-                  </span>
-                  <h3 className="font-pixel text-[11px] uppercase tracking-wider">{s.title}</h3>
-                </div>
-                <ul className="mt-5 space-y-2.5">
-                  {s.articles.map((a) => (
-                    <li key={a.slug}>
-                      <Link
-                        href={`/docs/${a.slug}`}
-                        className="flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors hover:text-primary"
-                      >
-                        <span className="font-pixel text-[10px] text-primary" aria-hidden="true">›</span>
-                        {a.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <DocsSearch sections={SECTIONS} />
         </section>
 
         {/* Need help? */}
