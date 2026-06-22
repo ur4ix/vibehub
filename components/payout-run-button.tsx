@@ -21,8 +21,13 @@ export function PayoutRunButton() {
       toast.info('Auto-payouts off', String(json.reason))
       return
     }
-    const errs = Array.isArray(json.errors) ? json.errors.length : 0
-    toast.success(`Paid ${json.paid ?? 0}`, `${json.skipped ?? 0} skipped · ${errs} errors`)
+    const errors: { id: string; error: string }[] = Array.isArray(json.errors) ? json.errors : []
+    if (errors.length > 0) {
+      // Surface the actual failure so payout issues are debuggable.
+      toast.error(`Payout failed (${errors.length})`, String(errors[0]?.error ?? 'unknown error'))
+    } else {
+      toast.success(`Paid ${json.paid ?? 0}`, `${json.skipped ?? 0} skipped`)
+    }
     router.refresh()
   }
 
