@@ -102,17 +102,32 @@ export function ProfileCard(props: ProfileCardProps) {
       setSaveError(BANNED_MESSAGE)
       return
     }
+    const nextUsername = (draft.username.trim() || username).toLowerCase()
+    // Mirror the DB constraint so users get a clear message, not a raw error.
+    if (!/^[a-z0-9_]{3,30}$/.test(nextUsername)) {
+      setSaveError('Username must be 3–30 characters — lowercase letters, digits and underscores only.')
+      return
+    }
     setSaving(true)
     setSaveError(null)
     const supabase = createClient()
-    const nextUsername = draft.username.trim() || username
     const { error } = await supabase.rpc('save_profile', {
       p_username: nextUsername,
       p_display_name: draft.displayName.trim() || null,
       p_bio: draft.bio.trim() || null,
     })
     setSaving(false)
-    if (error) { setSaveError(error.message); return }
+    if (error) {
+      const msg = error.message
+      setSaveError(
+        msg.includes('users_username_format')
+          ? 'Username must be 3–30 characters — lowercase letters, digits and underscores only.'
+          : /unique|duplicate|already exists/i.test(msg)
+            ? 'That username is already taken.'
+            : msg,
+      )
+      return
+    }
 
     setDisplayName(draft.displayName.trim() || null)
     setBio(draft.bio.trim() || null)
@@ -197,7 +212,7 @@ export function ProfileCard(props: ProfileCardProps) {
             </span>
           </div>
 
-          <Field label="Username" value={draft.username} onChange={(v) => setDraft((d) => ({ ...d, username: v }))} placeholder="username" />
+          <Field label="Username" value={draft.username} onChange={(v) => setDraft((d) => ({ ...d, username: v.toLowerCase().replace(/[^a-z0-9_]/g, '') }))} placeholder="username" />
           <Field label="Display name" value={draft.displayName} onChange={(v) => setDraft((d) => ({ ...d, displayName: v }))} placeholder="Your Name" />
 
           <div className="flex flex-col gap-2">
