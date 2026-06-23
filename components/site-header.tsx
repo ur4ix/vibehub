@@ -171,7 +171,9 @@ function NotificationBell() {
                         <div className="mt-1.5 flex items-center gap-2">
                           <p className="font-mono text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
                           {n.actor_username && (
-                            <span className="font-mono text-[10px] text-primary">· reply →</span>
+                            <span className="font-mono text-[10px] text-primary">
+                              · {REPLYABLE_TYPES.has(n.type) ? 'reply' : 'view profile'} →
+                            </span>
                           )}
                         </div>
                       </div>
