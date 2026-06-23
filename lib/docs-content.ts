@@ -340,14 +340,14 @@ The dashboard shows three numbers at a glance: what's **in escrow**, what's **re
     body: `Simple and flat — no listing fees, no monthly cost.
 
 ## The numbers
-- **First 30 days: 0% fee.** Everything you sell in your first month is yours.
-- **After that: a flat 10%.** You keep ~90% of every sale.
+- **Early Adopters — the first 100 accounts — pay 0% platform fee, for life.** You'll also wear the Early Adopter badge.
+- **Everyone else:** 0% for your first 30 days, then a flat **10%**. You keep ~90% of every sale.
 
-## What it covers
-Hosting, checkout, escrow, payouts, discovery and the trust layer that makes the marketplace work.
+## What our fee covers
+Hosting, checkout, escrow, payouts, discovery and the trust layer that makes the marketplace work. When our crypto processor takes its small cut, it comes **out of our fee, not on top of yours** — the platform fee you see is the one you pay.
 
-## Network fees
-Separately, every crypto transfer carries a small **blockchain network fee** (a few cents on low-fee networks). That's the chain's cost, not ours — it's why a few dollars is a sensible minimum price. See [Pricing your repository](/docs/pricing).`,
+## One cost that always applies: the network fee
+Crypto isn't free to move. Every payout carries a small **blockchain network fee** — usually just a few cents on low-fee networks like Tron or BNB Chain. That's the chain's cost, charged by the network itself, so it applies **even on a 0% platform fee**: a "0% fee" sale still nets you the price minus those few cents. It's also why a few dollars is a sensible minimum price. See [Pricing your repository](/docs/pricing).`,
   },
 
   // ─── API & integrations ──────────────────────────────────────────────────────

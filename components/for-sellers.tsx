@@ -60,6 +60,13 @@ export function ForSellers() {
           </p>
         </div>
 
+        <div className="mt-8 inline-flex flex-wrap items-center gap-x-3 gap-y-1 border-2 border-amber-400/50 bg-amber-400/5 px-4 py-3">
+          <span className="font-pixel text-[9px] uppercase tracking-wider text-amber-400">Early Adopter</span>
+          <span className="font-mono text-xs text-foreground">
+            First 100 sellers get the badge + <span className="text-amber-400">0% platform fee for life</span>.
+          </span>
+        </div>
+
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PERKS.map((p) => (
             <div
