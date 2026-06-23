@@ -40,8 +40,13 @@ function timeAgo(iso: string) {
 
 // ─── Notification Bell ────────────────────────────────────────────────────────
 
+// Types that warrant a written reply / human contact → clicking opens a chat.
+// Everything else (like, follow, fork, review…) just opens the actor's profile.
+const REPLYABLE_TYPES = new Set(['message', 'interest', 'bid', 'application'])
+
 function NotificationBell() {
   const { user } = useAuth()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const ref = useRef<HTMLDivElement>(null)
@@ -101,7 +106,12 @@ function NotificationBell() {
       const supabase = createClient()
       await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
     }
-    if (n.actor_username) openChat(n.actor_username)
+    if (!n.actor_username) return
+    if (REPLYABLE_TYPES.has(n.type)) {
+      openChat(n.actor_username)
+    } else {
+      router.push(`/u/${n.actor_username}`)
+    }
   }
 
 
