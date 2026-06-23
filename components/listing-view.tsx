@@ -46,6 +46,7 @@ interface RepoDetail {
   average_rating: number
   review_count: number
   purchase_count: number
+  view_count: number
   is_published: boolean
   published_at: string | null
   created_at: string
@@ -64,6 +65,7 @@ interface ReviewRow {
   rating: number
   comment: string | null
   created_at: string
+  verified_purchase: boolean
   reviewer: { username: string; avatar_url: string | null } | null
 }
 
@@ -158,6 +160,17 @@ export function ListingView({ id }: { id: string }) {
   const [deleting, setDeleting] = useState(false)
   const [buying, setBuying] = useState(false)
 
+  // Count a view — once per session per repo.
+  useEffect(() => {
+    if (!id) return
+    const key = `viewed:${id}`
+    try {
+      if (sessionStorage.getItem(key)) return
+      sessionStorage.setItem(key, '1')
+    } catch { return }
+    createClient().rpc('increment_repo_view', { p_repo: id })
+  }, [id])
+
   // Fetch all data
   useEffect(() => {
     if (!id) return
@@ -193,7 +206,7 @@ export function ListingView({ id }: { id: string }) {
       // Reviews (+ reviewer profiles, fetched separately for the same RLS reason)
       const { data: rvRaw } = await supabase
         .from('reviews')
-        .select('id, rating, comment, created_at, reviewer_id')
+        .select('id, rating, comment, created_at, verified_purchase, reviewer_id')
         .eq('repository_id', id)
         .order('created_at', { ascending: false })
         .limit(20)
@@ -215,6 +228,7 @@ export function ListingView({ id }: { id: string }) {
         rating: x.rating,
         comment: x.comment,
         created_at: x.created_at,
+        verified_purchase: x.verified_purchase,
         reviewer: reviewerMap.get(x.reviewer_id) ?? null,
       })))
 
@@ -405,7 +419,7 @@ export function ListingView({ id }: { id: string }) {
         rating,
         comment: comment.trim(),
       })
-      .select('id, rating, comment, created_at')
+      .select('id, rating, comment, created_at, verified_purchase')
       .single()
 
     setSubmitting(false)
@@ -415,7 +429,7 @@ export function ListingView({ id }: { id: string }) {
       return
     }
 
-    const inserted = data as { id: string; rating: number; comment: string | null; created_at: string }
+    const inserted = data as { id: string; rating: number; comment: string | null; created_at: string; verified_purchase: boolean }
     setReviews((prev) => [
       { ...inserted, reviewer: { username: user.username, avatar_url: user.avatarUrl } },
       ...prev,
@@ -647,7 +661,10 @@ export function ListingView({ id }: { id: string }) {
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />{likeCount} likes
+                    <Eye className="h-3 w-3" />{repo.view_count} views
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Heart className="h-3 w-3" />{likeCount} likes
                   </span>
                   <span className="flex items-center gap-1">
                     <GitFork className="h-3 w-3" />{repo.fork_count} forks
@@ -859,6 +876,15 @@ export function ListingView({ id }: { id: string }) {
                           <span className="font-mono text-xs text-foreground">
                             @{rv.reviewer?.username ?? 'anonymous'}
                           </span>
+                          {rv.verified_purchase ? (
+                            <span className="inline-flex items-center gap-1 border border-green-400/40 bg-green-400/10 px-1.5 py-0.5 font-pixel text-[7px] uppercase tracking-wider text-green-400">
+                              ✓ verified buyer
+                            </span>
+                          ) : (
+                            <span className="border border-border bg-secondary px-1.5 py-0.5 font-pixel text-[7px] uppercase tracking-wider text-muted-foreground">
+                              free copy
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <StarRating value={rv.rating} />

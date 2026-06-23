@@ -746,6 +746,7 @@ export type Database = {
           average_rating: number;
           review_count: number;
           purchase_count: number;
+          view_count: number;
           is_published: boolean;
           published_at: string | null;
           tags: string[];
@@ -784,6 +785,7 @@ export type Database = {
           average_rating?: number;
           review_count?: number;
           purchase_count?: number;
+          view_count?: number;
           is_published?: boolean;
           published_at?: string | null;
           tags?: string[];
@@ -816,6 +818,7 @@ export type Database = {
           average_rating?: number;
           review_count?: number;
           purchase_count?: number;
+          view_count?: number;
           is_published?: boolean;
           published_at?: string | null;
           tags?: string[];
@@ -843,6 +846,7 @@ export type Database = {
           reviewer_id: string;
           rating: number;
           comment: string | null;
+          verified_purchase: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -853,6 +857,7 @@ export type Database = {
           reviewer_id: string;
           rating: number;
           comment?: string | null;
+          verified_purchase?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -863,6 +868,7 @@ export type Database = {
           reviewer_id?: string;
           rating?: number;
           comment?: string | null;
+          verified_purchase?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -997,6 +1003,10 @@ export type Database = {
       claim_free_repo: {
         Args: { p_repository_id: string };
         Returns: string;
+      };
+      increment_repo_view: {
+        Args: { p_repo: string };
+        Returns: undefined;
       };
       expire_repository_chats: {
         Args: Record<PropertyKey, never>;
@@ -1159,6 +1169,7 @@ export interface Repository {
   average_rating: number
   review_count: number
   purchase_count: number
+  view_count: number
   is_published: boolean
   published_at: string | null
   tags: string[]
