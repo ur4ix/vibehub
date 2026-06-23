@@ -88,7 +88,7 @@ export function ForSellers() {
         <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <Link
             href="/upload"
-            className="font-pixel inline-flex items-center justify-center gap-2 border-2 px-6 py-4 text-[10px] uppercase leading-none tracking-wider border-primary bg-primary text-primary-foreground pixel-shadow-border transition-all duration-100 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
+            className="font-pixel inline-flex items-center justify-center gap-2 border-2 px-6 py-4 text-[10px] uppercase leading-none tracking-wider border-primary bg-primary text-primary-foreground pixel-shadow-border transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
           >
             Publish a project →
           </Link>
