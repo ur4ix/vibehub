@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/pixel-toast'
 
@@ -65,17 +66,20 @@ export function PayoutSettings({
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <select
-          value={cur}
-          onChange={(e) => { setCur(e.target.value); setDirty(true) }}
-          className="border-2 border-border bg-background px-3 py-2 font-mono text-xs text-foreground focus:border-primary focus:outline-none sm:w-56"
-        >
-          {CURRENCIES.map((c) => (
-            <option key={c.ticker} value={c.ticker}>
-              {c.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative sm:w-56">
+          <select
+            value={cur}
+            onChange={(e) => { setCur(e.target.value); setDirty(true) }}
+            className="w-full appearance-none border-2 border-border bg-background py-2 pl-3 pr-9 font-mono text-xs text-foreground focus:border-primary focus:outline-none"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.ticker} value={c.ticker}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        </div>
         <input
           value={addr}
           onChange={(e) => { setAddr(e.target.value); setDirty(true) }}
