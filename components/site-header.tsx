@@ -49,20 +49,44 @@ function NotificationBell() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
+  // actor_id → current username, so renames don't leave stale links.
+  const [actorNames, setActorNames] = useState<Record<string, string>>({})
   const ref = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  // The actor's current handle (resolved by id), falling back to the snapshot.
+  const actorHandle = (n: Notification): string | null =>
+    (n.actor_id ? actorNames[n.actor_id] : null) ?? n.actor_username ?? null
+
+  // New notification bodies are name-less; prepend the current @handle. Legacy
+  // bodies already start with '@', so show them as-is.
+  const bodyText = (n: Notification): string => {
+    const handle = actorHandle(n)
+    const body = n.body ?? ''
+    return handle && !body.startsWith('@') ? `@${handle} ${body}` : body
+  }
 
   const loadNotifications = useCallback(async () => {
     if (!user) return
     const supabase = createClient()
     const { data: rawNotifs } = await supabase
       .from('notifications')
-      .select('id, type, title, body, actor_username, is_read, created_at')
+      .select('id, type, title, body, actor_username, actor_id, is_read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20)
-    if (rawNotifs) setNotifications(rawNotifs as Notification[])
+    const notifs = (rawNotifs as Notification[] | null) ?? []
+    setNotifications(notifs)
+
+    // Resolve actors' CURRENT usernames so links survive renames.
+    const actorIds = [...new Set(notifs.map((n) => n.actor_id).filter((x): x is string => !!x))]
+    if (actorIds.length > 0) {
+      const { data: profs } = await supabase.from('profiles').select('id, username').in('id', actorIds)
+      const map: Record<string, string> = {}
+      for (const p of (profs as { id: string; username: string }[] | null) ?? []) map[p.id] = p.username
+      setActorNames(map)
+    }
   }, [user])
 
   // Live updates: subscribe to new notifications (RLS-filtered to me) + a slow
@@ -106,11 +130,12 @@ function NotificationBell() {
       const supabase = createClient()
       await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
     }
-    if (!n.actor_username) return
+    const handle = actorHandle(n)
+    if (!handle) return
     if (REPLYABLE_TYPES.has(n.type)) {
-      openChat(n.actor_username)
+      openChat(handle)
     } else {
-      router.push(`/u/${n.actor_username}`)
+      router.push(`/u/${handle}`)
     }
   }
 
@@ -167,10 +192,10 @@ function NotificationBell() {
                       {!n.is_read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-primary" />}
                       <div className={'min-w-0 ' + (!n.is_read ? '' : 'pl-[18px]')}>
                         <p className="font-pixel text-[9px] uppercase tracking-wider text-foreground">{n.title}</p>
-                        {n.body && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{n.body}</p>}
+                        {n.body && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{bodyText(n)}</p>}
                         <div className="mt-1.5 flex items-center gap-2">
                           <p className="font-mono text-[10px] text-muted-foreground/60">{timeAgo(n.created_at)}</p>
-                          {n.actor_username && (
+                          {actorHandle(n) && (
                             <span className="font-mono text-[10px] text-primary">
                               · {REPLYABLE_TYPES.has(n.type) ? 'reply' : 'view profile'} →
                             </span>
