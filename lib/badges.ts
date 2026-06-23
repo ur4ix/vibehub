@@ -19,17 +19,15 @@ export interface BadgeStats {
   publishedRepos: number
   followers: number
   reviewsWritten: number
+  earlyAdopter: boolean
 }
-
-// Joined on/before this date → Early Adopter.
-const EARLY_ADOPTER_CUTOFF = '2026-12-01'
 
 const EARNED: (BadgeDef & { earned: (s: BadgeStats) => boolean })[] = [
   {
     key: 'early-adopter', label: 'Early Adopter',
-    description: 'Joined Vydex in its first season.',
+    description: 'One of the first 100 on Vydex — 0% platform fee for life.',
     className: 'border-amber-400/50 bg-amber-400/10 text-amber-400',
-    earned: (s) => new Date(s.createdAt) <= new Date(EARLY_ADOPTER_CUTOFF),
+    earned: (s) => s.earlyAdopter,
   },
   {
     key: 'creator', label: 'Creator',

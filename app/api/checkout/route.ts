@@ -43,18 +43,19 @@ export async function POST(req: NextRequest) {
   // Reuse a pending purchase or create one.
   let purchaseId = ex?.id ?? null
   if (!purchaseId) {
-    // First-month-free: a seller pays 0% platform fee for their first 30 days
-    // (matches the "0% your first month" promise across the site).
+    // Fee waivers: Early Adopters (first 100 accounts) pay 0% for life; everyone
+    // else gets 0% for their first 30 days, then the flat platform fee.
     const { data: sellerRaw } = await supabase
       .from('profiles')
-      .select('created_at')
+      .select('created_at, early_adopter')
       .eq('id', repo.owner_id)
       .maybeSingle()
-    const sellerCreatedAt = (sellerRaw as { created_at: string } | null)?.created_at
-    const inFirstMonth = sellerCreatedAt
-      ? Date.now() - new Date(sellerCreatedAt).getTime() < 30 * 86_400_000
+    const seller = sellerRaw as { created_at: string; early_adopter: boolean } | null
+    const isEarlyAdopter = seller?.early_adopter === true
+    const inFirstMonth = seller?.created_at
+      ? Date.now() - new Date(seller.created_at).getTime() < 30 * 86_400_000
       : false
-    const feeCents = inFirstMonth ? 0 : Math.round(repo.price_cents * PLATFORM_FEE)
+    const feeCents = isEarlyAdopter || inFirstMonth ? 0 : Math.round(repo.price_cents * PLATFORM_FEE)
 
     const { data: ins, error } = await supabase
       .from('purchases')

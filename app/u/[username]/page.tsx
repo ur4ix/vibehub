@@ -22,13 +22,14 @@ interface PublicProfile {
   created_at: string
   github_username: string | null
   x_username: string | null
+  early_adopter: boolean
 }
 
 async function getProfileRow(username: string) {
   const supabase = await createClient()
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url, bio, reputation, created_at, github_username, x_username')
+    .select('id, username, display_name, avatar_url, bio, reputation, created_at, github_username, x_username, early_adopter')
     .eq('username', username)
     .maybeSingle()
   return data as PublicProfile | null
@@ -91,6 +92,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     publishedRepos: publishedCount,
     followers: followers ?? 0,
     reviewsWritten: reviewsWritten ?? 0,
+    earlyAdopter: profile.early_adopter,
   })
   const manual = manualBadges(((badgeRows as { badge: string }[] | null) ?? []).map((b) => b.badge))
   const badges = [...manual, ...earned]

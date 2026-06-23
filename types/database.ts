@@ -902,6 +902,7 @@ export type Database = {
           x_username: string | null;
           payout_address: string | null;
           payout_currency: string | null;
+          early_adopter: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -919,6 +920,7 @@ export type Database = {
           x_username?: string | null;
           payout_address?: string | null;
           payout_currency?: string | null;
+          early_adopter?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -936,6 +938,7 @@ export type Database = {
           x_username?: string | null;
           payout_address?: string | null;
           payout_currency?: string | null;
+          early_adopter?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -951,6 +954,9 @@ export type Database = {
           avatar_url: string | null;
           bio: string | null;
           reputation: number;
+          github_username: string | null;
+          x_username: string | null;
+          early_adopter: boolean;
           created_at: string;
         };
         Relationships: [];
@@ -1187,6 +1193,7 @@ export interface Profile {
   x_username: string | null
   payout_address: string | null
   payout_currency: string | null
+  early_adopter: boolean
   created_at: string
 }
 
