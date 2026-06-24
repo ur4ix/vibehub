@@ -225,12 +225,20 @@ function ExploreContent() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         {/* Heading */}
-        <div className="mb-8">
-          <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// explore'}</span>
-          <h1 className="mt-3 font-pixel text-xl">Browse repositories</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Discover apps, components, prompts and templates built by the vibe coding community.
-          </p>
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// explore'}</span>
+            <h1 className="mt-3 font-pixel text-xl">Browse repositories</h1>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Discover apps, components, prompts and templates built by the vibe coding community.
+            </p>
+          </div>
+          <Link
+            href="/upload"
+            className="font-pixel inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-[10px] uppercase leading-none tracking-wider border-primary bg-primary text-primary-foreground pixel-shadow-border transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
+          >
+            + Publish
+          </Link>
         </div>
 
         {/* Search + filters */}
@@ -251,7 +259,7 @@ function ExploreContent() {
           </div>
 
           {/* Filter rows */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3">
             {/* Category pills */}
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (

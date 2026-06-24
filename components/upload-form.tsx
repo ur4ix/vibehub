@@ -596,7 +596,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             </span>
             <Input
               id="slug"
-              className="pl-[5.5rem]"
+              className="pl-[6.5rem]"
               placeholder="my-awesome-vibe"
               value={slug}
               onChange={(e) => {

@@ -227,12 +227,14 @@ export default async function DashboardPage() {
 
         {/* Purchased (your library) */}
         <div className="mb-12">
-          <h2 className="mb-5 font-pixel text-xs uppercase tracking-wider">Purchased</h2>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="font-pixel text-xs uppercase tracking-wider">Purchased</h2>
+            <Link href="/explore" className="font-mono text-xs text-primary hover:underline">Browse →</Link>
+          </div>
           {purchases.length === 0 ? (
-            <p className="font-mono text-sm text-muted-foreground">
-              Nothing purchased yet.{' '}
-              <Link href="/explore" className="text-primary hover:underline">Browse Explore</Link>
-            </p>
+            <div className="border-2 border-dashed border-border p-10 text-center">
+              <p className="font-mono text-sm text-muted-foreground">Nothing purchased yet.</p>
+            </div>
           ) : (
             <div className="flex flex-col gap-3">
               {purchases.map((p) => {
@@ -257,16 +259,14 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <h2 className="font-pixel text-xs uppercase tracking-wider mb-5">Repositories</h2>
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-pixel text-xs uppercase tracking-wider">Repositories</h2>
+          <Link href="/upload" className="font-mono text-xs text-primary hover:underline">+ Publish</Link>
+        </div>
 
         {!repos || repos.length === 0 ? (
-          <div className="border-2 border-border border-dashed p-10 text-center">
-            <p className="font-mono text-sm text-muted-foreground">
-              No repositories yet.{' '}
-              <Link href="/upload" className="text-primary hover:underline">
-                Publish your first project
-              </Link>
-            </p>
+          <div className="border-2 border-dashed border-border p-10 text-center">
+            <p className="font-mono text-sm text-muted-foreground">No repositories yet.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -297,7 +297,9 @@ export default async function DashboardPage() {
           <Link href="/hire/new" className="font-mono text-xs text-primary hover:underline">+ Post a job</Link>
         </div>
         {!jobs || jobs.length === 0 ? (
-          <p className="mt-4 font-mono text-sm text-muted-foreground">No jobs posted yet.</p>
+          <div className="mt-4 border-2 border-dashed border-border p-10 text-center">
+            <p className="font-mono text-sm text-muted-foreground">No jobs posted yet.</p>
+          </div>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {jobs.map((j) => (
@@ -320,7 +322,9 @@ export default async function DashboardPage() {
           <Link href="/orders/new" className="font-mono text-xs text-primary hover:underline">+ Create order</Link>
         </div>
         {!orders || orders.length === 0 ? (
-          <p className="mt-4 font-mono text-sm text-muted-foreground">No orders posted yet.</p>
+          <div className="mt-4 border-2 border-dashed border-border p-10 text-center">
+            <p className="font-mono text-sm text-muted-foreground">No orders posted yet.</p>
+          </div>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {orders.map((o) => (
