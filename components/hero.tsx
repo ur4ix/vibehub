@@ -49,7 +49,7 @@ export function Hero() {
             </span>
             <span className="hidden text-border sm:inline" aria-hidden="true">|</span>
             <span>
-              <span className="text-primary">Scanned</span> &amp; reviewed
+              <span className="text-primary">Scanned</span>{' '}&amp;{' '}reviewed
             </span>
           </div>
         </div>
