@@ -155,7 +155,7 @@ export function ProfileBody({
           <h2 className="mt-10 font-pixel text-xs uppercase tracking-wider">Jobs</h2>
           <div className="mt-5 flex flex-col gap-3">
             {jobs.map((j) => (
-              <Link key={j.id} href={`/hire/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+              <Link key={j.id} href={`/hiring/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
                 <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>

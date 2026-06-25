@@ -334,7 +334,7 @@ export function ProfileCard(props: ProfileCardProps) {
             <Shield className="h-3 w-3" />
             Security settings
           </Link>
-          <PixelButton className="mt-3 w-full" onClick={() => router.push('/upload')}>+ New repository</PixelButton>
+          <PixelButton className="mt-3 w-full" onClick={() => router.push('/explore/new')}>+ New repository</PixelButton>
         </>
       ) : (
         <>

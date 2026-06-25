@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const PROTECTED = ["/dashboard", "/upload", "/profile", "/settings"]
+  const PROTECTED = ["/dashboard", "/explore/new", "/profile", "/settings"]
   const needsAuth = PROTECTED.some((p) => pathname.startsWith(p))
 
   if (!isAuthenticated && needsAuth) {
@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/upload/:path*",
+    "/explore/new/:path*",
     "/profile/:path*",
     "/settings/:path*",
     "/auth",

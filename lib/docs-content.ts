@@ -54,7 +54,7 @@ Once you're in, head to [Publishing your first project](/docs/first-project).`,
 Zip your project into a single \`.zip\` file. See [Uploading a ZIP archive](/docs/zip-upload) for what to include and exclude.
 
 ## 2. Add the details
-On the [upload page](/upload), fill in:
+On the [upload page](/explore/new), fill in:
 - **Title & description** — what it is and what it does.
 - **Category & tags** — so buyers can find it.
 - **Preview** — a screenshot gallery and a live demo link go a long way.

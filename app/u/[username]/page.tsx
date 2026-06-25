@@ -156,7 +156,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
               isOwner ? (
                 <p className="font-mono text-sm text-muted-foreground">
                   No repositories yet.{' '}
-                  <Link href="/upload" className="text-primary hover:underline">Publish your first project</Link>
+                  <Link href="/explore/new" className="text-primary hover:underline">Publish your first project</Link>
                 </p>
               ) : (
                 <p className="font-mono text-sm text-muted-foreground">No published projects yet.</p>

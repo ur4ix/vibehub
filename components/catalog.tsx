@@ -16,7 +16,7 @@ const SECTIONS = [
   {
     icon: '☰',
     title: 'Hiring',
-    href: '/hire',
+    href: '/hiring',
     desc: 'Find vibe coders for your project, or post a job.',
   },
   {

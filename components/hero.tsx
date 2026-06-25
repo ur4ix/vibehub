@@ -34,7 +34,7 @@ export function Hero() {
             }}>
               Browse catalog
             </PixelButton>
-            <PixelButton variant="outline" onClick={() => router.push('/upload')}>
+            <PixelButton variant="outline" onClick={() => router.push('/explore/new')}>
               Sell your project
             </PixelButton>
           </div>

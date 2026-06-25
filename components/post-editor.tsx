@@ -184,7 +184,7 @@ export function PostEditor({ slug }: PostEditorProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6">
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/blog" className="hover:text-primary">blog</Link>
           {' / '}

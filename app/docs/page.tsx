@@ -75,8 +75,8 @@ const SECTIONS = [
 
 const QUICKSTART = [
   { step: '01', title: 'Create account', desc: 'Sign up with GitHub or email in under a minute.', href: '/auth' },
-  { step: '02', title: 'Upload your code', desc: 'Pack your project as a ZIP and fill in the details.', href: '/upload' },
-  { step: '03', title: 'Set your price', desc: 'Free or paid — you decide. We take 0% the first month.', href: '/upload' },
+  { step: '02', title: 'Upload your code', desc: 'Pack your project as a ZIP and fill in the details.', href: '/explore/new' },
+  { step: '03', title: 'Set your price', desc: 'Free or paid — you decide. We take 0% the first month.', href: '/explore/new' },
   { step: '04', title: 'Go live', desc: 'Hit publish. Your listing is immediately visible to the community.', href: '/explore' },
 ]
 

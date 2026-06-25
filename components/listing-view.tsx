@@ -523,7 +523,7 @@ export function ListingView({ id }: { id: string }) {
 
     setForking(false)
     toast.success('Forked!', 'A draft copy was added to your projects.')
-    router.push(`/upload?edit=${newId}`)
+    router.push(`/explore/new?edit=${newId}`)
   }
 
   async function handleDelete() {
@@ -997,7 +997,7 @@ export function ListingView({ id }: { id: string }) {
                 )}
 
                 {isOwner && (
-                  <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/upload?edit=${repo.id}`)}>
+                  <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/explore/new?edit=${repo.id}`)}>
                     Edit listing
                   </PixelButton>
                 )}

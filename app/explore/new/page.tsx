@@ -29,9 +29,9 @@ export default async function UploadPage({
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
-          <Link href="/dashboard" className="hover:text-primary">dashboard</Link>
+          <Link href="/explore" className="hover:text-primary">explore</Link>
           {' / '}
-          <span className="text-foreground">publish</span>
+          <span className="text-foreground">new</span>
         </nav>
 
         <div className="mb-8">

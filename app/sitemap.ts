@@ -6,7 +6,7 @@ import { SITE_URL } from '@/lib/site'
 export const revalidate = 3600
 
 const STATIC_PATHS = [
-  '', '/explore', '/hire', '/orders', '/startups',
+  '', '/explore', '/hiring', '/orders', '/startups',
   '/blog', '/about', '/docs', '/contact', '/terms', '/privacy',
 ]
 

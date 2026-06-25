@@ -149,7 +149,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <Link
-            href="/upload"
+            href="/explore/new"
             className="font-pixel inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-[10px] uppercase leading-none tracking-wider border-primary bg-primary text-primary-foreground pixel-shadow-border transition-all duration-100 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
           >
             + Publish
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
 
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-pixel text-xs uppercase tracking-wider">Repositories</h2>
-          <Link href="/upload" className="font-mono text-xs text-primary hover:underline">+ Publish</Link>
+          <Link href="/explore/new" className="font-mono text-xs text-primary hover:underline">+ Publish</Link>
         </div>
 
         {!repos || repos.length === 0 ? (
@@ -294,7 +294,7 @@ export default async function DashboardPage() {
         {/* Jobs */}
         <div className="mt-12 flex items-center justify-between">
           <h2 className="font-pixel text-xs uppercase tracking-wider">Jobs</h2>
-          <Link href="/hire/new" className="font-mono text-xs text-primary hover:underline">+ Post a job</Link>
+          <Link href="/hiring/new" className="font-mono text-xs text-primary hover:underline">+ Post a job</Link>
         </div>
         {!jobs || jobs.length === 0 ? (
           <div className="mt-4 border-2 border-dashed border-border p-10 text-center">
@@ -303,7 +303,7 @@ export default async function DashboardPage() {
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {jobs.map((j) => (
-              <Link key={j.id} href={`/hire/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
+              <Link key={j.id} href={`/hiring/${j.id}`} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-4 transition-colors hover:border-primary">
                 <p className="min-w-0 truncate font-mono text-sm text-foreground">{j.title}</p>
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="font-pixel text-[9px] text-green-400">{jobBudget(j.budget_type, j.budget_value)}</span>

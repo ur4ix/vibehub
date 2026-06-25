@@ -96,7 +96,7 @@ export default function HirePage() {
               Find vibe coders for your project — fixed price, equity, or hourly.
             </p>
           </div>
-          <PixelButton className="shrink-0 px-5 py-2.5" onClick={() => router.push('/hire/new')}>
+          <PixelButton className="shrink-0 px-5 py-2.5" onClick={() => router.push('/hiring/new')}>
             + Post a job
           </PixelButton>
         </div>
@@ -146,7 +146,7 @@ export default function HirePage() {
             </p>
             {jobs.length === 0 && (
               <p className="mt-3 font-mono text-sm text-muted-foreground">
-                <Link href="/hire/new" className="text-primary hover:underline">Post the first job</Link>
+                <Link href="/hiring/new" className="text-primary hover:underline">Post the first job</Link>
               </p>
             )}
           </div>
@@ -161,7 +161,7 @@ export default function HirePage() {
                   key={job.id}
                   className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
                 >
-                  <Link href={`/hire/${job.id}`} aria-label={job.title} className="absolute inset-0 z-[1]" />
+                  <Link href={`/hiring/${job.id}`} aria-label={job.title} className="absolute inset-0 z-[1]" />
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="truncate font-mono text-sm text-foreground group-hover:text-primary">{job.title}</h2>
                     <span className={`shrink-0 whitespace-nowrap border-2 px-2 py-0.5 font-pixel text-[9px] ${BUDGET_COLORS[job.budget_type]}`}>

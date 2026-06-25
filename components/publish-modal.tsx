@@ -9,14 +9,14 @@ const CARDS = [
     icon: '▢',
     title: 'Upload Repository',
     description: 'Publish your code — sell it, open-source it, or let others fork it.',
-    href: '/upload',
+    href: '/explore/new',
     tag: 'Code',
   },
   {
     icon: '◈',
     title: 'Post a Job',
     description: 'Find a vibe coder for your project — offer equity or credit.',
-    href: '/hire/new',
+    href: '/hiring/new',
     tag: 'Hiring',
   },
   {

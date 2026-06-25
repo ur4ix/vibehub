@@ -72,7 +72,7 @@ export default function PostJobPage() {
     }
 
     toast.success('Job posted!', 'Vibe coders will start applying soon.')
-    router.push('/hire')
+    router.push('/hiring')
   }
 
   return (
@@ -83,12 +83,12 @@ export default function PostJobPage() {
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
-          <Link href="/hire" className="hover:text-primary">hire</Link>
+          <Link href="/hiring" className="hover:text-primary">hiring</Link>
           {' / '}
           <span className="text-foreground">new</span>
         </nav>
 
-        <h1 className="mb-8 font-pixel text-sm leading-relaxed">Post a Job</h1>
+        <h1 className="mb-8 font-pixel text-lg leading-relaxed">Post a Job</h1>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <Field label="Job title" required>
@@ -164,7 +164,7 @@ export default function PostJobPage() {
             <PixelButton type="submit" disabled={submitting} className="flex-1 py-3">
               {submitting ? 'Posting…' : 'Post job'}
             </PixelButton>
-            <PixelButton type="button" variant="outline" className="flex-1 py-3" onClick={() => router.push('/hire')}>
+            <PixelButton type="button" variant="outline" className="flex-1 py-3" onClick={() => router.push('/hiring')}>
               Cancel
             </PixelButton>
           </div>

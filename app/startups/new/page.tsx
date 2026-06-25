@@ -96,7 +96,7 @@ export default function NewStartupPage() {
           <span className="text-foreground">new</span>
         </nav>
 
-        <h1 className="mb-8 font-pixel text-sm leading-relaxed">List your startup</h1>
+        <h1 className="mb-8 font-pixel text-lg leading-relaxed">List your startup</h1>
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <Field label="Startup name" required>

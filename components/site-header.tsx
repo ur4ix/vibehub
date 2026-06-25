@@ -23,7 +23,7 @@ const UNAUTH_NAV = [
 const AUTH_NAV = [
   { label: 'Explore', href: '/explore' },
   { label: 'Startups', href: '/startups' },
-  { label: 'Hiring', href: '/hire' },
+  { label: 'Hiring', href: '/hiring' },
   { label: 'Orders', href: '/orders' },
   { label: 'Dashboard', href: '/dashboard' },
 ]

@@ -179,7 +179,7 @@ export default function JobDetailPage() {
       return
     }
     toast.success('Job deleted')
-    router.push('/hire')
+    router.push('/hiring')
   }
 
   async function handleClose() {
@@ -215,7 +215,7 @@ export default function JobDetailPage() {
         <main className="grid flex-1 place-items-center px-4">
           <div className="text-center">
             <p className="font-pixel text-xs text-muted-foreground">Job not found.</p>
-            <Link href="/hire" className="mt-4 block font-mono text-sm text-primary hover:underline">← Back to hiring board</Link>
+            <Link href="/hiring" className="mt-4 block font-mono text-sm text-primary hover:underline">← Back to hiring board</Link>
           </div>
         </main>
         <SiteFooter />
@@ -232,7 +232,7 @@ export default function JobDetailPage() {
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
-          <Link href="/hire" className="hover:text-primary">hire</Link>
+          <Link href="/hiring" className="hover:text-primary">hiring</Link>
           {' / '}
           <span className="truncate text-foreground">{job.title.slice(0, 40)}{job.title.length > 40 ? '…' : ''}</span>
         </nav>
@@ -397,7 +397,7 @@ export default function JobDetailPage() {
         </div>
 
         <div className="mt-6">
-          <Link href="/hire" className="font-mono text-xs text-muted-foreground hover:text-primary">
+          <Link href="/hiring" className="font-mono text-xs text-muted-foreground hover:text-primary">
             ← Back to hiring board
           </Link>
         </div>

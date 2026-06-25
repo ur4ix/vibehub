@@ -80,19 +80,19 @@ export default function NewOrderPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6">
         {/* Breadcrumb */}
         <nav className="mb-8 font-mono text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary">~</Link>
           {' / '}
           <Link href="/orders" className="hover:text-primary">orders</Link>
           {' / '}
-          <span className="text-foreground">new order</span>
+          <span className="text-foreground">new</span>
         </nav>
 
         {/* Heading */}
         <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// development order'}</span>
-        <h1 className="mt-3 font-pixel text-2xl leading-tight">Describe what you need built</h1>
+        <h1 className="mt-3 font-pixel text-lg leading-relaxed">Describe what you need built</h1>
         <p className="mt-3 font-mono text-sm text-muted-foreground">
           The clearer the brief, the faster the right vibe coder responds.
         </p>

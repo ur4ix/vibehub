@@ -234,7 +234,7 @@ function ExploreContent() {
             </p>
           </div>
           <Link
-            href="/upload"
+            href="/explore/new"
             className="font-pixel inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-[10px] uppercase leading-none tracking-wider border-primary bg-primary text-primary-foreground pixel-shadow-border transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:brightness-110 active:translate-x-1 active:translate-y-1 active:shadow-none"
           >
             + Publish
@@ -315,7 +315,7 @@ function ExploreContent() {
             <p className="mt-6 font-pixel text-xs text-muted-foreground">No repositories found</p>
             <p className="mt-3 font-mono text-sm text-muted-foreground">
               Try adjusting filters or{' '}
-              <Link href="/upload" className="text-primary hover:underline">
+              <Link href="/explore/new" className="text-primary hover:underline">
                 publish the first one
               </Link>
             </p>

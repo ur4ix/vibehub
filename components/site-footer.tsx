@@ -37,7 +37,7 @@ const COLS = [
     links: [
       { label: 'Explore', href: '/explore' },
       { label: 'Startups', href: '/startups' },
-      { label: 'Hiring', href: '/hire' },
+      { label: 'Hiring', href: '/hiring' },
       { label: 'Orders', href: '/orders' },
       { label: 'Templates', href: '/explore?cat=templates' },
     ],
@@ -45,7 +45,7 @@ const COLS = [
   {
     title: 'Sellers',
     links: [
-      { label: 'Publish project', href: '/upload' },
+      { label: 'Publish project', href: '/explore/new' },
       { label: 'Pricing', href: '/#sellers' },
       { label: 'Review rules', href: '/docs/review-rules' },
       { label: 'Payouts', href: '/docs/payouts' },
