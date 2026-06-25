@@ -594,7 +594,7 @@ export function UploadForm({ userId }: UploadFormProps) {
             <span className="shrink-0 text-sm text-muted-foreground select-none">vydex.dev/</span>
             <input
               id="slug"
-              className="h-full min-w-0 flex-1 bg-transparent pl-2.5 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-full min-w-0 flex-1 bg-transparent pl-0.5 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="my-awesome-vibe"
               value={slug}
               onChange={(e) => {
