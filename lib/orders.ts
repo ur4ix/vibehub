@@ -28,19 +28,6 @@ export const TIMELINES = [
   { label: 'Flexible', days: null },
 ] as const
 
-export const SKILL_PRESETS = [
-  'Next.js',
-  'React',
-  'Vue',
-  'Node.js',
-  'Python',
-  'TypeScript',
-  'Tailwind',
-  'Supabase',
-  'Postgres',
-  'AI-SDK',
-] as const
-
 // Stable, cosmetic short code derived from the order id (e.g. ORD-2041).
 export function orderCode(id: string): string {
   let h = 0

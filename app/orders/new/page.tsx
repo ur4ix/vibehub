@@ -10,9 +10,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
-import { PROJECT_TYPES, BUDGET_RANGES, TIMELINES, SKILL_PRESETS } from '@/lib/orders'
-
-const MAX_SKILLS = 8
+import { PROJECT_TYPES, BUDGET_RANGES, TIMELINES } from '@/lib/orders'
 
 export default function NewOrderPage() {
   const router = useRouter()
@@ -22,29 +20,18 @@ export default function NewOrderPage() {
   const [title, setTitle] = useState('')
   const [projectType, setProjectType] = useState<string>(PROJECT_TYPES[0])
   const [description, setDescription] = useState('')
-  const [skills, setSkills] = useState<string[]>([])
   const [budgetIdx, setBudgetIdx] = useState(1) // $200–500
   const [timelineIdx, setTimelineIdx] = useState(1) // up to a week
   const [refs, setRefs] = useState('')
   const [contact, setContact] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  function toggleSkill(skill: string) {
-    setSkills((prev) =>
-      prev.includes(skill)
-        ? prev.filter((s) => s !== skill)
-        : prev.length >= MAX_SKILLS
-          ? prev
-          : [...prev, skill],
-    )
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) { router.push('/auth'); return }
     if (!title.trim()) { toast.error('Add a project name'); return }
     if (!description.trim()) { toast.error('Add a description'); return }
-    if (containsBanned(title, description, refs, contact, skills)) {
+    if (containsBanned(title, description, refs, contact)) {
       toast.error('Not allowed', BANNED_MESSAGE)
       return
     }
@@ -62,7 +49,6 @@ export default function NewOrderPage() {
       budget: range.min,
       budget_range: range.label,
       delivery_days: timeline.days,
-      tags: skills,
       reference_links: refs.trim() || null,
       contact: contact.trim() || null,
     })
@@ -143,33 +129,9 @@ export default function NewOrderPage() {
             />
           </Section>
 
-          {/* 04 — Required skills */}
-          <Section n="04" label="Required skills" hint={`Pick the skills this build needs · max ${MAX_SKILLS}`}>
-            <div className="flex flex-wrap gap-2">
-              {SKILL_PRESETS.map((s) => {
-                const active = skills.includes(s)
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => toggleSkill(s)}
-                    className={
-                      'border-2 px-3 py-2 font-mono text-xs transition-colors ' +
-                      (active
-                        ? 'border-primary text-foreground'
-                        : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground')
-                    }
-                  >
-                    {active ? '✓ ' : '+ '}{s}
-                  </button>
-                )
-              })}
-            </div>
-          </Section>
-
-          {/* 05 + 06 — Budget & timeline */}
+          {/* 04 + 05 — Budget & timeline */}
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
-            <Section n="05" label="Budget">
+            <Section n="04" label="Budget">
               <div className="flex flex-col gap-2">
                 {BUDGET_RANGES.map((b, i) => (
                   <OptionRow key={b.label} label={b.label} selected={budgetIdx === i} onClick={() => setBudgetIdx(i)} />
@@ -177,7 +139,7 @@ export default function NewOrderPage() {
               </div>
             </Section>
 
-            <Section n="06" label="Timeline">
+            <Section n="05" label="Timeline">
               <div className="flex flex-col gap-2">
                 {TIMELINES.map((t, i) => (
                   <OptionRow key={t.label} label={t.label} selected={timelineIdx === i} onClick={() => setTimelineIdx(i)} />
@@ -186,8 +148,8 @@ export default function NewOrderPage() {
             </Section>
           </div>
 
-          {/* 07 — Reference links */}
-          <Section n="07" label="Reference links" hint="Optional">
+          {/* 06 — Reference links */}
+          <Section n="06" label="Reference links" hint="Optional">
             <input
               type="text"
               value={refs}
@@ -197,8 +159,8 @@ export default function NewOrderPage() {
             />
           </Section>
 
-          {/* 08 — Contact */}
-          <Section n="08" label="Contact" hint="Optional">
+          {/* 07 — Contact */}
+          <Section n="07" label="Contact" hint="Optional">
             <input
               type="text"
               value={contact}
