@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Enables React's <ViewTransition> for native crossfades on navigation.
-    viewTransition: true,
-  },
   images: {
     remotePatterns: [
       // Supabase Storage (repo previews live in a public bucket).
