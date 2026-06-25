@@ -590,13 +590,11 @@ export function UploadForm({ userId }: UploadFormProps) {
               (repository URL)
             </span>
           </Label>
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground select-none">
-              vydex.dev/
-            </span>
-            <Input
+          <div className="flex h-8 items-center rounded-lg border border-input bg-transparent px-2.5 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
+            <span className="shrink-0 text-sm text-muted-foreground select-none">vydex.dev/</span>
+            <input
               id="slug"
-              className="pl-[6.5rem]"
+              className="h-full min-w-0 flex-1 bg-transparent pl-2.5 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="my-awesome-vibe"
               value={slug}
               onChange={(e) => {
