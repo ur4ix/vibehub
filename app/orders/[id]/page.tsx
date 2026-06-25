@@ -20,7 +20,11 @@ interface Order {
   title: string
   description: string
   budget: number
+  budget_range: string | null
   delivery_days: number | null
+  project_type: string | null
+  reference_links: string | null
+  contact: string | null
   tags: string[]
   status: OrderStatus
   bids_count: number
@@ -261,7 +265,7 @@ export default function OrderDetailPage() {
               </div>
             </div>
             <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-4 py-1.5 font-pixel text-[10px] text-green-400">
-              ${order.budget}
+              {order.budget_range ?? `$${order.budget}`}
             </span>
           </div>
 
@@ -269,6 +273,9 @@ export default function OrderDetailPage() {
 
           {/* Meta */}
           <div className="mt-4 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground">
+            {order.project_type && (
+              <span className="border border-border bg-secondary px-2 py-0.5">{order.project_type}</span>
+            )}
             {order.owner?.username && (
               <span>posted by <Link href={`/u/${order.owner.username}`} className="transition-colors hover:text-primary">@{order.owner.username}</Link></span>
             )}
@@ -296,6 +303,24 @@ export default function OrderDetailPage() {
                   <span key={t} className="border border-border bg-secondary px-3 py-1.5 font-mono text-[10px] text-muted-foreground">{t}</span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Reference links + contact */}
+          {(order.reference_links || order.contact) && (
+            <div className="mt-6 grid gap-6 border-t border-border pt-6 sm:grid-cols-2">
+              {order.reference_links && (
+                <div>
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">References</p>
+                  <p className="break-words font-mono text-xs leading-relaxed text-foreground/80">{order.reference_links}</p>
+                </div>
+              )}
+              {order.contact && (
+                <div>
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Contact</p>
+                  <p className="break-words font-mono text-xs leading-relaxed text-foreground/80">{order.contact}</p>
+                </div>
+              )}
             </div>
           )}
 

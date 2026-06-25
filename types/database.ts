@@ -55,7 +55,11 @@ export type Database = {
           title: string;
           description: string;
           budget: number;
+          budget_range: string | null;
           delivery_days: number | null;
+          project_type: string | null;
+          reference_links: string | null;
+          contact: string | null;
           tags: string[];
           status: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count: number;
@@ -67,7 +71,11 @@ export type Database = {
           title: string;
           description: string;
           budget: number;
+          budget_range?: string | null;
           delivery_days?: number | null;
+          project_type?: string | null;
+          reference_links?: string | null;
+          contact?: string | null;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;
@@ -79,7 +87,11 @@ export type Database = {
           title?: string;
           description?: string;
           budget?: number;
+          budget_range?: string | null;
           delivery_days?: number | null;
+          project_type?: string | null;
+          reference_links?: string | null;
+          contact?: string | null;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;

@@ -1,61 +1,53 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShoppingBag, Clock, Plus, Search } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
 import { createClient } from '@/lib/supabase/client'
-
-type OrderStatus = 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled'
+import { PROJECT_TYPES, orderCode, deliveryLabel } from '@/lib/orders'
 
 interface Order {
   id: string
   title: string
   description: string
   budget: number
-  status: OrderStatus
+  budget_range: string | null
+  delivery_days: number | null
+  project_type: string | null
   tags: string[]
+  status: string
   owner_id: string
   bids_count: number
   created_at: string
   owner?: { username: string | null }
 }
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  open:        'Open',
-  in_progress: 'In progress',
-  review:      'In review',
-  completed:   'Completed',
-  cancelled:   'Cancelled',
-}
+type SortKey = 'newest' | 'budget' | 'fewest'
 
-const STATUS_COLORS: Record<OrderStatus, string> = {
-  open:        'text-primary border-primary bg-primary/10',
-  in_progress: 'text-blue-400 border-blue-400/50 bg-blue-400/10',
-  review:      'text-amber-400 border-amber-400/50 bg-amber-400/10',
-  completed:   'text-green-400 border-green-400/50 bg-green-400/10',
-  cancelled:   'text-muted-foreground border-border bg-secondary',
-}
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'newest', label: 'Newest' },
+  { key: 'budget', label: 'Budget' },
+  { key: 'fewest', label: 'Fewest bids' },
+]
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (diff < 60)    return 'just now'
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-const ALL_STATUSES: Array<'all' | OrderStatus> = ['all', 'open', 'in_progress', 'review', 'completed', 'cancelled']
-
 export default function OrdersPage() {
-  const router    = useRouter()
-  const [orders,  setOrders]  = useState<Order[]>([])
+  const router = useRouter()
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [search,  setSearch]  = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | string>('all')
+  const [sort, setSort] = useState<SortKey>('newest')
 
   useEffect(() => {
     const supabase = createClient()
@@ -80,123 +72,162 @@ export default function OrdersPage() {
     load()
   }, [])
 
-  const filtered = orders.filter((o) => {
-    const matchesSearch =
-      o.title.toLowerCase().includes(search.toLowerCase()) ||
-      o.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
-    return matchesSearch && (statusFilter === 'all' || o.status === statusFilter)
-  })
+  const openCount = orders.filter((o) => o.status === 'open').length
+
+  const visible = useMemo(() => {
+    const list = orders.filter((o) => typeFilter === 'all' || o.project_type === typeFilter)
+    const sorted = [...list]
+    if (sort === 'budget') sorted.sort((a, b) => b.budget - a.budget)
+    else if (sort === 'fewest') sorted.sort((a, b) => a.bids_count - b.bids_count)
+    // 'newest' keeps the query order (created_at desc)
+    return sorted
+  }, [orders, typeFilter, sort])
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+        {/* Breadcrumb */}
+        <nav className="mb-8 font-mono text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-primary">~</Link>
+          {' / '}
+          <span className="text-foreground">orders</span>
+        </nav>
+
         {/* Heading */}
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// orders'}</span>
-            <h1 className="mt-3 font-pixel text-xl">Order board</h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Fixed-price development orders. Browse, bid, and get paid.
+            <span className="font-pixel text-[8px] uppercase tracking-wider text-primary">{'// order feed'}</span>
+            <h1 className="mt-3 font-pixel text-2xl leading-tight">Pick an order</h1>
+            <p className="mt-3 font-mono text-sm text-muted-foreground">
+              {openCount} open development order{openCount !== 1 ? 's' : ''}
             </p>
           </div>
           <PixelButton className="shrink-0 px-5 py-2.5" onClick={() => router.push('/orders/new')}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Create order
+            + Create order
           </PixelButton>
         </div>
 
-        {/* Search + filters */}
-        <div className="mb-8 flex flex-col gap-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search orders or skills…"
-              className="w-full border-2 border-border bg-card py-3 pl-11 pr-4 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {ALL_STATUSES.map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={
-                  'font-pixel whitespace-nowrap border-2 px-3 py-2 text-[9px] uppercase tracking-wider transition-all duration-100 ' +
-                  (statusFilter === s
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary hover:text-primary')
-                }
-              >
-                {s === 'all' ? 'All' : STATUS_LABELS[s]}
-              </button>
-            ))}
-          </div>
+        {/* Type filters */}
+        <div className="mt-8 flex flex-wrap gap-2">
+          {(['all', ...PROJECT_TYPES] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={
+                'whitespace-nowrap border-2 px-3 py-2 font-mono text-[11px] transition-all duration-100 ' +
+                (typeFilter === t
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary hover:text-primary')
+              }
+            >
+              {t === 'all' ? 'All' : t}
+            </button>
+          ))}
         </div>
 
-        {/* Grid */}
-        {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-48 animate-pulse border-2 border-border bg-card" />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center border-2 border-border bg-card py-24 text-center">
-            <ShoppingBag className="mb-4 h-10 w-10 text-muted-foreground/30" />
-            <p className="font-pixel text-xs text-muted-foreground">
-              {orders.length === 0 ? 'No orders yet' : 'No orders match your search'}
-            </p>
-            {orders.length === 0 && (
-              <p className="mt-3 font-mono text-sm text-muted-foreground">
-                <Link href="/orders/new" className="text-primary hover:underline">Create the first order</Link>
+        {/* Sort */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Sort:</span>
+          {SORTS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSort(s.key)}
+              className={
+                'border-2 px-3 py-1.5 font-mono text-[11px] transition-all duration-100 ' +
+                (sort === s.key
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary hover:text-primary')
+              }
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        <div className="mt-8 flex flex-col gap-4">
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-44 animate-pulse border-2 border-border bg-card" />
+            ))
+          ) : visible.length === 0 ? (
+            <div className="flex flex-col items-center justify-center border-2 border-border bg-card py-24 text-center">
+              <ShoppingBag className="mb-4 h-10 w-10 text-muted-foreground/30" />
+              <p className="font-pixel text-xs text-muted-foreground">
+                {orders.length === 0 ? 'No orders yet' : 'No orders in this category'}
               </p>
-            )}
-          </div>
-        ) : (
-          <>
-            <p className="mb-5 font-mono text-xs text-muted-foreground">
-              {filtered.length} result{filtered.length !== 1 ? 's' : ''}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((order) => (
-                <div
-                  key={order.id}
-                  className="group relative flex flex-col border-2 border-border bg-card p-5 transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-primary pixel-shadow-border"
-                >
-                  <Link href={`/orders/${order.id}`} aria-label={order.title} className="absolute inset-0 z-[1]" />
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h2 className="truncate font-mono text-sm text-foreground group-hover:text-primary">{order.title}</h2>
-                      <span className={`mt-1 inline-block border px-2 py-0.5 font-pixel text-[9px] uppercase tracking-wider ${STATUS_COLORS[order.status]}`}>
-                        {STATUS_LABELS[order.status]}
-                      </span>
+              {orders.length === 0 && (
+                <p className="mt-3 font-mono text-sm text-muted-foreground">
+                  <Link href="/orders/new" className="text-primary hover:underline">Create the first order</Link>
+                </p>
+              )}
+            </div>
+          ) : (
+            visible.map((order) => (
+              <article
+                key={order.id}
+                className="group relative flex flex-col gap-5 border-2 border-border bg-card p-5 transition-colors hover:border-primary sm:flex-row sm:items-stretch sm:justify-between sm:p-6"
+              >
+                {/* Left: details */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground/70">{orderCode(order.id)}</span>
+                    {order.project_type && (
+                      <span className="border border-border bg-secondary px-2 py-0.5 text-muted-foreground">{order.project_type}</span>
+                    )}
+                    <span>{timeAgo(order.created_at)}</span>
+                  </div>
+
+                  <h2 className="mt-3 font-mono text-base text-foreground transition-colors group-hover:text-primary">
+                    <Link href={`/orders/${order.id}`} className="after:absolute after:inset-0">{order.title}</Link>
+                  </h2>
+
+                  <p className="mt-2 line-clamp-2 max-w-2xl font-mono text-xs leading-relaxed text-muted-foreground">
+                    {order.description}
+                  </p>
+
+                  {order.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {order.tags.slice(0, 4).map((t) => (
+                        <span key={t} className="border border-border bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{t}</span>
+                      ))}
                     </div>
-                    <span className="shrink-0 border-2 border-green-400/50 bg-green-400/10 px-2 py-0.5 font-pixel text-[9px] text-green-400">
-                      ${order.budget}
-                    </span>
-                  </div>
-                  <p className="mt-3 line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground">{order.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {order.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="border border-border bg-secondary px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{t}</span>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex items-center gap-3 border-t border-border pt-4 font-mono text-[10px] text-muted-foreground">
-                    <span>{order.bids_count} bids</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(order.created_at)}</span>
-                    {order.owner?.username && (
-                      <Link href={`/u/${order.owner.username}`} className="relative z-[2] ml-auto truncate transition-colors hover:text-primary">
+                  )}
+
+                  <p className="mt-4 flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                    {order.owner?.username ? (
+                      <Link href={`/u/${order.owner.username}`} className="relative z-[1] text-foreground/80 transition-colors hover:text-primary">
                         @{order.owner.username}
                       </Link>
+                    ) : (
+                      <span>author</span>
                     )}
-                  </div>
+                    <span>·</span>
+                    <span>{order.bids_count} bid{order.bids_count !== 1 ? 's' : ''}</span>
+                  </p>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+
+                {/* Right: budget + CTA */}
+                <div className="flex shrink-0 flex-col gap-2 sm:w-44">
+                  <div className="border-2 border-border bg-background px-4 py-3 text-center">
+                    <p className="font-pixel text-sm text-primary">{order.budget_range ?? `$${order.budget}`}</p>
+                    <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                      {deliveryLabel(order.delivery_days)}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="relative z-[1] inline-flex items-center justify-center border-2 border-border bg-card px-4 py-2.5 font-pixel text-[10px] uppercase tracking-wider text-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    Take order
+                  </Link>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </main>
 
       <SiteFooter />
