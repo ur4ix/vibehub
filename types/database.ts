@@ -759,6 +759,7 @@ export type Database = {
           ai_signals: string[];
           security_flags: string[];
           vuln_findings: string[];
+          source_sha256: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -777,6 +778,7 @@ export type Database = {
           ai_signals?: string[];
           security_flags?: string[];
           vuln_findings?: string[];
+          source_sha256?: string | null;
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;
@@ -810,6 +812,7 @@ export type Database = {
           ai_signals?: string[];
           security_flags?: string[];
           vuln_findings?: string[];
+          source_sha256?: string | null;
           type?: Database["public"]["Enums"]["repository_type"];
           price_cents?: number | null;
           chat_reaction_threshold?: number;

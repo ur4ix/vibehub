@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import HCaptcha from '@hcaptcha/react-hcaptcha'
@@ -15,8 +15,14 @@ const HCAPTCHA_SITEKEY =
   process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY ?? 'a84aec58-7ca4-458c-b722-a74edf9088e4'
 
 export function AuthCard() {
-  const [mode, setMode] = useState<'login' | 'register'>('login')
-  const [email, setEmail] = useState('')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Pre-fill email + switch to register when arriving from the CTA form.
+  const prefillEmail = searchParams.get('email')
+
+  const [mode, setMode] = useState<'login' | 'register'>(prefillEmail ? 'register' : 'login')
+  const [email, setEmail] = useState(prefillEmail ?? '')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -25,23 +31,11 @@ export function AuthCard() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const captchaRef = useRef<HCaptcha>(null)
 
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
   // hCaptcha tokens are single-use — clear after every auth attempt.
   function resetCaptcha() {
     setCaptchaToken(null)
     captchaRef.current?.resetCaptcha()
   }
-
-  // Pre-fill email from CTA form
-  useEffect(() => {
-    const prefill = searchParams.get('email')
-    if (prefill) {
-      setEmail(prefill)
-      setMode('register')
-    }
-  }, [searchParams])
 
   async function handleGitHub() {
     setIsLoading(true)

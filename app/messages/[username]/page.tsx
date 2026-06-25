@@ -86,6 +86,9 @@ export default function ConversationPage() {
   // Load + realtime (instant incoming) + slow poll fallback.
   useEffect(() => {
     if (!user || !other) return
+    // Initial fetch for this conversation; setState happens async after the
+    // query resolves, then realtime + poll keep it fresh.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMessages(user.id, other.id)
     const supabase = createClient()
     const channel = supabase

@@ -40,9 +40,34 @@ export async function POST(req: NextRequest) {
   const done = status === 'finished' || status === 'confirmed'
 
   if (done && orderId) {
+    const admin = createAdminClient()
+
+    // Defense in depth: the IPN is signed, but still confirm the (signed)
+    // invoice amount/currency matches what this purchase should cost before
+    // unlocking the download. Refuse to complete on an underpayment.
+    const { data: pRaw } = await admin
+      .from('purchases')
+      .select('amount_cents, status')
+      .eq('id', orderId)
+      .maybeSingle()
+    const purchase = pRaw as { amount_cents: number; status: string } | null
+    if (!purchase || purchase.status !== 'pending') {
+      return NextResponse.json({ ok: true }) // unknown or already settled
+    }
+
+    const paidUsd = Number(body.price_amount)
+    const currency = String(body.price_currency ?? '').toLowerCase()
+    const expectedUsd = purchase.amount_cents / 100
+    if (
+      currency !== 'usd' ||
+      !Number.isFinite(paidUsd) ||
+      paidUsd + 0.01 < expectedUsd // allow a 1-cent rounding tolerance
+    ) {
+      return NextResponse.json({ ok: true, ignored: 'amount_mismatch' })
+    }
+
     const ESCROW_DAYS = 3
     const releaseAt = new Date(Date.now() + ESCROW_DAYS * 86400_000).toISOString()
-    const admin = createAdminClient()
     await admin
       .from('purchases')
       .update({

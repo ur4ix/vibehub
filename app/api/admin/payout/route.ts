@@ -61,6 +61,14 @@ export async function POST(req: NextRequest) {
 
   // ── Manual: just record it ────────────────────────────────────────────────
   if (mode === 'manual') {
+    // Don't let a manual record silently bury an unverified NOWPayments batch
+    // that may still send — resolve that one first.
+    if (p.payout_status === 'pending' && p.payout_ref) {
+      return NextResponse.json(
+        { error: 'A NOWPayments payout batch is already pending for this sale — verify or cancel it before recording a manual payout.' },
+        { status: 409 },
+      )
+    }
     return finalizePaid(admin, p, ref || 'manual', netCents)
   }
 

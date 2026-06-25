@@ -35,7 +35,13 @@ export async function POST(req: NextRequest) {
   if (p.escrow_status !== 'disputed') return NextResponse.json({ error: 'Not a disputed purchase' }, { status: 400 })
 
   const next = action === 'refund' ? 'refunded' : 'released'
-  const { error } = await admin.from('purchases').update({ escrow_status: next }).eq('id', p.id)
+  // A refund also revokes the buyer's access: storage + repository RLS gate on
+  // status='completed', so flipping status to 'refunded' pulls the download.
+  const patch =
+    action === 'refund'
+      ? { escrow_status: next, status: 'refunded' as const }
+      : { escrow_status: next }
+  const { error } = await admin.from('purchases').update(patch).eq('id', p.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const amount = `$${(p.amount_cents / 100).toFixed(2)}`

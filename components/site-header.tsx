@@ -93,6 +93,8 @@ function NotificationBell() {
   // poll as a fallback in case realtime isn't enabled.
   useEffect(() => {
     if (!user) return
+    // Initial load; setState resolves async, then realtime + poll keep it fresh.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadNotifications()
     const supabase = createClient()
     const channel = supabase

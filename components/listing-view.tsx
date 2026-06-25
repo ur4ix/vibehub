@@ -41,6 +41,7 @@ interface RepoDetail {
   ai_signals: string[] | null
   security_flags: string[] | null
   vuln_findings: string[] | null
+  source_sha256: string | null
   reaction_count: number
   fork_count: number
   average_rating: number
@@ -160,16 +161,18 @@ export function ListingView({ id }: { id: string }) {
   const [deleting, setDeleting] = useState(false)
   const [buying, setBuying] = useState(false)
 
-  // Count a view — once per session per repo.
+  // Count a view — once per session per repo, but never count the owner viewing
+  // their own listing. Runs after the repo loads so the owner is known.
   useEffect(() => {
-    if (!id) return
+    if (!id || !repo) return
+    if (user?.id === repo.owner_id) return
     const key = `viewed:${id}`
     try {
       if (sessionStorage.getItem(key)) return
       sessionStorage.setItem(key, '1')
     } catch { return }
     createClient().rpc('increment_repo_view', { p_repo: id })
-  }, [id])
+  }, [id, repo, user])
 
   // Fetch all data
   useEffect(() => {
@@ -355,7 +358,7 @@ export function ListingView({ id }: { id: string }) {
         toast.info('Already purchased', 'You already own this project.')
         setPurchaseId('owned'); router.refresh(); setBuying(false); return
       }
-      if (json.url) { window.location.href = json.url; return } // → Cryptomus
+      if (json.url) { window.location.href = json.url; return } // → NOWPayments invoice
       toast.error('Checkout unavailable', json.error ?? 'Please try again later.')
     } catch {
       toast.error('Checkout failed', 'Please try again later.')
@@ -493,7 +496,12 @@ export function ListingView({ id }: { id: string }) {
       slug: `${repo.slug}-fork-${newId.slice(0, 6)}`.slice(0, 80),
       description: repo.description,
       readme: repo.readme,
-      type: 'free',
+      // A fork of a paid project stays paid (>= original price) — you can't
+      // turn someone else's paid work into a free giveaway. The DB trigger
+      // also blocks publishing until the source actually changes.
+      type: repo.type,
+      price_cents: repo.type === 'paid' ? repo.price_cents : null,
+      source_sha256: repo.source_sha256,
       storage_path: newPath,
       tags: repo.tags,
       category: repo.category,

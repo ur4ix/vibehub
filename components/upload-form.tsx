@@ -36,6 +36,16 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// SHA-256 (hex) of a file's bytes — used to detect whether a fork's source
+// actually differs from the original it was forked from (see the
+// enforce_fork_publish DB trigger).
+async function sha256Hex(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 const MAX_TAGS = 10;
 const TAG_MAX_LEN = 30;
@@ -77,6 +87,7 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewUploading, setPreviewUploading] = useState(false);
   const [fileManifest, setFileManifest] = useState<string[]>([]);
+  const [sourceSha256, setSourceSha256] = useState<string | null>(null);
   const [securityFlags, setSecurityFlags] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
   const [vulnFindings, setVulnFindings] = useState<string[]>([]);
@@ -200,6 +211,9 @@ export function UploadForm({ userId }: UploadFormProps) {
   // JSZip is imported lazily so it stays out of the main bundle.
   async function parseManifest(f: File) {
     try {
+      // Hash the archive bytes (drives the fork "code actually changed" check).
+      try { setSourceSha256(await sha256Hex(f)); } catch { setSourceSha256(null); }
+
       const JSZip = (await import("jszip")).default;
       const zip = await JSZip.loadAsync(f);
       const paths: string[] = [];
@@ -410,6 +424,8 @@ export function UploadForm({ userId }: UploadFormProps) {
             type: repoType,
             price_cents: priceCents,
             storage_path: newStoragePath,
+            // Refresh the source hash only when a new archive was uploaded.
+            ...(file ? { source_sha256: sourceSha256 } : {}),
             tags,
             category: category || null,
             ai_tools: aiTools,
@@ -466,6 +482,7 @@ export function UploadForm({ userId }: UploadFormProps) {
           type: repoType,
           price_cents: priceCents,
           storage_path: storagePath,
+          source_sha256: file ? sourceSha256 : null,
           tags,
           category: category || null,
           ai_tools: aiTools,

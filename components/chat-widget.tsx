@@ -106,6 +106,8 @@ export function ChatWidget() {
   // ── open-chat event + unread on mount + realtime ─────────────────────────────
   useEffect(() => {
     if (!user) return
+    // Initial unread count; setState resolves async, then realtime keeps it fresh.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUnread()
     function onOpen(e: Event) {
       const username = (e as CustomEvent).detail?.username as string | undefined
