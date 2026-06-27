@@ -1052,6 +1052,14 @@ export type Database = {
         Args: { p_repository_id: string };
         Returns: string;
       };
+      purchase_with_balance: {
+        Args: { p_repository_id: string };
+        Returns: string;
+      };
+      post_ledger: {
+        Args: { p_user: string; p_amount: number; p_type: string; p_ref?: string; p_memo?: string };
+        Returns: number;
+      };
       increment_repo_view: {
         Args: { p_repo: string };
         Returns: undefined;

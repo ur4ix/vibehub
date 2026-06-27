@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
-  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info,
+  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info, Wallet,
 } from 'lucide-react'
 import type { RepositoryVersion } from '@/types/database'
 import { SiteHeader } from '@/components/site-header'
@@ -160,6 +160,9 @@ export function ListingView({ id }: { id: string }) {
   const [forking, setForking] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [buying, setBuying] = useState(false)
+  // Internal balance — enables a "pay with balance" option when it covers the price.
+  const [balanceCents, setBalanceCents] = useState<number | null>(null)
+  const [balancePaying, setBalancePaying] = useState(false)
 
   // Count a view — once per session per repo, but never count the owner viewing
   // their own listing. Runs after the repo loads so the owner is known.
@@ -327,6 +330,13 @@ export function ListingView({ id }: { id: string }) {
       .maybeSingle()
       .then(({ data }) => { if (active) setLiked(Boolean(data)) })
 
+    supabase
+      .from('users')
+      .select('balance_cents')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setBalanceCents((data as { balance_cents: number } | null)?.balance_cents ?? 0) })
+
     return () => { active = false }
   }, [id, user])
 
@@ -364,6 +374,22 @@ export function ListingView({ id }: { id: string }) {
       toast.error('Checkout failed', 'Please try again later.')
     }
     setBuying(false)
+  }
+
+  // Pay from the internal balance (only offered when it covers the price).
+  async function handleBalanceBuy() {
+    if (!user) { router.push('/auth'); return }
+    if (!repo || balancePaying) return
+    setBalancePaying(true)
+    const supabase = createClient()
+    const { data, error } = await supabase.rpc('purchase_with_balance', { p_repository_id: repo.id })
+    setBalancePaying(false)
+    if (error) { toast.error('Payment failed', error.message); return }
+    setPurchaseId((data as string) ?? 'owned')
+    setEscrowStatus('held')
+    setBalanceCents((c) => (c != null ? c - (repo.price_cents ?? 0) : c))
+    toast.success('Purchased with balance', 'Enjoy your new project!')
+    router.refresh()
   }
 
   // Downloads go through our branded route (vydex.dev/api/download/…), which
@@ -599,6 +625,7 @@ export function ListingView({ id }: { id: string }) {
   const price      = repo.price_cents ? `$${(repo.price_cents / 100).toFixed(2)}` : 'Free'
   const categoryIcon = CATEGORY_ICONS[repo.category ?? ''] ?? '▢'
   const isOwner    = user?.id === repo.owner_id
+  const canPayBalance = isPaid && balanceCents != null && (repo.price_cents ?? 0) > 0 && balanceCents >= (repo.price_cents ?? 0)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -961,6 +988,17 @@ export function ListingView({ id }: { id: string }) {
                       <Download className="h-4 w-4" />
                       Download
                     </PixelButton>
+                  ) : canPayBalance ? (
+                    <div className="flex flex-col gap-2">
+                      <PixelButton className="w-full py-3 gap-2" onClick={handleBalanceBuy} disabled={balancePaying}>
+                        <Wallet className="h-4 w-4" />
+                        {balancePaying ? 'Paying…' : `Pay with balance · ${price}`}
+                      </PixelButton>
+                      <PixelButton variant="outline" className="w-full gap-2 py-2.5 text-xs" onClick={handleBuy} disabled={buying}>
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                        {buying ? 'Redirecting…' : 'Pay with crypto'}
+                      </PixelButton>
+                    </div>
                   ) : (
                     <PixelButton className="w-full py-3 gap-2" onClick={handleBuy} disabled={buying}>
                       <ShoppingCart className="h-4 w-4" />

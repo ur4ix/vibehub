@@ -27,10 +27,10 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: pRaw } = await admin
     .from('purchases')
-    .select('id, buyer_id, seller_id, amount_cents, escrow_status')
+    .select('id, buyer_id, seller_id, amount_cents, escrow_status, provider')
     .eq('id', purchaseId)
     .maybeSingle()
-  const p = pRaw as { id: string; buyer_id: string; seller_id: string; amount_cents: number; escrow_status: string | null } | null
+  const p = pRaw as { id: string; buyer_id: string; seller_id: string; amount_cents: number; escrow_status: string | null; provider: string | null } | null
   if (!p) return NextResponse.json({ error: 'Purchase not found' }, { status: 404 })
   if (p.escrow_status !== 'disputed') return NextResponse.json({ error: 'Not a disputed purchase' }, { status: 400 })
 
@@ -43,6 +43,19 @@ export async function POST(req: NextRequest) {
       : { escrow_status: next }
   const { error } = await admin.from('purchases').update(patch).eq('id', p.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // A balance-paid purchase debited the buyer up front, so a refund must put the
+  // money back on their balance. (Crypto buys are returned manually off-platform.)
+  // The seller was never credited — escrow only releases to them on approval.
+  if (action === 'refund' && p.provider === 'balance' && p.amount_cents > 0) {
+    await admin.rpc('post_ledger', {
+      p_user: p.buyer_id,
+      p_amount: p.amount_cents,
+      p_type: 'refund',
+      p_ref: p.id,
+      p_memo: 'Dispute refund',
+    })
+  }
 
   const amount = `$${(p.amount_cents / 100).toFixed(2)}`
   if (action === 'refund') {
