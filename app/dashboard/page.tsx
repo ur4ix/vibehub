@@ -119,6 +119,15 @@ export default async function DashboardPage() {
     const { data: tr } = await supabase.from('repositories').select('id, title').in('id', ids)
     for (const r of (tr as { id: string; title: string }[] | null) ?? []) saleRepoTitle.set(r.id, r.title)
   }
+  // Internal balance + recent ledger history.
+  const balanceCents = profile?.balance_cents ?? 0
+  const { data: ledgerRaw } = await supabase
+    .from('balance_entries')
+    .select('id, amount_cents, type, memo, created_at')
+    .order('created_at', { ascending: false })
+    .limit(8)
+  const ledger = (ledgerRaw as { id: string; amount_cents: number; type: string; memo: string | null; created_at: string }[] | null) ?? []
+
   const net = (s: SaleRow) => s.amount_cents - s.platform_fee_cents
   // Funds still in escrow = held OR disputed (a dispute doesn't make them vanish,
   // it just freezes them pending a moderator decision).
@@ -171,6 +180,35 @@ export default async function DashboardPage() {
             <div className="font-pixel text-sm text-primary">{profile?.reputation ?? 0}</div>
             <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">reputation</div>
           </div>
+        </div>
+
+        {/* Internal balance */}
+        <div className="mb-12">
+          <h2 className="mb-5 font-pixel text-xs uppercase tracking-wider">Balance</h2>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-2 border-primary bg-card px-5 py-4">
+            <div>
+              <div className="font-pixel text-lg text-primary">{money(balanceCents)}</div>
+              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">available balance</div>
+            </div>
+            <p className="max-w-xs font-mono text-[10px] leading-relaxed text-muted-foreground">
+              Sales credit your balance once they clear escrow. Withdrawals to crypto are coming soon.
+            </p>
+          </div>
+          {ledger.length > 0 && (
+            <div className="mt-4 flex flex-col gap-2">
+              {ledger.map((e) => (
+                <div key={e.id} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-mono text-xs capitalize text-foreground">{e.type}</p>
+                    {e.memo && <p className="truncate font-mono text-[10px] text-muted-foreground">{e.memo}</p>}
+                  </div>
+                  <span className={'shrink-0 font-pixel text-[10px] ' + (e.amount_cents >= 0 ? 'text-green-400' : 'text-muted-foreground')}>
+                    {e.amount_cents >= 0 ? '+' : '−'}{money(Math.abs(e.amount_cents))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Earnings (seller payouts) */}

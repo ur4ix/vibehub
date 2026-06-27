@@ -786,7 +786,7 @@ export function ListingView({ id }: { id: string }) {
             <RepoFiles
               manifest={repo.file_manifest ?? []}
               storagePath={repo.storage_path}
-              canView={Boolean(user) && (isOwner || repo.type === 'free' || Boolean(purchaseId))}
+              canView={Boolean(user) && (isOwner || isStaff || repo.type === 'free' || Boolean(purchaseId))}
               lockedLabel={!user ? 'Sign in to view' : 'Purchase to view'}
             />
 

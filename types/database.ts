@@ -926,6 +926,7 @@ export type Database = {
           x_username: string | null;
           payout_address: string | null;
           payout_currency: string | null;
+          balance_cents: number;
           early_adopter: boolean;
           created_at: string;
           updated_at: string;
@@ -944,6 +945,7 @@ export type Database = {
           x_username?: string | null;
           payout_address?: string | null;
           payout_currency?: string | null;
+          balance_cents?: number;
           early_adopter?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -962,9 +964,40 @@ export type Database = {
           x_username?: string | null;
           payout_address?: string | null;
           payout_currency?: string | null;
+          balance_cents?: number;
           early_adopter?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      balance_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount_cents: number;
+          type: string;
+          ref_id: string | null;
+          memo: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount_cents: number;
+          type: string;
+          ref_id?: string | null;
+          memo?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          amount_cents?: number;
+          type?: string;
+          ref_id?: string | null;
+          memo?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -1222,6 +1255,7 @@ export interface Profile {
   x_username: string | null
   payout_address: string | null
   payout_currency: string | null
+  balance_cents: number
   early_adopter: boolean
   created_at: string
 }
