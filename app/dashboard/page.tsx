@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PayoutSettings } from '@/components/payout-settings'
+import { BalanceActions } from '@/components/balance-actions'
 import type { Profile, DashboardRepo } from '@/types/database'
 
 export const metadata: Metadata = {
@@ -190,9 +191,10 @@ export default async function DashboardPage() {
               <div className="font-pixel text-lg text-primary">{money(balanceCents)}</div>
               <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">available balance</div>
             </div>
-            <p className="max-w-xs font-mono text-[10px] leading-relaxed text-muted-foreground">
-              Sales credit your balance once they clear escrow. Withdrawals to crypto are coming soon.
-            </p>
+            <BalanceActions
+              balanceCents={balanceCents}
+              hasWallet={Boolean(profile?.payout_address && profile?.payout_currency)}
+            />
           </div>
           {ledger.length > 0 && (
             <div className="mt-4 flex flex-col gap-2">

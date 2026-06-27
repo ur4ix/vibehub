@@ -25,6 +25,10 @@ interface Order {
   project_type: string | null
   reference_links: string | null
   contact: string | null
+  executor_id: string | null
+  escrow_status: 'held' | 'released' | 'refunded' | 'disputed' | null
+  amount_held_cents: number | null
+  platform_fee_cents: number | null
   tags: string[]
   status: OrderStatus
   bids_count: number
@@ -84,6 +88,8 @@ export default function OrderDetailPage() {
   const [bidding,    setBidding]    = useState(false)
   const [bids,       setBids]       = useState<Bid[]>([])
   const [isStaff,    setIsStaff]    = useState(false)
+  const [acting,     setActing]     = useState(false)
+  const [executorName, setExecutorName] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -102,6 +108,10 @@ export default function OrderDetailPage() {
         // Owner from the public `profiles` view (users is RLS-restricted to self).
         const { data: prof } = await supabase.from('profiles').select('username').eq('id', o.owner_id).maybeSingle()
         o.owner = { username: (prof as { username: string } | null)?.username ?? null }
+        if (o.executor_id) {
+          const { data: ex } = await supabase.from('profiles').select('username').eq('id', o.executor_id).maybeSingle()
+          setExecutorName((ex as { username: string } | null)?.username ?? null)
+        }
       }
       setOrder(o)
       setLoading(false)
@@ -178,6 +188,52 @@ export default function OrderDetailPage() {
   }
 
   const isOwner = user && order && user.id === order.owner_id
+  const isExecutor = user && order && user.id === order.executor_id
+
+  // ── Order escrow actions (all reload to reflect the new state) ──────────────
+  async function acceptBid(bidId: string) {
+    if (acting) return
+    if (!window.confirm('Accept this bid? The amount is held from your balance in escrow until you approve delivery.')) return
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('accept_order_bid', { p_bid_id: bidId })
+    setActing(false)
+    if (error) { toast.error('Could not accept bid', error.message); return }
+    toast.success('Bid accepted', 'Funds are in escrow.')
+    window.location.reload()
+  }
+  async function markDelivered() {
+    if (acting || !order) return
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('mark_order_delivered', { p_order_id: order.id })
+    setActing(false)
+    if (error) { toast.error('Could not update', error.message); return }
+    toast.success('Marked delivered', 'The owner can now release the payment.')
+    window.location.reload()
+  }
+  async function releaseOrder() {
+    if (acting || !order) return
+    if (!window.confirm('Release the escrowed payment to the executor?')) return
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('release_order', { p_order_id: order.id })
+    setActing(false)
+    if (error) { toast.error('Could not release', error.message); return }
+    toast.success('Payment released', 'Paid to the executor’s balance.')
+    window.location.reload()
+  }
+  async function refundOrder() {
+    if (acting || !order) return
+    if (!window.confirm('Cancel the order and refund the escrow to your balance?')) return
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('refund_order', { p_order_id: order.id })
+    setActing(false)
+    if (error) { toast.error('Could not refund', error.message); return }
+    toast.info('Order cancelled', 'The escrow was refunded to your balance.')
+    window.location.reload()
+  }
 
   async function handleDelete() {
     if (!confirmDel) { setConfirmDel(true); return }
@@ -324,6 +380,43 @@ export default function OrderDetailPage() {
             </div>
           )}
 
+          {/* Order progress / escrow */}
+          {order.escrow_status && (
+            <div className="mt-6 border-t border-border pt-6">
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Order progress</p>
+              <div className="border-2 border-border bg-background px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-pixel text-[10px] uppercase tracking-wider text-primary">
+                      {order.escrow_status === 'held' ? '🔒 In escrow'
+                        : order.escrow_status === 'released' ? '✓ Released'
+                        : order.escrow_status === 'refunded' ? '↩ Refunded'
+                        : '⚖ Disputed'}
+                    </p>
+                    {executorName && (
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                        Executor: <Link href={`/u/${executorName}`} className="hover:text-primary">@{executorName}</Link>
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {isExecutor && order.status === 'in_progress' && (
+                      <PixelButton className="px-4 py-2 text-xs" disabled={acting} onClick={markDelivered}>Mark delivered</PixelButton>
+                    )}
+                    {isOwner && order.status === 'review' && (
+                      <PixelButton className="px-4 py-2 text-xs" disabled={acting} onClick={releaseOrder}>Approve &amp; release</PixelButton>
+                    )}
+                    {isOwner && order.status === 'in_progress' && (
+                      <button type="button" disabled={acting} onClick={refundOrder} className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-60">
+                        Cancel &amp; refund
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Escrow notice */}
           <div className="mt-6 border-t border-border pt-6">
             <div className="border-2 border-border bg-secondary px-4 py-3">
@@ -449,7 +542,14 @@ export default function OrderDetailPage() {
                         </span>
                       </div>
                       <p className="mt-3 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{b.message}</p>
-                      <p className="mt-2 font-mono text-[10px] text-muted-foreground">{timeAgo(b.created_at)}</p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="font-mono text-[10px] text-muted-foreground">{timeAgo(b.created_at)}</p>
+                        {order.status === 'open' && (
+                          <PixelButton className="px-4 py-1.5 text-[11px]" disabled={acting} onClick={() => acceptBid(b.id)}>
+                            Accept &amp; pay ${b.amount}
+                          </PixelButton>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

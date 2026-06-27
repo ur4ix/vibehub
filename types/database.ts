@@ -60,6 +60,11 @@ export type Database = {
           project_type: string | null;
           reference_links: string | null;
           contact: string | null;
+          executor_id: string | null;
+          assigned_bid_id: string | null;
+          escrow_status: 'held' | 'released' | 'refunded' | 'disputed' | null;
+          amount_held_cents: number | null;
+          platform_fee_cents: number | null;
           tags: string[];
           status: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count: number;
@@ -76,6 +81,11 @@ export type Database = {
           project_type?: string | null;
           reference_links?: string | null;
           contact?: string | null;
+          executor_id?: string | null;
+          assigned_bid_id?: string | null;
+          escrow_status?: 'held' | 'released' | 'refunded' | 'disputed' | null;
+          amount_held_cents?: number | null;
+          platform_fee_cents?: number | null;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;
@@ -92,6 +102,11 @@ export type Database = {
           project_type?: string | null;
           reference_links?: string | null;
           contact?: string | null;
+          executor_id?: string | null;
+          assigned_bid_id?: string | null;
+          escrow_status?: 'held' | 'released' | 'refunded' | 'disputed' | null;
+          amount_held_cents?: number | null;
+          platform_fee_cents?: number | null;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;
@@ -1001,6 +1016,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      topups: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount_cents: number;
+          status: 'pending' | 'credited' | 'failed';
+          provider: string;
+          provider_ref: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount_cents: number;
+          status?: 'pending' | 'credited' | 'failed';
+          provider?: string;
+          provider_ref?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          amount_cents?: number;
+          status?: 'pending' | 'credited' | 'failed';
+          provider?: string;
+          provider_ref?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      withdrawals: {
+        Row: {
+          id: string;
+          user_id: string;
+          amount_cents: number;
+          address: string;
+          currency: string;
+          status: 'pending' | 'sent' | 'failed';
+          payout_ref: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          amount_cents: number;
+          address: string;
+          currency: string;
+          status?: 'pending' | 'sent' | 'failed';
+          payout_ref?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          amount_cents?: number;
+          address?: string;
+          currency?: string;
+          status?: 'pending' | 'sent' | 'failed';
+          payout_ref?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       profiles: {
@@ -1059,6 +1137,26 @@ export type Database = {
       post_ledger: {
         Args: { p_user: string; p_amount: number; p_type: string; p_ref?: string; p_memo?: string };
         Returns: number;
+      };
+      request_withdrawal: {
+        Args: { p_amount_cents: number };
+        Returns: string;
+      };
+      accept_order_bid: {
+        Args: { p_bid_id: string };
+        Returns: string;
+      };
+      mark_order_delivered: {
+        Args: { p_order_id: string };
+        Returns: undefined;
+      };
+      release_order: {
+        Args: { p_order_id: string };
+        Returns: undefined;
+      };
+      refund_order: {
+        Args: { p_order_id: string };
+        Returns: undefined;
       };
       increment_repo_view: {
         Args: { p_repo: string };

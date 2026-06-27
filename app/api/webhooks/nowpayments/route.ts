@@ -42,6 +42,32 @@ export async function POST(req: NextRequest) {
   if (done && orderId) {
     const admin = createAdminClient()
 
+    // Balance top-up (order_id = "topup_<id>"): credit the balance once.
+    if (orderId.startsWith('topup_')) {
+      const topupId = orderId.slice('topup_'.length)
+      // Flip pending→credited atomically; only credit if we won the flip.
+      const { data: flipped } = await admin
+        .from('topups')
+        .update({ status: 'credited', provider_ref: String(body.payment_id ?? body.invoice_id ?? '') })
+        .eq('id', topupId)
+        .eq('status', 'pending')
+        .select('user_id, amount_cents')
+      const t = (flipped as { user_id: string; amount_cents: number }[] | null)?.[0]
+      if (t) {
+        const paidUsd = Number(body.price_amount)
+        const currency = String(body.price_currency ?? '').toLowerCase()
+        if (currency === 'usd' && Number.isFinite(paidUsd) && paidUsd + 0.01 >= t.amount_cents / 100) {
+          await admin.rpc('post_ledger', {
+            p_user: t.user_id, p_amount: t.amount_cents, p_type: 'topup', p_ref: topupId, p_memo: 'Top-up',
+          })
+        } else {
+          // underpaid — undo the flip so it isn't silently swallowed
+          await admin.from('topups').update({ status: 'failed' }).eq('id', topupId)
+        }
+      }
+      return NextResponse.json({ ok: true })
+    }
+
     // Defense in depth: the IPN is signed, but still confirm the (signed)
     // invoice amount/currency matches what this purchase should cost before
     // unlocking the download. Refuse to complete on an underpayment.

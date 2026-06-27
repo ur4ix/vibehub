@@ -3,6 +3,7 @@ import { isStableCurrency } from '@/lib/nowpayments-payout'
 import { PayoutActions } from '@/components/payout-actions'
 import { PayoutCsvButton } from '@/components/payout-csv-button'
 import { PayoutRunButton } from '@/components/payout-run-button'
+import { WithdrawalActions } from '@/components/withdrawal-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,20 @@ export default async function AdminPayoutsPage() {
   const csvRows = groups
     .filter((g) => g.seller?.address && g.seller?.currency)
     .map((g) => ({ ticker: g.seller!.currency!, address: g.seller!.address!, amount: g.total / 100 }))
+
+  // Pending balance withdrawals (cash-outs) awaiting processing.
+  const { data: wRaw } = await admin
+    .from('withdrawals')
+    .select('id, user_id, amount_cents, address, currency, status, created_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+  const withdrawals = (wRaw as { id: string; user_id: string; amount_cents: number; address: string; currency: string; status: string; created_at: string }[] | null) ?? []
+  const wUserIds = [...new Set(withdrawals.map((w) => w.user_id))]
+  const wNames = new Map<string, string>()
+  if (wUserIds.length > 0) {
+    const { data: wu } = await admin.from('users').select('id, username').in('id', wUserIds)
+    for (const u of (wu as { id: string; username: string }[] | null) ?? []) wNames.set(u.id, u.username)
+  }
 
   return (
     <div>
@@ -142,6 +157,37 @@ export default async function AdminPayoutsPage() {
           })}
         </div>
       )}
+
+      {/* Balance withdrawals (cash-outs) */}
+      <div className="mt-12">
+        <h2 className="font-pixel text-sm">Withdrawals</h2>
+        <p className="mt-2 font-mono text-xs text-muted-foreground">
+          Pending balance cash-outs. Amounts are already debited from the user&apos;s balance.
+          &ldquo;Send&rdquo; pushes via NOWPayments; &ldquo;Reject&rdquo; credits the balance back.
+        </p>
+
+        {withdrawals.length === 0 ? (
+          <div className="mt-5 border-2 border-dashed border-border p-10 text-center">
+            <p className="font-mono text-sm text-muted-foreground">No pending withdrawals.</p>
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-col gap-2">
+            {withdrawals.map((w) => (
+              <div key={w.id} className="flex flex-wrap items-center justify-between gap-3 border-2 border-border bg-card px-5 py-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-sm text-foreground">
+                    @{wNames.get(w.user_id) ?? 'unknown'} · <span className="text-primary">{money(w.amount_cents)}</span>
+                  </p>
+                  <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">
+                    {w.currency} · {w.address} · {new Date(w.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+                <WithdrawalActions withdrawalId={w.id} canAuto={isStableCurrency(w.currency)} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
