@@ -38,11 +38,14 @@ Run inside a git repo with at least one commit. It uploads `git archive HEAD`
 # create a new draft
 vydex push --title "Analytics dashboard"
 
+# create a paid draft
+vydex push --title "Pro UI kit" --paid --price 29
+
 # push a new version to an existing repo
 vydex push --repo <repository-id> --message "fix auth bug"
 ```
 
-Options: `--title`, `--repo <id>`, `--message "<changelog>"`, `--url <https://…>`
-(defaults to https://vydex.dev; override for local dev with `VYDEX_URL`).
+Options: `--title`, `--paid`, `--price <usd>`, `--repo <id>`, `--message "<changelog>"`,
+`--url <https://…>` (defaults to https://vydex.dev; override for local dev with `VYDEX_URL`).
 
 The command prints the listing URL — open it to set a price and publish.

@@ -33,13 +33,17 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: wRaw } = await admin
     .from('withdrawals')
-    .select('address, currency')
+    .select('address, currency, payout_ref')
     .eq('id', withdrawalId)
     .single()
-  const w = wRaw as { address: string; currency: string } | null
+  const w = wRaw as { address: string; currency: string; payout_ref: string | null } | null
   if (w) {
     try {
-      const ref = await sendWithdrawal(w.address, w.currency, amountCents / 100, req.nextUrl.origin)
+      const ref = await sendWithdrawal({
+        address: w.address, currency: w.currency, amountUsd: amountCents / 100, origin: req.nextUrl.origin,
+        existingBatch: w.payout_ref,
+        onBatch: async (id) => { await admin.from('withdrawals').update({ payout_ref: id }).eq('id', withdrawalId) },
+      })
       await admin.from('withdrawals').update({ status: 'sent', payout_ref: ref }).eq('id', withdrawalId)
       return NextResponse.json({ ok: true, status: 'sent' })
     } catch {

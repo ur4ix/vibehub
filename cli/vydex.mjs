@@ -76,8 +76,15 @@ async function push(args) {
   const title = flags.title || basename(process.cwd())
   const form = new FormData()
   form.append('file', new Blob([buf], { type: 'application/zip' }), 'archive.zip')
-  if (flags.repo) form.append('repoId', String(flags.repo))
-  else form.append('title', String(title))
+  if (flags.repo) {
+    form.append('repoId', String(flags.repo))
+  } else {
+    form.append('title', String(title))
+    if (flags.paid) {
+      form.append('paid', 'true')
+      if (flags.price) form.append('price', String(flags.price))
+    }
+  }
   if (flags.message) form.append('changelog', String(flags.message))
 
   console.log(`• Uploading ${(buf.length / 1024 / 1024).toFixed(2)} MB to ${base}…`)
@@ -101,11 +108,12 @@ else {
   console.log(`vydex — push code into your Vydex drafts
 
   vydex login [token]     save your API token (Settings → Security)
-  vydex push [--title ..] [--repo <id>] [--message ..]
+  vydex push [--title ..] [--repo <id>] [--message ..] [--paid --price 19]
 
 Examples:
   vydex login
   vydex push --title "Analytics dashboard"
+  vydex push --title "Pro UI kit" --paid --price 29
   vydex push --repo 1234-… --message "fix auth"`)
   if (existsSync(CONFIG)) console.log('\n(logged in)')
 }

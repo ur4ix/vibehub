@@ -32,10 +32,10 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: wRaw } = await admin
     .from('withdrawals')
-    .select('id, user_id, amount_cents, address, currency, status')
+    .select('id, user_id, amount_cents, address, currency, status, payout_ref')
     .eq('id', withdrawalId)
     .maybeSingle()
-  const w = wRaw as { id: string; user_id: string; amount_cents: number; address: string; currency: string; status: string } | null
+  const w = wRaw as { id: string; user_id: string; amount_cents: number; address: string; currency: string; status: string; payout_ref: string | null } | null
   if (!w) return NextResponse.json({ error: 'Withdrawal not found' }, { status: 404 })
   if (w.status !== 'pending') return NextResponse.json({ error: 'Already processed' }, { status: 409 })
 
@@ -54,7 +54,11 @@ export async function POST(req: NextRequest) {
 
   // action === 'send'
   try {
-    const batch = await sendWithdrawal(w.address, w.currency, w.amount_cents / 100, req.nextUrl.origin)
+    const batch = await sendWithdrawal({
+      address: w.address, currency: w.currency, amountUsd: w.amount_cents / 100, origin: req.nextUrl.origin,
+      existingBatch: w.payout_ref,
+      onBatch: async (id) => { await admin.from('withdrawals').update({ payout_ref: id }).eq('id', w.id) },
+    })
     await admin.from('withdrawals').update({ status: 'sent', payout_ref: batch }).eq('id', w.id)
     return NextResponse.json({ ok: true, status: 'sent', ref: batch })
   } catch (e) {

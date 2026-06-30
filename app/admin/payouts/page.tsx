@@ -83,6 +83,10 @@ export default async function AdminPayoutsPage() {
     for (const u of (wu as { id: string; username: string }[] | null) ?? []) wNames.set(u.id, u.username)
   }
 
+  // Integrity check: cached balances vs the ledger (should be empty).
+  const { data: reconRaw } = await admin.rpc('balance_reconciliation')
+  const recon = (reconRaw as { user_id: string; balance_cents: number; ledger_cents: number; drift_cents: number }[] | null) ?? []
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -183,6 +187,28 @@ export default async function AdminPayoutsPage() {
                   </p>
                 </div>
                 <WithdrawalActions withdrawalId={w.id} canAuto={isStableCurrency(w.currency)} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Ledger integrity */}
+      <div className="mt-12">
+        <h2 className="font-pixel text-sm">Ledger integrity</h2>
+        {recon.length === 0 ? (
+          <div className="mt-4 flex items-center gap-2 border-2 border-green-400/40 bg-green-400/10 px-5 py-3">
+            <span className="font-mono text-xs text-green-400">✓ All balances reconcile with the ledger.</span>
+          </div>
+        ) : (
+          <div className="mt-4 flex flex-col gap-2">
+            <p className="font-mono text-xs text-destructive">⚠ {recon.length} balance(s) drifted from the ledger — investigate:</p>
+            {recon.map((r) => (
+              <div key={r.user_id} className="flex items-center justify-between gap-3 border-2 border-destructive/50 bg-destructive/5 px-5 py-3">
+                <p className="truncate font-mono text-[11px] text-foreground">{r.user_id}</p>
+                <p className="font-mono text-[11px] text-muted-foreground">
+                  cached {money(r.balance_cents)} · ledger {money(r.ledger_cents)} · drift <span className="text-destructive">{money(r.drift_cents)}</span>
+                </p>
               </div>
             ))}
           </div>

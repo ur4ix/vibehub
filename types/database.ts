@@ -1228,6 +1228,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: number;
       };
+      balance_reconciliation: {
+        Args: Record<PropertyKey, never>;
+        Returns: { user_id: string; balance_cents: number; ledger_cents: number; drift_cents: number }[];
+      };
       release_order: {
         Args: { p_order_id: string };
         Returns: undefined;

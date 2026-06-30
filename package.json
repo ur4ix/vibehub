@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test test/unit.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^2.0.2",

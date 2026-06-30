@@ -84,6 +84,11 @@ export async function POST(req: NextRequest) {
 
   // ── create a new draft ──────────────────────────────────────────────────────
   const title = String(form.get('title') ?? '').trim().slice(0, 120)
+  const paid = String(form.get('paid') ?? '') === 'true'
+  const priceUsd = Number(form.get('price') ?? 0)
+  if (paid && (!Number.isFinite(priceUsd) || priceUsd <= 0 || priceUsd > 9999)) {
+    return NextResponse.json({ error: 'Price must be between $0.01 and $9,999' }, { status: 400 })
+  }
   const newId = randomUUID()
   const baseSlug = slugify(title) || 'project'
   const slug = `${baseSlug}-${newId.slice(0, 6)}`.slice(0, 80)
@@ -97,7 +102,8 @@ export async function POST(req: NextRequest) {
     owner_id: userId,
     title: title || baseSlug,
     slug,
-    type: 'free',
+    type: paid ? 'paid' : 'free',
+    price_cents: paid ? Math.round(priceUsd * 100) : null,
     storage_path: path,
     file_manifest: manifest,
     source_sha256: sha256,
