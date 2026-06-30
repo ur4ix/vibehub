@@ -50,12 +50,29 @@ Once you're in, head to [Publishing your first project](/docs/first-project).`,
     title: 'Push from the CLI',
     body: `Prefer the terminal? The \`@vydex/cli\` tool pushes a project straight into your **drafts** — like \`git push\`, but into your Vydex account. From a draft you set a price and publish on the site.
 
+Requires **Node 18+** and **git** on your PATH.
+
+## Install — two ways
+**Option A — global (short \`vydex\` command):**
+\`\`\`bash
+npm install -g @vydex/cli
+vydex --help
+\`\`\`
+
+**Option B — on demand with npx (no install):**
+\`\`\`bash
+npx @vydex/cli --help
+\`\`\`
+
+The examples below use the global \`vydex\` command. If you prefer npx, just write \`npx @vydex/cli\` wherever you see \`vydex\` — e.g. \`npx @vydex/cli push …\`.
+
 ## 1. Get a token
 Go to **Settings → Security → CLI access tokens → Generate** and copy the \`vdx_…\` token (shown once).
 
 ## 2. Log in
 \`\`\`bash
-npx @vydex/cli login        # paste the token when prompted
+vydex login                 # paste the token when prompted
+# npx: npx @vydex/cli login
 \`\`\`
 The token is saved to \`~/.vydex.json\` (or pass \`VYDEX_TOKEN\`).
 
@@ -64,13 +81,13 @@ Run inside a git repo with at least one commit. It uploads \`git archive HEAD\` 
 
 \`\`\`bash
 # new draft
-npx @vydex/cli push --title "Analytics dashboard"
+vydex push --title "Analytics dashboard"
 
 # paid draft
-npx @vydex/cli push --title "Pro UI kit" --paid --price 29
+vydex push --title "Pro UI kit" --paid --price 29
 
 # a new version of an existing repo
-npx @vydex/cli push --repo <repository-id> --message "fix auth"
+vydex push --repo <repository-id> --message "fix auth"
 \`\`\`
 
 The command prints the draft URL — open it to set a price and publish. Tokens can be revoked any time on the same settings page.`,
