@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Standalone Node CLI (its own runtime, not part of the Next app):
+    "cli/**",
   ]),
 ]);
 

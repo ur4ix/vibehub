@@ -1055,6 +1055,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      api_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          token_hash: string;
+          token_prefix: string;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          token_hash: string;
+          token_prefix: string;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          token_hash?: string;
+          token_prefix?: string;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       order_deliveries: {
         Row: {
           id: string;

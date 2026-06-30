@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock, Smartphone, CircleCheck, CircleAlert } from 'lucide-react'
+import { Shield, Mail, Lock, Smartphone, Terminal, CircleCheck, CircleAlert } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
+import { CliTokens } from '@/components/cli-tokens'
 import { createClient } from '@/lib/supabase/client'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -413,6 +414,14 @@ export default function SecurityPage() {
             description="Add an extra layer of security. Use Google Authenticator or any TOTP-compatible app."
           >
             <TwoFactorSection />
+          </Section>
+
+          <Section
+            icon={<Terminal className="h-5 w-5" />}
+            title="CLI access tokens"
+            description="Personal tokens for the vydex CLI — push a repo or a new version straight into your drafts from the terminal."
+          >
+            <CliTokens />
           </Section>
         </div>
       </main>

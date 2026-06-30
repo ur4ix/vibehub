@@ -1,0 +1,9 @@
+{
+  "name": "vydex",
+  "version": "0.1.0",
+  "description": "Push code straight into your Vydex drafts from the terminal.",
+  "type": "module",
+  "bin": { "vydex": "./vydex.mjs" },
+  "engines": { "node": ">=18" },
+  "files": ["vydex.mjs", "README.md"]
+}
