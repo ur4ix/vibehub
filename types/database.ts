@@ -65,6 +65,9 @@ export type Database = {
           escrow_status: 'held' | 'released' | 'refunded' | 'disputed' | null;
           amount_held_cents: number | null;
           platform_fee_cents: number | null;
+          delivered_at: string | null;
+          auto_release_at: string | null;
+          revisions_used: number;
           tags: string[];
           status: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count: number;
@@ -86,6 +89,9 @@ export type Database = {
           escrow_status?: 'held' | 'released' | 'refunded' | 'disputed' | null;
           amount_held_cents?: number | null;
           platform_fee_cents?: number | null;
+          delivered_at?: string | null;
+          auto_release_at?: string | null;
+          revisions_used?: number;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;
@@ -107,6 +113,9 @@ export type Database = {
           escrow_status?: 'held' | 'released' | 'refunded' | 'disputed' | null;
           amount_held_cents?: number | null;
           platform_fee_cents?: number | null;
+          delivered_at?: string | null;
+          auto_release_at?: string | null;
+          revisions_used?: number;
           tags?: string[];
           status?: 'open' | 'in_progress' | 'review' | 'completed' | 'cancelled';
           bids_count?: number;
@@ -1046,6 +1055,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      order_deliveries: {
+        Row: {
+          id: string;
+          order_id: string;
+          author_id: string;
+          kind: 'delivery' | 'revision';
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          author_id: string;
+          kind: 'delivery' | 'revision';
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          author_id?: string;
+          kind?: 'delivery' | 'revision';
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       withdrawals: {
         Row: {
           id: string;
@@ -1149,6 +1185,18 @@ export type Database = {
       mark_order_delivered: {
         Args: { p_order_id: string };
         Returns: undefined;
+      };
+      deliver_order: {
+        Args: { p_order_id: string; p_message: string };
+        Returns: undefined;
+      };
+      request_order_revision: {
+        Args: { p_order_id: string; p_message: string };
+        Returns: undefined;
+      };
+      auto_release_due_orders: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
       };
       release_order: {
         Args: { p_order_id: string };

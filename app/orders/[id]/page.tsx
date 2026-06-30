@@ -29,6 +29,9 @@ interface Order {
   escrow_status: 'held' | 'released' | 'refunded' | 'disputed' | null
   amount_held_cents: number | null
   platform_fee_cents: number | null
+  delivered_at: string | null
+  auto_release_at: string | null
+  revisions_used: number
   tags: string[]
   status: OrderStatus
   bids_count: number
@@ -90,6 +93,10 @@ export default function OrderDetailPage() {
   const [isStaff,    setIsStaff]    = useState(false)
   const [acting,     setActing]     = useState(false)
   const [executorName, setExecutorName] = useState<string | null>(null)
+  const [deliveries, setDeliveries] = useState<{ id: string; author_id: string; kind: string; message: string; created_at: string }[]>([])
+  const [deliverMsg, setDeliverMsg] = useState('')
+  const [revisionMsg, setRevisionMsg] = useState('')
+  const [showRevision, setShowRevision] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -163,6 +170,20 @@ export default function OrderDetailPage() {
     return () => { active = false }
   }, [order, user])
 
+  // Delivery / revision timeline (visible to the order's two parties).
+  useEffect(() => {
+    if (!order || !user || (user.id !== order.owner_id && user.id !== order.executor_id)) return
+    const supabase = createClient()
+    let active = true
+    supabase
+      .from('order_deliveries')
+      .select('id, author_id, kind, message, created_at')
+      .eq('order_id', order.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => { if (active) setDeliveries((data as { id: string; author_id: string; kind: string; message: string; created_at: string }[] | null) ?? []) })
+    return () => { active = false }
+  }, [order, user])
+
   async function handleBid(e: React.FormEvent) {
     e.preventDefault()
     if (!user) { router.push('/auth'); return }
@@ -202,14 +223,24 @@ export default function OrderDetailPage() {
     toast.success('Bid accepted', 'Funds are in escrow.')
     window.location.reload()
   }
-  async function markDelivered() {
-    if (acting || !order) return
+  async function deliverWork() {
+    if (acting || !order || !deliverMsg.trim()) return
     setActing(true)
     const supabase = createClient()
-    const { error } = await supabase.rpc('mark_order_delivered', { p_order_id: order.id })
+    const { error } = await supabase.rpc('deliver_order', { p_order_id: order.id, p_message: deliverMsg.trim() })
     setActing(false)
-    if (error) { toast.error('Could not update', error.message); return }
-    toast.success('Marked delivered', 'The owner can now release the payment.')
+    if (error) { toast.error('Could not deliver', error.message); return }
+    toast.success('Delivered', 'The owner will review your work.')
+    window.location.reload()
+  }
+  async function requestRevision() {
+    if (acting || !order || !revisionMsg.trim()) return
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('request_order_revision', { p_order_id: order.id, p_message: revisionMsg.trim() })
+    setActing(false)
+    if (error) { toast.error('Could not request revision', error.message); return }
+    toast.info('Revision requested', 'Sent back to the executor with your notes.')
     window.location.reload()
   }
   async function releaseOrder() {
@@ -380,7 +411,7 @@ export default function OrderDetailPage() {
             </div>
           )}
 
-          {/* Order progress / escrow */}
+          {/* Order progress / escrow (Fiverr-style deliver → accept / revise) */}
           {order.escrow_status && (
             <div className="mt-6 border-t border-border pt-6">
               <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Order progress</p>
@@ -388,31 +419,93 @@ export default function OrderDetailPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-pixel text-[10px] uppercase tracking-wider text-primary">
-                      {order.escrow_status === 'held' ? '🔒 In escrow'
-                        : order.escrow_status === 'released' ? '✓ Released'
+                      {order.escrow_status === 'released' ? '✓ Completed'
                         : order.escrow_status === 'refunded' ? '↩ Refunded'
-                        : '⚖ Disputed'}
+                        : order.status === 'review' ? '🔍 Awaiting your review'
+                        : '🔒 In progress'}
                     </p>
                     {executorName && (
                       <p className="mt-1 font-mono text-[10px] text-muted-foreground">
                         Executor: <Link href={`/u/${executorName}`} className="hover:text-primary">@{executorName}</Link>
+                        {order.revisions_used > 0 && <span> · {order.revisions_used} revision{order.revisions_used !== 1 ? 's' : ''}</span>}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    {isExecutor && order.status === 'in_progress' && (
-                      <PixelButton className="px-4 py-2 text-xs" disabled={acting} onClick={markDelivered}>Mark delivered</PixelButton>
-                    )}
-                    {isOwner && order.status === 'review' && (
-                      <PixelButton className="px-4 py-2 text-xs" disabled={acting} onClick={releaseOrder}>Approve &amp; release</PixelButton>
-                    )}
-                    {isOwner && order.status === 'in_progress' && (
-                      <button type="button" disabled={acting} onClick={refundOrder} className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-60">
-                        Cancel &amp; refund
-                      </button>
+                  {order.status === 'review' && order.auto_release_at && (
+                    <p className="font-mono text-[10px] text-amber-400">
+                      Auto-accepts {new Date(order.auto_release_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+
+                {/* Delivery / revision timeline */}
+                {deliveries.length > 0 && (
+                  <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+                    {deliveries.map((d) => (
+                      <div key={d.id} className="border-l-2 pl-3" style={{ borderColor: d.kind === 'delivery' ? 'var(--primary)' : 'rgb(251 191 36 / 0.6)' }}>
+                        <p className={'font-pixel text-[8px] uppercase tracking-wider ' + (d.kind === 'delivery' ? 'text-primary' : 'text-amber-400')}>
+                          {d.kind === 'delivery' ? 'Delivery' : 'Revision request'} · {timeAgo(d.created_at)}
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{d.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Executor: deliver the work */}
+                {isExecutor && order.status === 'in_progress' && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <textarea
+                      rows={3}
+                      value={deliverMsg}
+                      onChange={(e) => setDeliverMsg(e.target.value)}
+                      placeholder="Delivery note — what you built, links to the work, how to run it…"
+                      className="w-full resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                    />
+                    <PixelButton className="mt-2 px-4 py-2 text-xs" disabled={acting || !deliverMsg.trim()} onClick={deliverWork}>
+                      Deliver work
+                    </PixelButton>
+                  </div>
+                )}
+
+                {/* Owner: accept or request a revision */}
+                {isOwner && order.status === 'review' && (
+                  <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+                    {showRevision ? (
+                      <>
+                        <textarea
+                          rows={3}
+                          value={revisionMsg}
+                          onChange={(e) => setRevisionMsg(e.target.value)}
+                          placeholder="What needs changing?"
+                          className="w-full resize-none border-2 border-input bg-background px-3 py-2 font-mono text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+                        />
+                        <div className="flex items-center gap-3">
+                          <PixelButton className="px-4 py-2 text-xs" disabled={acting || !revisionMsg.trim()} onClick={requestRevision}>
+                            Send revision request
+                          </PixelButton>
+                          <button type="button" onClick={() => setShowRevision(false)} className="font-mono text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <PixelButton className="px-4 py-2 text-xs" disabled={acting} onClick={releaseOrder}>Accept delivery</PixelButton>
+                        <button type="button" onClick={() => setShowRevision(true)} className="font-mono text-xs text-muted-foreground hover:text-primary">
+                          Request a revision
+                        </button>
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
+
+                {/* Owner: cancel before any delivery */}
+                {isOwner && order.status === 'in_progress' && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <button type="button" disabled={acting} onClick={refundOrder} className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-60">
+                      Cancel &amp; refund
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
