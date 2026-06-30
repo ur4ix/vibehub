@@ -1,0 +1,11 @@
+{
+  "name": "pixel-clock",
+  "version": "1.0.0",
+  "description": "A tiny dependency-free retro pixel clock widget.",
+  "private": true,
+  "scripts": {
+    "start": "python -m http.server 8080"
+  },
+  "keywords": ["clock", "widget", "retro", "pixel", "vanilla-js"],
+  "license": "MIT"
+}

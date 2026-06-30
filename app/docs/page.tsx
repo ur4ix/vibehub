@@ -57,6 +57,7 @@ const SECTIONS = [
     articles: [
       { title: 'Paying with crypto', slug: 'paying-with-crypto' },
       { title: 'Supported coins & networks', slug: 'supported-coins' },
+      { title: 'Your balance & wallet', slug: 'wallet' },
       { title: 'Seller payouts', slug: 'payouts' },
       { title: 'Platform fees', slug: 'fees' },
     ],
@@ -66,6 +67,7 @@ const SECTIONS = [
     title: 'API & integrations',
     articles: [
       { title: 'API overview', slug: 'api-overview' },
+      { title: 'Push from the CLI', slug: 'cli-push' },
       { title: 'Authentication', slug: 'api-auth' },
       { title: 'Webhooks', slug: 'webhooks' },
       { title: 'Rate limits', slug: 'rate-limits' },

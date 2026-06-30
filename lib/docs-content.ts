@@ -46,6 +46,56 @@ Your username is your public handle and the address of your profile (\`vydex.dev
 Once you're in, head to [Publishing your first project](/docs/first-project).`,
   },
 
+  'cli-push': {
+    title: 'Push from the CLI',
+    body: `Prefer the terminal? The \`@vydex/cli\` tool pushes a project straight into your **drafts** — like \`git push\`, but into your Vydex account. From a draft you set a price and publish on the site.
+
+## 1. Get a token
+Go to **Settings → Security → CLI access tokens → Generate** and copy the \`vdx_…\` token (shown once).
+
+## 2. Log in
+\`\`\`bash
+npx @vydex/cli login        # paste the token when prompted
+\`\`\`
+The token is saved to \`~/.vydex.json\` (or pass \`VYDEX_TOKEN\`).
+
+## 3. Push
+Run inside a git repo with at least one commit. It uploads \`git archive HEAD\` — your tracked files at the current commit.
+
+\`\`\`bash
+# new draft
+npx @vydex/cli push --title "Analytics dashboard"
+
+# paid draft
+npx @vydex/cli push --title "Pro UI kit" --paid --price 29
+
+# a new version of an existing repo
+npx @vydex/cli push --repo <repository-id> --message "fix auth"
+\`\`\`
+
+The command prints the draft URL — open it to set a price and publish. Tokens can be revoked any time on the same settings page.`,
+  },
+
+  'wallet': {
+    title: 'Your balance & wallet',
+    body: `Vydex has an internal balance so you don't have to wait on a crypto transfer for every action.
+
+## Earning
+When a buyer's payment clears escrow, your **net** (price minus the platform fee) is credited to your balance automatically. You'll see it on your [dashboard](/dashboard) with a full history.
+
+## Spending
+If your balance covers the price, you can **pay with balance** in one click instead of a crypto invoice — the purchase still goes through escrow exactly the same way.
+
+## Topping up
+Add funds any time from the dashboard — you pay with crypto and your balance is credited once the payment confirms.
+
+## Withdrawing
+Set a payout wallet, then withdraw your balance to crypto. Withdrawals are processed to the wallet you configured.
+
+## Orders
+Order escrow runs on your balance too: when you accept a developer's bid, the amount is held from your balance and released to them once you approve the delivery. See [Seller payouts](/docs/payouts) for more.`,
+  },
+
   'first-project': {
     title: 'Publishing your first project',
     body: `Going from a folder on your machine to a live listing takes a few minutes.
