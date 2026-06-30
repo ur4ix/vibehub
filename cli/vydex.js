@@ -33,8 +33,18 @@ function parseFlags(args) {
   const out = { _: [] }
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a.startsWith('--')) out[a.slice(2)] = args[++i] ?? true
-    else out._.push(a)
+    if (a.startsWith('--')) {
+      const next = args[i + 1]
+      // Boolean flag (e.g. --paid) when nothing or another flag follows.
+      if (next === undefined || next.startsWith('--')) {
+        out[a.slice(2)] = true
+      } else {
+        out[a.slice(2)] = next
+        i++
+      }
+    } else {
+      out._.push(a)
+    }
   }
   return out
 }
