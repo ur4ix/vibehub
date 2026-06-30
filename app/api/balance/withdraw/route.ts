@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWithdrawal } from '@/lib/withdrawals'
@@ -46,8 +47,12 @@ export async function POST(req: NextRequest) {
       })
       await admin.from('withdrawals').update({ status: 'sent', payout_ref: ref }).eq('id', withdrawalId)
       return NextResponse.json({ ok: true, status: 'sent' })
-    } catch {
-      // left pending for admin processing
+    } catch (e) {
+      // Left pending for admin processing. 'manual' just means auto-payout isn't
+      // configured (expected) — only report real send failures.
+      if (!(e instanceof Error && e.message === 'manual')) {
+        Sentry.captureException(e, { tags: { area: 'withdrawal' }, extra: { withdrawalId } })
+      }
     }
   }
   return NextResponse.json({ ok: true, status: 'pending' })

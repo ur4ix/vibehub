@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { payoutAuth, createPayout, verifyPayout, isStableCurrency } from '@/lib/nowpayments-payout'
 import { totp } from '@/lib/totp'
@@ -61,6 +62,7 @@ export async function runAutoPayouts(origin: string): Promise<PayoutRunResult> {
       else result.skipped++
     } catch (e) {
       result.errors.push({ id: row.id, error: e instanceof Error ? e.message : 'failed' })
+      Sentry.captureException(e, { tags: { area: 'payout' }, extra: { purchaseId: row.id } })
     }
   }
   return result
