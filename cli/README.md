@@ -13,7 +13,7 @@ Requires **Node 18+** and **git** on your PATH.
 node cli/vydex.mjs <command>
 
 # or once published to npm:
-npx vydex <command>
+npx @vydex/cli <command>
 ```
 
 ## 1. Get a token

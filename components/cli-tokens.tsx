@@ -108,7 +108,7 @@ export function CliTokens() {
       )}
 
       <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-        Use with the CLI: <code className="text-foreground">npx vydex login</code> then <code className="text-foreground">vydex push</code> from your repo.
+        Use with the CLI: <code className="text-foreground">npx @vydex/cli login</code> then <code className="text-foreground">vydex push</code> from your repo.
       </p>
     </div>
   )
