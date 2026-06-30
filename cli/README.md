@@ -10,7 +10,7 @@ Requires **Node 18+** and **git** on your PATH.
 
 ```bash
 # from this repo, without publishing:
-node cli/vydex.mjs <command>
+node cli/vydex.js <command>
 
 # or once published to npm:
 npx @vydex/cli <command>
