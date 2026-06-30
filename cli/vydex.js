@@ -72,6 +72,9 @@ async function push(args) {
   execFileSync('git', ['archive', '--format=zip', '-o', tmp, 'HEAD'])
   const buf = readFileSync(tmp)
   try { unlinkSync(tmp) } catch { /* ignore */ }
+  if (buf.length < 100) {
+    die('The archive is empty. Commit your files first, and run this inside the project repo (not an outer one).')
+  }
 
   const title = flags.title || basename(process.cwd())
   const form = new FormData()
@@ -82,7 +85,11 @@ async function push(args) {
     form.append('title', String(title))
     if (flags.paid) {
       form.append('paid', 'true')
-      if (flags.price) form.append('price', String(flags.price))
+      if (flags.price) {
+        // Forgive "$2,00" / " 2 " / "2,00" → "2.00".
+        const price = String(flags.price).replace(/[$\s]/g, '').replace(',', '.')
+        form.append('price', price)
+      }
     }
   }
   if (flags.message) form.append('changelog', String(flags.message))
