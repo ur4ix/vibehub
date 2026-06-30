@@ -6,6 +6,6 @@ import { SENTRY_DSN } from '@/lib/sentry-dsn'
 // doesn't reach the project.
 Sentry.init({
   dsn: SENTRY_DSN,
-  enabled: process.env.NODE_ENV === 'production',
+  enabled: process.env.NEXT_PUBLIC_SENTRY_DISABLE !== '1',
   tracesSampleRate: 0,
 })
