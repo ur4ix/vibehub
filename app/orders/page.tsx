@@ -159,11 +159,11 @@ export default function OrdersPage() {
             <div className="flex flex-col items-center justify-center border-2 border-border bg-card py-24 text-center">
               <ShoppingBag className="mb-4 h-10 w-10 text-muted-foreground/30" />
               <p className="font-pixel text-xs text-muted-foreground">
-                {orders.length === 0 ? 'No orders yet' : 'No orders in this category'}
+                {orders.length === 0 ? 'No open orders right now' : 'No open orders in this category'}
               </p>
               {orders.length === 0 && (
                 <p className="mt-3 font-mono text-sm text-muted-foreground">
-                  <Link href="/orders/new" className="text-primary hover:underline">Create the first order</Link>
+                  <Link href="/orders/new" className="text-primary hover:underline">Create one</Link>
                 </p>
               )}
             </div>
