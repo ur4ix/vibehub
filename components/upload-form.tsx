@@ -39,7 +39,7 @@ function formatBytes(bytes: number) {
 // SHA-256 (hex) of a file's bytes — used to detect whether a fork's source
 // actually differs from the original it was forked from (see the
 // enforce_fork_publish DB trigger).
-async function sha256Hex(file: File): Promise<string> {
+async function sha256Hex(file: Blob): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -99,6 +99,26 @@ export function UploadForm({ userId }: UploadFormProps) {
   const [editForbidden, setEditForbidden] = useState(false);
   const [existingStoragePath, setExistingStoragePath] = useState<string | null>(null);
   const [existingPublishedAt, setExistingPublishedAt] = useState<string | null>(null);
+  const [rescanning, setRescanning] = useState(false);
+
+  // Re-run the analysis (file tree, AI badges, security + dependency scans) on the
+  // already-uploaded archive — no re-upload needed. Handy when the site adds new
+  // checks. Updates the form state; the user saves to persist.
+  async function rescan() {
+    if (!existingStoragePath || rescanning) return;
+    setRescanning(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.storage.from("repositories").createSignedUrl(existingStoragePath, 120);
+      if (error || !data) throw new Error(error?.message ?? "Could not read the archive");
+      const res = await fetch(data.signedUrl);
+      await parseManifest(await res.blob());
+      toast.success("Re-scanned", "Save to apply the refreshed analysis.");
+    } catch (e) {
+      toast.error("Re-scan failed", e instanceof Error ? e.message : "Try again.");
+    }
+    setRescanning(false);
+  }
 
   // Load the repository when editing.
   useEffect(() => {
@@ -209,7 +229,7 @@ export function UploadForm({ userId }: UploadFormProps) {
 
   // Read the file list out of the ZIP so the listing can show a file tree.
   // JSZip is imported lazily so it stays out of the main bundle.
-  async function parseManifest(f: File) {
+  async function parseManifest(f: Blob) {
     try {
       // Hash the archive bytes (drives the fork "code actually changed" check).
       try { setSourceSha256(await sha256Hex(f)); } catch { setSourceSha256(null); }
@@ -1054,6 +1074,23 @@ export function UploadForm({ userId }: UploadFormProps) {
             onChange={handleFileChange}
             disabled={isSubmitting}
           />
+
+          {/* Refresh analysis on the existing archive — no re-upload needed. */}
+          {isEdit && existingStoragePath && !file && (
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={rescan}
+                disabled={rescanning || scanning || scanningVuln || isSubmitting}
+                className="self-start border-2 border-border px-4 py-2 font-mono text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-60"
+              >
+                {rescanning ? "Re-scanning…" : "↻ Re-scan current archive"}
+              </button>
+              <p className="text-xs text-muted-foreground">
+                Refresh the file tree, AI badges and security/dependency scans from your existing upload — no re-upload needed. Then save.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Changelog — only relevant when a ZIP is attached (a new version) */}
