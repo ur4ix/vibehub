@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Press_Start_2P } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth-provider'
 import { ToastProvider } from '@/components/pixel-toast'
 import { PageTransition } from '@/components/page-transition'
@@ -68,6 +69,7 @@ export default function RootLayout({
             <ChatWidget />
           </ToastProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   )

@@ -46,7 +46,9 @@ async function sha256Hex(file: Blob): Promise<string> {
     .join("");
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+// 25 MB — keeps Supabase's free-tier 1 GB storage from filling up fast; most
+// vibe-coded projects (source only, no node_modules) fit comfortably.
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MAX_TAGS = 10;
 const TAG_MAX_LEN = 30;
 

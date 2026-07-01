@@ -13,7 +13,7 @@ import { hashToken } from '@/lib/api-token'
 //   repoId     — add a new version to this repo instead of creating one (optional)
 //   changelog  — version note (optional)
 
-const MAX = 50 * 1024 * 1024
+const MAX = 25 * 1024 * 1024 // keep in sync with the web upload form
 
 function slugify(s: string): string {
   return s.toLowerCase().trim()
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   try { form = await req.formData() } catch { return NextResponse.json({ error: 'Bad form data' }, { status: 400 }) }
   const file = form.get('file')
   if (!(file instanceof Blob)) return NextResponse.json({ error: 'Missing file' }, { status: 400 })
-  if (file.size > MAX) return NextResponse.json({ error: 'Archive too large (max 50 MB)' }, { status: 413 })
+  if (file.size > MAX) return NextResponse.json({ error: 'Archive too large (max 25 MB)' }, { status: 413 })
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const sha256 = createHash('sha256').update(buffer).digest('hex')

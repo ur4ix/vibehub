@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   Download, ShoppingCart, Star, GitFork, Eye,
-  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info, Wallet,
+  Calendar, Tag, Send, ExternalLink, Heart, Trash2, History, Sparkles, Info, Wallet, Share2,
 } from 'lucide-react'
 import type { RepositoryVersion } from '@/types/database'
 import { SiteHeader } from '@/components/site-header'
@@ -18,6 +18,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/components/pixel-toast'
 import { createClient } from '@/lib/supabase/client'
 import { containsBanned, BANNED_MESSAGE } from '@/lib/banned-words'
+import { TWITTER_HANDLE } from '@/lib/site'
 import { SECURITY_CATALOG, SEVERITY_STYLE } from '@/lib/security-scan'
 import { VulnFinding } from '@/components/vuln-finding'
 
@@ -1040,6 +1041,24 @@ export function ListingView({ id }: { id: string }) {
                     </PixelButton>
                   </div>
                 )}
+
+                {/* Share on X — sellers promoting their own listing is the loop. */}
+                <PixelButton
+                  variant="outline"
+                  className="w-full gap-1.5 py-2.5 text-xs"
+                  onClick={() => {
+                    const text = isOwner
+                      ? `I just published "${repo.title}" on ${TWITTER_HANDLE} — AI-built code, ready to use.`
+                      : `Check out "${repo.title}" on ${TWITTER_HANDLE} — AI-built code, ready to use.`
+                    window.open(
+                      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`,
+                      '_blank', 'noopener,noreferrer',
+                    )
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  Share on X
+                </PixelButton>
 
                 {isOwner && (
                   <PixelButton variant="outline" className="w-full py-2.5 text-xs" onClick={() => router.push(`/explore/new?edit=${repo.id}`)}>

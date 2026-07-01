@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { EarlyAdopterCount } from '@/components/early-adopter-count'
 
 const PERKS = [
   {
@@ -65,6 +66,7 @@ export function ForSellers() {
           <span className="font-mono text-xs text-foreground">
             First 100 sellers get the badge + <span className="text-amber-400">0% platform fee for life</span>.
           </span>
+          <EarlyAdopterCount />
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
