@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
-import { PayoutSettings } from '@/components/payout-settings'
-import { BalanceActions } from '@/components/balance-actions'
 import type { Profile, DashboardRepo } from '@/types/database'
 
 export const metadata: Metadata = {
@@ -100,46 +98,7 @@ export default async function DashboardPage() {
     .map((p) => ({ ...p, repo: purchasedRepoMap.get(p.repository_id) }))
     .filter((p) => p.repo)
 
-  // Earnings (seller side) — paid sales of your repos, with escrow + payout state.
-  const { data: saleRaw } = await supabase
-    .from('purchases')
-    .select('id, repository_id, amount_cents, platform_fee_cents, escrow_status, payout_status, created_at')
-    .eq('seller_id', user.id)
-    .eq('status', 'completed')
-    .gt('amount_cents', 0)
-    .order('created_at', { ascending: false })
-  type SaleRow = {
-    id: string; repository_id: string; amount_cents: number; platform_fee_cents: number
-    escrow_status: string | null; payout_status: string | null; created_at: string
-  }
-  const saleRows = (saleRaw as SaleRow[] | null) ?? []
-  // Resolve titles for the sold repos (owner is you, so they're readable).
-  const saleRepoTitle = new Map<string, string>()
-  if (saleRows.length > 0) {
-    const ids = [...new Set(saleRows.map((s) => s.repository_id))]
-    const { data: tr } = await supabase.from('repositories').select('id, title').in('id', ids)
-    for (const r of (tr as { id: string; title: string }[] | null) ?? []) saleRepoTitle.set(r.id, r.title)
-  }
-  // Internal balance + recent ledger history.
   const balanceCents = profile?.balance_cents ?? 0
-  const { data: ledgerRaw } = await supabase
-    .from('balance_entries')
-    .select('id, amount_cents, type, memo, created_at')
-    .order('created_at', { ascending: false })
-    .limit(8)
-  const ledger = (ledgerRaw as { id: string; amount_cents: number; type: string; memo: string | null; created_at: string }[] | null) ?? []
-
-  const net = (s: SaleRow) => s.amount_cents - s.platform_fee_cents
-  // Funds still in escrow = held OR disputed (a dispute doesn't make them vanish,
-  // it just freezes them pending a moderator decision).
-  const heldTotal = saleRows.filter((s) => s.escrow_status === 'held').reduce((a, s) => a + net(s), 0)
-  const disputedTotal = saleRows.filter((s) => s.escrow_status === 'disputed').reduce((a, s) => a + net(s), 0)
-  const inEscrowTotal = heldTotal + disputedTotal
-  const owed = saleRows.filter((s) => s.escrow_status === 'released' && s.payout_status !== 'paid')
-  const owedTotal = owed.reduce((a, s) => a + net(s), 0)
-  const paidTotal = saleRows.filter((s) => s.payout_status === 'paid').reduce((a, s) => a + net(s), 0)
-  const hasSales = saleRows.length > 0
-  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -183,87 +142,17 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Internal balance */}
-        <div className="mb-12">
-          <h2 className="mb-5 font-pixel text-xs uppercase tracking-wider">Balance</h2>
-          <div className="flex flex-wrap items-center justify-between gap-4 border-2 border-primary bg-card px-5 py-4">
-            <div>
-              <div className="font-pixel text-lg text-primary">{money(balanceCents)}</div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">available balance</div>
-            </div>
-            <BalanceActions
-              balanceCents={balanceCents}
-              hasWallet={Boolean(profile?.payout_address && profile?.payout_currency)}
-            />
+        {/* Wallet summary → full wallet page */}
+        <Link
+          href="/wallet"
+          className="mb-12 flex flex-wrap items-center justify-between gap-4 border-2 border-primary bg-card px-5 py-4 transition-all duration-100 hover:pixel-shadow-border"
+        >
+          <div>
+            <div className="font-pixel text-lg text-primary">${(balanceCents / 100).toFixed(2)}</div>
+            <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">balance</div>
           </div>
-          {ledger.length > 0 && (
-            <div className="mt-4 flex flex-col gap-2">
-              {ledger.map((e) => (
-                <div key={e.id} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-3">
-                  <div className="min-w-0">
-                    {/* Prefer the human memo ("Order payout", "Top-up"…) over the raw type ("sale"). */}
-                    <p className="truncate font-mono text-xs text-foreground">{e.memo ?? e.type}</p>
-                  </div>
-                  <span className={'shrink-0 font-pixel text-[10px] ' + (e.amount_cents >= 0 ? 'text-green-400' : 'text-muted-foreground')}>
-                    {e.amount_cents >= 0 ? '+' : '−'}{money(Math.abs(e.amount_cents))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Earnings (seller payouts) */}
-        <div className="mb-12">
-          <h2 className="mb-5 font-pixel text-xs uppercase tracking-wider">Earnings</h2>
-
-          {hasSales && (
-            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="border-2 border-border bg-card px-4 py-3">
-                <div className="font-pixel text-sm text-amber-400">{money(inEscrowTotal)}</div>
-                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">in escrow</div>
-                {disputedTotal > 0 && (
-                  <div className="mt-1 font-mono text-[9px] text-amber-400/80">incl. {money(disputedTotal)} in dispute</div>
-                )}
-              </div>
-              <div className="border-2 border-primary bg-card px-4 py-3">
-                <div className="font-pixel text-sm text-primary">{money(owedTotal)}</div>
-                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">ready to pay out</div>
-              </div>
-              <div className="border-2 border-border bg-card px-4 py-3">
-                <div className="font-pixel text-sm text-green-400">{money(paidTotal)}</div>
-                <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">paid out</div>
-              </div>
-            </div>
-          )}
-
-          <PayoutSettings
-            userId={user.id}
-            address={profile?.payout_address ?? null}
-            currency={profile?.payout_currency ?? null}
-          />
-
-          {owed.length > 0 && (
-            <div className="mt-5">
-              <p className="mb-3 font-pixel text-[9px] uppercase tracking-wider text-muted-foreground">
-                Ready to pay out
-              </p>
-              <div className="flex flex-col gap-2">
-                {owed.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-3">
-                    <p className="min-w-0 truncate font-mono text-sm text-foreground">
-                      {saleRepoTitle.get(s.repository_id) ?? 'Repository'}
-                    </p>
-                    <span className="shrink-0 font-pixel text-[9px] text-primary">{money(net(s))}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 font-mono text-[10px] text-muted-foreground">
-                Net of the platform fee. Payouts are sent to your wallet above.
-              </p>
-            </div>
-          )}
-        </div>
+          <span className="font-mono text-xs text-primary">Wallet · balance, earnings, payouts →</span>
+        </Link>
 
         {/* Purchased (your library) */}
         <div className="mb-12">

@@ -8,6 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { PixelButton } from '@/components/pixel-button'
 import { CliTokens } from '@/components/cli-tokens'
+import { PayoutSettings } from '@/components/payout-settings'
 import { createClient } from '@/lib/supabase/client'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -342,12 +343,16 @@ export default function SecurityPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [checking, setChecking] = useState(true)
+  const [wallet, setWallet] = useState<{ userId: string; address: string | null; currency: string | null } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { router.push('/auth'); return }
       setEmail(session.user.email ?? '')
+      const { data } = await supabase.from('users').select('payout_address, payout_currency').eq('id', session.user.id).maybeSingle()
+      const u = data as { payout_address: string | null; payout_currency: string | null } | null
+      setWallet({ userId: session.user.id, address: u?.payout_address ?? null, currency: u?.payout_currency ?? null })
       setChecking(false)
     })
   }, [router])
@@ -415,6 +420,11 @@ export default function SecurityPage() {
           >
             <TwoFactorSection />
           </Section>
+
+          {/* Payout wallet — PayoutSettings is self-contained (its own card + heading). */}
+          {wallet
+            ? <PayoutSettings userId={wallet.userId} address={wallet.address} currency={wallet.currency} />
+            : <div className="border-2 border-border bg-card p-6"><p className="font-mono text-xs text-muted-foreground">Loading wallet…</p></div>}
 
           <Section
             icon={<Terminal className="h-5 w-5" />}
