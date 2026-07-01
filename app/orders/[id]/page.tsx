@@ -97,6 +97,7 @@ export default function OrderDetailPage() {
   const [deliverMsg, setDeliverMsg] = useState('')
   const [revisionMsg, setRevisionMsg] = useState('')
   const [showRevision, setShowRevision] = useState(false)
+  const [tipAmount, setTipAmount] = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -263,6 +264,18 @@ export default function OrderDetailPage() {
     setActing(false)
     if (error) { toast.error('Could not refund', error.message); return }
     toast.info('Order cancelled', 'The escrow was refunded to your balance.')
+    window.location.reload()
+  }
+  async function tipOrder() {
+    if (acting || !order) return
+    const amount = Number(tipAmount)
+    if (!Number.isFinite(amount) || amount <= 0) { toast.error('Enter a tip amount'); return }
+    setActing(true)
+    const supabase = createClient()
+    const { error } = await supabase.rpc('tip_order', { p_order_id: order.id, p_amount_cents: Math.round(amount * 100) })
+    setActing(false)
+    if (error) { toast.error('Could not send tip', error.message); return }
+    toast.success('Tip sent', 'Paid to the executor from your balance.')
     window.location.reload()
   }
 
@@ -449,6 +462,24 @@ export default function OrderDetailPage() {
                         <p className="mt-1 whitespace-pre-wrap font-mono text-xs leading-relaxed text-muted-foreground">{d.message}</p>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Owner: tip the executor once the work is done */}
+                {isOwner && order.escrow_status === 'released' && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Leave a tip</span>
+                    <div className="flex border-2 border-input bg-background focus-within:border-primary">
+                      <span className="flex items-center border-r border-border bg-secondary px-2 font-mono text-[11px] text-muted-foreground">$</span>
+                      <input
+                        type="number" min={1} step="0.01" value={tipAmount}
+                        onChange={(e) => setTipAmount(e.target.value)} placeholder="5"
+                        className="w-20 bg-transparent px-2 py-1.5 font-mono text-xs outline-none placeholder:text-muted-foreground/50"
+                      />
+                    </div>
+                    <PixelButton className="px-3 py-1.5 text-xs" disabled={acting || !(Number(tipAmount) > 0)} onClick={tipOrder}>
+                      Send tip
+                    </PixelButton>
                   </div>
                 )}
 

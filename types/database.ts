@@ -1243,6 +1243,10 @@ export type Database = {
         Args: { p_order_id: string };
         Returns: undefined;
       };
+      tip_order: {
+        Args: { p_order_id: string; p_amount_cents: number };
+        Returns: undefined;
+      };
       increment_repo_view: {
         Args: { p_repo: string };
         Returns: undefined;
