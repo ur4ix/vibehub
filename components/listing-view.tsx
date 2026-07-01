@@ -174,7 +174,9 @@ export function ListingView({ id }: { id: string }) {
       if (sessionStorage.getItem(key)) return
       sessionStorage.setItem(key, '1')
     } catch { return }
-    createClient().rpc('increment_repo_view', { p_repo: id })
+    // NB: supabase query builders are lazy — without .then()/await the request
+    // is never sent, so the view wouldn't actually be counted.
+    createClient().rpc('increment_repo_view', { p_repo: id }).then(() => {})
   }, [id, repo, user])
 
   // Fetch all data
@@ -626,6 +628,8 @@ export function ListingView({ id }: { id: string }) {
   const categoryIcon = CATEGORY_ICONS[repo.category ?? ''] ?? '▢'
   const isOwner    = user?.id === repo.owner_id
   const canPayBalance = isPaid && balanceCents != null && (repo.price_cents ?? 0) > 0 && balanceCents >= (repo.price_cents ?? 0)
+  // Owner / staff / free / purchased → has the source, can download (and never sees "buy").
+  const hasAccess = isOwner || isStaff || repo.type === 'free' || Boolean(purchaseId)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -866,14 +870,16 @@ export function ListingView({ id }: { id: string }) {
                         </span>
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-[10px] text-muted-foreground">{formatDate(v.created_at)}</span>
-                          <button
-                            type="button"
-                            onClick={() => downloadVersion(v.id)}
-                            className="text-muted-foreground transition-colors hover:text-primary"
-                            aria-label={`Download ${v.version}`}
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
+                          {hasAccess && (
+                            <button
+                              type="button"
+                              onClick={() => downloadVersion(v.id)}
+                              className="text-muted-foreground transition-colors hover:text-primary"
+                              aria-label={`Download ${v.version}`}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       {v.changelog && (
@@ -907,6 +913,7 @@ export function ListingView({ id }: { id: string }) {
                             username={rv.reviewer?.username ?? '?'}
                             avatarColor={colorFromId(rv.id)}
                             size={24}
+                            imageUrl={rv.reviewer?.avatar_url ?? undefined}
                           />
                           <span className="font-mono text-xs text-foreground">
                             @{rv.reviewer?.username ?? 'anonymous'}
@@ -983,7 +990,7 @@ export function ListingView({ id }: { id: string }) {
 
               <div className="mt-5 flex flex-col gap-2">
                 {isPaid ? (
-                  purchaseId ? (
+                  hasAccess ? (
                     <PixelButton className="w-full py-3 gap-2" onClick={handleDownload}>
                       <Download className="h-4 w-4" />
                       Download
