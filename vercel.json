@@ -1,7 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/release-escrow", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/auto-release-orders", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/payouts", "schedule": "0 4 * * *" }
+    { "path": "/api/cron/daily", "schedule": "0 3 * * *" }
   ]
 }
