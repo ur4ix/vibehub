@@ -42,7 +42,7 @@ function timeAgo(iso: string) {
 
 // Types that warrant a written reply / human contact → clicking opens a chat.
 // Everything else (like, follow, fork, review…) just opens the actor's profile.
-const REPLYABLE_TYPES = new Set(['message', 'interest', 'bid', 'application'])
+const REPLYABLE_TYPES = new Set(['message', 'interest', 'application'])
 
 function NotificationBell() {
   const { user } = useAuth()
@@ -72,7 +72,7 @@ function NotificationBell() {
     const supabase = createClient()
     const { data: rawNotifs } = await supabase
       .from('notifications')
-      .select('id, type, title, body, actor_username, actor_id, is_read, created_at')
+      .select('id, type, title, body, actor_username, actor_id, link, is_read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -132,6 +132,8 @@ function NotificationBell() {
       const supabase = createClient()
       await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
     }
+    // A deep link (e.g. a bid → its order page) always wins.
+    if (n.link) { router.push(n.link); return }
     const handle = actorHandle(n)
     if (!handle) return
     if (REPLYABLE_TYPES.has(n.type)) {

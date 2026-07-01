@@ -520,8 +520,9 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Owner / moderator actions */}
-          {(isOwner || isStaff) && (
+          {/* Owner / moderator actions. While funds are in escrow (held) the order
+              can't be deleted — use "Cancel & refund" in the progress panel. */}
+          {(isOwner || isStaff) && (order.status === 'open' || order.escrow_status !== 'held') && (
             <div className="mt-6 border-t border-border pt-6">
               <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{isOwner ? 'Manage' : 'Moderate'}</p>
               <div className="flex flex-wrap gap-3">
@@ -531,15 +532,17 @@ export default function OrderDetailPage() {
                     {cancelling ? 'Cancelling…' : 'Cancel order'}
                   </PixelButton>
                 )}
-                <PixelButton
-                  variant="outline"
-                  disabled={deleting}
-                  onClick={handleDelete}
-                  className={'gap-2 ' + (confirmDel ? 'border-destructive text-destructive hover:bg-destructive/10' : '')}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {deleting ? 'Deleting…' : confirmDel ? 'Confirm delete?' : 'Delete order'}
-                </PixelButton>
+                {order.escrow_status !== 'held' && (
+                  <PixelButton
+                    variant="outline"
+                    disabled={deleting}
+                    onClick={handleDelete}
+                    className={'gap-2 ' + (confirmDel ? 'border-destructive text-destructive hover:bg-destructive/10' : '')}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {deleting ? 'Deleting…' : confirmDel ? 'Confirm delete?' : 'Delete order'}
+                  </PixelButton>
+                )}
                 {confirmDel && !deleting && (
                   <button onClick={() => setConfirmDel(false)} className="font-mono text-xs text-muted-foreground hover:text-foreground">
                     Cancel

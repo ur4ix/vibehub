@@ -201,8 +201,8 @@ export default async function DashboardPage() {
               {ledger.map((e) => (
                 <div key={e.id} className="flex items-center justify-between gap-4 border-2 border-border bg-card px-5 py-3">
                   <div className="min-w-0">
-                    <p className="truncate font-mono text-xs capitalize text-foreground">{e.type}</p>
-                    {e.memo && <p className="truncate font-mono text-[10px] text-muted-foreground">{e.memo}</p>}
+                    {/* Prefer the human memo ("Order payout", "Top-up"…) over the raw type ("sale"). */}
+                    <p className="truncate font-mono text-xs text-foreground">{e.memo ?? e.type}</p>
                   </div>
                   <span className={'shrink-0 font-pixel text-[10px] ' + (e.amount_cents >= 0 ? 'text-green-400' : 'text-muted-foreground')}>
                     {e.amount_cents >= 0 ? '+' : '−'}{money(Math.abs(e.amount_cents))}

@@ -52,9 +52,12 @@ export default function OrdersPage() {
   useEffect(() => {
     const supabase = createClient()
     async function load() {
+      // Only open orders belong on the public board — once a bid is accepted the
+      // order lives on its own page, visible to the owner and executor only.
       const { data } = await supabase
         .from('orders')
         .select('*')
+        .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(50)
       const rows = (data as Order[] | null) ?? []
